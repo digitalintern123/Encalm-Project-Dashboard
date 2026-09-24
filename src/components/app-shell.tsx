@@ -29,6 +29,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useAppState, type AppRole } from '@/state/app-state';
+import { BrandLogo } from './brand-logo';
 import { readItem, writeItem } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 
@@ -168,23 +169,10 @@ export function AppShell({ children }: AppShellProps) {
           <Link
             href="/"
             data-testid="link-brand"
-            className={`group flex items-center ${collapsed ? '' : 'gap-3'}`}
+            className="group flex items-center"
             onClick={() => setMobileOpen(false)}
           >
-            <img
-              src="https://encalm.com/assets/image/Encalm-Logo-White.png"
-              alt="Encalm"
-              onError={(event) => {
-                event.currentTarget.style.display = 'none';
-              }}
-              className={`h-8 w-auto object-contain object-left ${collapsed ? 'max-w-10' : 'max-w-[120px]'}`}
-            />
-            {!collapsed && <span className="sr-only">Encalm</span>}
-            {!collapsed && (
-              <span className="border-l border-white/20 pl-3 font-mono text-[9px] uppercase tracking-[.18em] text-white/45">
-                Projects
-              </span>
-            )}
+            <BrandLogo variant={collapsed ? 'mark' : 'full'} theme="dark" size="md" />
           </Link>
           <button
             type="button"

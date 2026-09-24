@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, Loader2 } from 'lucide-react';
 import { useAppState } from '@/state/app-state';
+import { BrandLogo } from '@/components/brand-logo';
 
 export default function Login() {
   const { login } = useAppState();
@@ -43,15 +44,8 @@ export default function Login() {
           <div className="absolute -right-20 -top-24 size-72 rounded-full border border-[#d6a95d]/20" />
           <div className="absolute -bottom-36 -left-20 size-96 rounded-full border border-[#d6a95d]/10" />
           <div>
-            <img
-              src="https://encalm.com/assets/image/Encalm-Logo-White.png"
-              alt="Encalm"
-              onError={(event) => {
-                event.currentTarget.style.display = 'none';
-              }}
-              className="h-9 w-auto object-contain object-left"
-            />
-            <p className="mt-2 font-mono text-[9px] uppercase tracking-[.24em] text-white/50">
+            <BrandLogo variant="full" theme="dark" size="lg" />
+            <p className="mt-3 font-mono text-[9px] uppercase tracking-[.24em] text-white/50">
               Projects · internal control office
             </p>
           </div>
@@ -71,14 +65,7 @@ export default function Login() {
 
         <section className="p-7 sm:p-12">
           <div className="mb-10 lg:hidden">
-            <img
-              src="https://encalm.com/assets/image/Encalm-Logo-Primary.png"
-              alt="Encalm"
-              onError={(event) => {
-                event.currentTarget.style.display = 'none';
-              }}
-              className="h-8 w-auto object-contain object-left"
-            />
+            <BrandLogo variant="full" theme="light" size="md" />
             <p className="mt-2 font-mono text-[9px] uppercase tracking-[.24em] text-muted-foreground">
               Projects · internal control office
             </p>
