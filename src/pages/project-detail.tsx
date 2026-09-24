@@ -44,8 +44,23 @@ const healthStyles: Record<Health, { dot: string; text: string; bg: string; bord
 
 type Tab = 'overview' | 'progress' | 'timeline' | 'milestones' | 'commercial' | 'issues' | 'updates';
 
-function Metric({ label, value, note, icon: Icon }: { label: string; value: string; note: string; icon: typeof Target }) {
-  return <div className="rounded-2xl border border-border bg-card p-4"><div className="flex items-center justify-between"><span className="font-mono text-[9px] uppercase tracking-[.13em] text-muted-foreground">{label}</span><Icon size={15} className="text-muted-foreground/60" /></div><p className="mt-4 text-[23px] font-extrabold tracking-[-.04em]">{value}</p><p className="mt-1 text-[10px] text-muted-foreground">{note}</p></div>;
+function Metric({ label, value, note, icon: Icon }: { label: string; value: string; note: ReactNode; icon: typeof Target }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 flex flex-col justify-between">
+      <div>
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[9px] uppercase tracking-[.13em] text-muted-foreground">{label}</span>
+          <Icon size={15} className="text-muted-foreground/60" />
+        </div>
+        <p className="mt-4 text-[23px] font-extrabold tracking-[-.04em]">{value}</p>
+      </div>
+      {typeof note === 'string' ? (
+        <p className="mt-1 text-[10px] text-muted-foreground">{note}</p>
+      ) : (
+        note
+      )}
+    </div>
+  );
 }
 
 function clampPercent(value: number): number {
@@ -1298,8 +1313,29 @@ export default function ProjectDetail() {
     <section className="fade-up mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
       <Metric label="Project Status" value={project.status || 'Yet to start'} note={`Stage: ${activePhase}`} icon={Layers3} />
       <Metric label="Completion %" value={`${project.progress}%`} note={`Target: ${project.targetLabel}`} icon={TrendingUp} />
-      <Metric label="Approved Budget (AOP)" value={formatCrore(project.aop)} note={`${formatCrore(project.awarded)} committed`} icon={CircleDollarSign} />
-      <Metric label="Projected Cost" value={formatCrore(project.projectedCost ?? project.aop)} note={`Spent: ${formatCrore(project.spent)}`} icon={ReceiptText} />
+      <Metric
+        label="Approved Budget (AOP)"
+        value={formatCrore(project.aop)}
+        note={
+          <div className="mt-1 space-y-0.5 text-[10px] text-muted-foreground">
+            <div>{formatCrore(project.awarded)} committed</div>
+            <div>{formatCrore(project.spent)} spent</div>
+          </div>
+        }
+        icon={CircleDollarSign}
+      />
+      <Metric
+        label="Projected Cost"
+        value={formatCrore(project.projectedCost ?? project.aop)}
+        note={
+          commercial.costVariance === 0
+            ? 'On approved budget'
+            : commercial.costVariance > 0
+              ? `+${formatCrore(commercial.costVariance)} variance`
+              : `${formatCrore(commercial.costVariance)} variance`
+        }
+        icon={ReceiptText}
+      />
       <Metric label="Next Milestone" value={formatShortDate(project.nextMilestoneDate)} note={project.nextMilestone} icon={Flag} />
     </section>
 

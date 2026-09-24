@@ -1298,26 +1298,38 @@ function CommercialView() {
         description="Portfolio-level capital position, with a project view of Approved Budget (AOP), Committed Cost, Projected Cost, and Spent Till Date."
       />
       <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Approved Budget (AOP)</p>
-          <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalAop)}</p>
+        <div className="rounded-2xl border border-border bg-card p-5 flex flex-col justify-between">
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Approved Budget (AOP)</p>
+            <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalAop)}</p>
+          </div>
+          <div className="mt-2 space-y-0.5 text-[10px] text-muted-foreground">
+            <div>{formatCrore(portfolio.totalAwarded)} committed</div>
+            <div>{formatCrore(portfolio.totalSpent)} spent</div>
+          </div>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Committed / Awarded</p>
-          <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalAwarded)}</p>
-          <p className="mt-1 text-[10px] text-[#2e7c67]">{formatRatio(portfolio.awardRatePct)} commitment rate</p>
+        <div className="rounded-2xl border border-border bg-card p-5 flex flex-col justify-between">
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Committed / Awarded</p>
+            <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalAwarded)}</p>
+          </div>
+          <p className="mt-2 text-[10px] text-[#2e7c67]">{formatRatio(portfolio.awardRatePct)} commitment rate</p>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Projected Cost</p>
-          <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalProjectedCost)}</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">
+        <div className="rounded-2xl border border-border bg-card p-5 flex flex-col justify-between">
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Projected Cost</p>
+            <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalProjectedCost)}</p>
+          </div>
+          <p className="mt-2 text-[10px] text-muted-foreground">
             Variance: {portfolio.totalProjectedCost >= portfolio.totalAop ? '+' : ''}{formatCrore(portfolio.totalProjectedCost - portfolio.totalAop)}
           </p>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Spent Till Date</p>
-          <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalSpent)}</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">{formatRatio(portfolio.spentRatePct)} of awarded</p>
+        <div className="rounded-2xl border border-border bg-card p-5 flex flex-col justify-between">
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Spent Till Date</p>
+            <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalSpent)}</p>
+          </div>
+          <p className="mt-2 text-[10px] text-muted-foreground">{formatRatio(portfolio.spentRatePct)} of awarded</p>
         </div>
       </div>
 
