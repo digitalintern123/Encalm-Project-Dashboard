@@ -602,12 +602,12 @@ export default function ProjectDetail() {
   const project = projects.find((item) => item.id === projectId);
   if (!project) return <div className="mx-auto max-w-4xl px-5 py-20 text-center"><p className="font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground">Project not found</p><h1 className="mt-3 font-serif text-4xl text-[#173e49]">That project is not in this portfolio.</h1><Link href="/" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground"><ArrowLeft size={14} /> Return to portfolio</Link></div>;
   const health = healthStyles[project.health];
-  const isLead = role === 'lead';
+  const canEdit = role === 'lead' || role === 'hod';
   const activePhase = project.phases.find((phase) => phase.status === 'active')?.name ?? 'planning';
   const saveProgress = (progress: number, comment: string, nextMilestone: string) => {
     const saved = updateProject(project.id, { progress: clampPercent(progress), nextMilestone: nextMilestone.trim() || project.nextMilestone });
     if (!saved) {
-      toast({ variant: 'destructive', title: 'Not saved', description: 'Project edits are restricted to Project Leads.' });
+      toast({ variant: 'destructive', title: 'Not saved', description: 'Project edits require lead or HOD permissions.' });
       return;
     }
     if (comment.trim()) {
@@ -655,7 +655,7 @@ export default function ProjectDetail() {
           </span>
         </div>
 
-        {isLead ? (
+        {canEdit ? (
           <button type="button" onClick={() => setEditing((value) => !value)} className="flex items-center gap-2 rounded-xl bg-[#d6a95d] px-3.5 py-3 text-[10px] font-extrabold text-[#173e49]">
             <Pencil size={14} /> Edit project
           </button>
@@ -665,7 +665,7 @@ export default function ProjectDetail() {
       </div>
     </section>
 
-    {editing && isLead && <EditProjectForm project={project} onCancel={() => setEditing(false)} onSave={(patch) => { updateProject(project.id, patch); setEditing(false); }} />}
+    {editing && canEdit && <EditProjectForm project={project} onCancel={() => setEditing(false)} onSave={(patch) => { updateProject(project.id, patch); setEditing(false); }} />}
 
     <section className="fade-up mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
       <Metric label="Project Status" value={project.status || 'Yet to start'} note={`Stage: ${activePhase}`} icon={Layers3} />
@@ -678,12 +678,12 @@ export default function ProjectDetail() {
     <div className="mt-9 flex gap-1 overflow-x-auto border-b border-border">{tabs.map(([value, label, Icon]) => <button type="button" key={value} onClick={() => setTab(value)} className={`relative flex shrink-0 items-center gap-2 px-3 py-3 text-[11px] font-bold ${tab === value ? 'text-[#173e49]' : 'text-muted-foreground hover:text-foreground'}`}><Icon size={14} />{label}{tab === value && <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-[#d19b35]" />}</button>)}</div>
     <div className="fade-up mt-6">
       {tab === 'overview' && <OverviewPanel project={project} />}
-      {tab === 'progress' && <StageProgressPanel project={project} editable={isLead} onSave={saveProgress} />}
-      {tab === 'timeline' && <StageTimelinePanel project={project} editable={isLead} onSave={(index, patch) => updatePhase(project.id, index, patch)} onAdd={(phase) => addPhase(project.id, phase)} onRemove={(index) => removePhase(project.id, index)} onMove={(index, direction) => movePhase(project.id, index, direction)} />}
-      {tab === 'milestones' && <StageMilestonesPanel project={project} editable={isLead} onAdd={(milestone) => addMilestone(project.id, milestone)} />}
-      {tab === 'commercial' && <CommercialPanel project={project} editable={isLead} onSave={(patch) => updateProject(project.id, patch)} />}
-      {tab === 'issues' && <StageIssuesPanel project={project} editable={isLead} onAdd={(issue) => addIssue(project.id, issue)} onUpdate={(index, patch) => updateIssue(project.id, index, patch)} />}
-      {tab === 'updates' && <StageUpdatesPanel project={project} editable={isLead} onAdd={(update) => addUpdate(project.id, update)} />}
+      {tab === 'progress' && <StageProgressPanel project={project} editable={canEdit} onSave={saveProgress} />}
+      {tab === 'timeline' && <StageTimelinePanel project={project} editable={canEdit} onSave={(index, patch) => updatePhase(project.id, index, patch)} onAdd={(phase) => addPhase(project.id, phase)} onRemove={(index) => removePhase(project.id, index)} onMove={(index, direction) => movePhase(project.id, index, direction)} />}
+      {tab === 'milestones' && <StageMilestonesPanel project={project} editable={canEdit} onAdd={(milestone) => addMilestone(project.id, milestone)} />}
+      {tab === 'commercial' && <CommercialPanel project={project} editable={canEdit} onSave={(patch) => updateProject(project.id, patch)} />}
+      {tab === 'issues' && <StageIssuesPanel project={project} editable={canEdit} onAdd={(issue) => addIssue(project.id, issue)} onUpdate={(index, patch) => updateIssue(project.id, index, patch)} />}
+      {tab === 'updates' && <StageUpdatesPanel project={project} editable={canEdit} onAdd={(update) => addUpdate(project.id, update)} />}
     </div>
   </div>;
 }

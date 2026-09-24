@@ -27,7 +27,7 @@ const demoUserIds: Record<AppRole, string> = {
   lead: DEMO_LEAD_ID,
 };
 
-const EDITOR_ROLES: readonly AppRole[] = ['lead'];
+const EDITOR_ROLES: readonly AppRole[] = ['lead', 'hod'];
 
 type AppStateValue = {
   role: AppRole | null;
@@ -299,7 +299,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     (id: string, phaseIndex: number, patch: Partial<Phase>): boolean => {
       const targetProject = projectState.find((p) => p.id === id);
       const phase = targetProject?.phases[phaseIndex];
-      const phaseId = phase?.id;
+      const phaseId = phase?.id || `${id}-phase-${phaseIndex}`;
 
       const ok = patchById(id, (project) => {
         if (phaseIndex < 0 || phaseIndex >= project.phases.length) return project;
@@ -313,7 +313,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       });
 
       if (ok && phaseId) {
-        api.phases.update(id, phaseId, patch).catch(console.warn);
+        api.phases.update(id, phaseId, patch).then((res) => {
+          if (res?.project) {
+            patchById(id, () => normaliseProject(res.project));
+          }
+        }).catch(console.warn);
       }
       return ok;
     },
@@ -332,7 +336,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }));
 
       if (ok) {
-        api.phases.add(id, newPhase).catch(console.warn);
+        api.phases.add(id, newPhase).then((res) => {
+          if (res?.project) {
+            patchById(id, () => normaliseProject(res.project));
+          }
+        }).catch(console.warn);
       }
       return ok;
     },
@@ -356,7 +364,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       });
 
       if (ok && phaseId) {
-        api.phases.delete(id, phaseId).catch(console.warn);
+        api.phases.delete(id, phaseId).then((res) => {
+          if (res?.project) {
+            patchById(id, () => normaliseProject(res.project));
+          }
+        }).catch(console.warn);
       }
       return ok;
     },
@@ -375,7 +387,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       });
 
       if (ok) {
-        api.phases.move(id, phaseIndex, direction).catch(console.warn);
+        api.phases.move(id, phaseIndex, direction).then((res) => {
+          if (res?.project) {
+            patchById(id, () => normaliseProject(res.project));
+          }
+        }).catch(console.warn);
       }
       return ok;
     },
@@ -384,17 +400,22 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const addProject = useCallback(
     (project: Project): boolean => {
+      const normalised = normaliseProject(project);
       const ok = mutate((projects) => {
         if (projects.some((existing) => existing.id === project.id)) return projects;
-        return [normaliseProject(project), ...projects];
+        return [normalised, ...projects];
       });
 
       if (ok) {
-        api.projects.create(project).catch(console.warn);
+        api.projects.create(normalised).then((res) => {
+          if (res?.project) {
+            patchById(project.id, () => normaliseProject(res.project));
+          }
+        }).catch(console.warn);
       }
       return ok;
     },
-    [mutate],
+    [mutate, patchById],
   );
 
   const addMilestone = useCallback(
@@ -406,7 +427,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }));
 
       if (ok) {
-        api.milestones.add(id, milestone).catch(console.warn);
+        api.milestones.add(id, milestone).then((res) => {
+          if (res?.project) {
+            patchById(id, () => normaliseProject(res.project));
+          }
+        }).catch(console.warn);
       }
       return ok;
     },

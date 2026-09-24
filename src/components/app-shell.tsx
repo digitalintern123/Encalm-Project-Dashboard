@@ -82,6 +82,7 @@ export function AppShell({ children }: AppShellProps) {
     isConnected,
     notifications,
     unreadNotifCount,
+    canEdit,
     markNotificationRead,
     markAllNotificationsRead,
   } = useAppState();
@@ -184,7 +185,7 @@ export function AppShell({ children }: AppShellProps) {
 
         <nav className="mt-9 flex-1 space-y-6 overflow-y-auto">
           {groups.map((group) => {
-            const visible = group.items.filter((item) => !item.leadOnly || isLead);
+            const visible = group.items.filter((item) => !item.leadOnly || canEdit);
             return (
               <div key={group.label}>
                 <p

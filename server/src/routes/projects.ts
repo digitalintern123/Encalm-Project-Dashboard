@@ -110,8 +110,8 @@ router.get('/:id', optionalAuth, (req, res) => {
   return res.json({ project });
 });
 
-// POST create project (Lead role only)
-router.post('/', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+// POST create project (Lead and HOD)
+router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
   const body = req.body;
   if (!body.name || !body.location || !body.category) {
     return res.status(400).json({ error: 'Name, location, and category are required' });
@@ -275,8 +275,8 @@ router.post('/', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest,
   return res.status(201).json({ project: created });
 });
 
-// PATCH update project (Lead role only)
-router.patch('/:id', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+// PATCH update project (Lead and HOD)
+router.patch('/:id', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
   const id = req.params.id as string;
   const project = fetchFullProject(id);
   if (!project) {
@@ -317,8 +317,8 @@ router.patch('/:id', requireAuth, requireRole(['lead']), (req: AuthenticatedRequ
   return res.json({ project: updated });
 });
 
-// DELETE project (Lead role only)
-router.delete('/:id', requireAuth, requireRole(['lead']), (req, res) => {
+// DELETE project (Lead and HOD)
+router.delete('/:id', requireAuth, requireRole(['lead', 'hod']), (req, res) => {
   const id = req.params.id as string;
   const result = db.prepare('DELETE FROM projects WHERE id = ?').run(id);
   if (result.changes === 0) {

@@ -5,8 +5,8 @@ import { fetchFullProject } from './projects.js';
 
 const router = Router({ mergeParams: true });
 
-// POST add milestone (Lead only)
-router.post('/', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+// POST add milestone (Lead and HOD)
+router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const project = fetchFullProject(projectId);
   if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -93,8 +93,8 @@ router.patch('/:milestoneId', requireAuth, (req: AuthenticatedRequest, res) => {
   return res.json({ project: updatedProject });
 });
 
-// DELETE milestone (Lead only)
-router.delete('/:milestoneId', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+// DELETE milestone (Lead and HOD)
+router.delete('/:milestoneId', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const milestoneId = req.params.milestoneId as string;
   db.prepare('DELETE FROM milestones WHERE id = ? AND project_id = ?').run(milestoneId, projectId);

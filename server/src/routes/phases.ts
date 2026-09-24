@@ -6,7 +6,7 @@ import { fetchFullProject } from './projects.js';
 const router = Router({ mergeParams: true });
 
 // POST add phase
-router.post('/', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const project = fetchFullProject(projectId);
   if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -48,7 +48,7 @@ router.post('/', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest,
 });
 
 // PATCH update phase
-router.patch('/:phaseId', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+router.patch('/:phaseId', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const phaseId = req.params.phaseId as string;
   const phase = db.prepare('SELECT * FROM phases WHERE id = ? AND project_id = ?').get(phaseId, projectId) as any;
@@ -95,7 +95,7 @@ router.patch('/:phaseId', requireAuth, requireRole(['lead']), (req: Authenticate
 });
 
 // DELETE remove phase
-router.delete('/:phaseId', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+router.delete('/:phaseId', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const phaseId = req.params.phaseId as string;
   const count = db.prepare('SELECT COUNT(*) as count FROM phases WHERE project_id = ?').get(projectId) as { count: number };
@@ -104,12 +104,22 @@ router.delete('/:phaseId', requireAuth, requireRole(['lead']), (req: Authenticat
   }
 
   db.prepare('DELETE FROM phases WHERE id = ? AND project_id = ?').run(phaseId, projectId);
+
+  // Re-index remaining phases sequentially
+  const remaining = db.prepare('SELECT id FROM phases WHERE project_id = ? ORDER BY order_index ASC').all(projectId) as any[];
+  const reindexTx = db.transaction(() => {
+    remaining.forEach((ph, idx) => {
+      db.prepare('UPDATE phases SET order_index = ? WHERE id = ?').run(idx, ph.id);
+    });
+  });
+  reindexTx();
+
   const updatedProject = fetchFullProject(projectId);
   return res.json({ project: updatedProject });
 });
 
 // POST move / reorder phase
-router.post('/move', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+router.post('/move', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const { phaseIndex, direction } = req.body; // direction is -1 or 1
 
@@ -119,12 +129,13 @@ router.post('/move', requireAuth, requireRole(['lead']), (req: AuthenticatedRequ
   const targetIndex = phaseIndex + direction;
   if (targetIndex < 0 || targetIndex >= phases.length) return res.status(400).json({ error: 'Target index out of bounds' });
 
-  const currentPhase = phases[phaseIndex];
-  const targetPhase = phases[targetIndex];
+  const [moved] = phases.splice(phaseIndex, 1);
+  phases.splice(targetIndex, 0, moved);
 
   const transaction = db.transaction(() => {
-    db.prepare('UPDATE phases SET order_index = ? WHERE id = ?').run(targetIndex, currentPhase.id);
-    db.prepare('UPDATE phases SET order_index = ? WHERE id = ?').run(phaseIndex, targetPhase.id);
+    phases.forEach((ph, idx) => {
+      db.prepare('UPDATE phases SET order_index = ? WHERE id = ?').run(idx, ph.id);
+    });
   });
   transaction();
 
