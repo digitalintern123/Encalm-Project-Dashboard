@@ -142,7 +142,7 @@ export const projectTemplates: ProjectTemplate[] = [
       { name: 'Concept & guest journey', owner: 'Design' },
       { name: 'MEP & airport coordination', owner: 'Projects' },
       { name: 'Procurement & vendor award', owner: 'Sourcing' },
-      { name: 'Build & installation', owner: 'Projects' },
+      { name: 'Execution', owner: 'Projects' },
       { name: 'Operational readiness', owner: 'Operations' },
       { name: 'Soft opening & handover', owner: 'Operations' },
     ],
@@ -223,8 +223,8 @@ const phases = (active: number, activeName: string, owner: string): Phase[] => [
   { name: 'Brief & scope', status: 'complete', progress: 100, owner: 'PMO' },
   { name: 'Design development', status: active === 2 ? 'active' : active > 2 ? 'complete' : 'upcoming', progress: active === 2 ? 68 : active > 2 ? 100 : 0, owner },
   { name: 'Procurement', status: active === 3 ? 'active' : active > 3 ? 'complete' : 'upcoming', progress: active === 3 ? 42 : active > 3 ? 100 : 0, owner: 'Sourcing' },
-  { name: 'Build & install', status: active === 4 ? 'active' : active > 4 ? 'complete' : 'upcoming', progress: active === 4 ? 24 : active > 4 ? 100 : 0, owner: 'Projects' },
-  { name: ['Brief & scope', 'Design development', 'Procurement', 'Build & install'].includes(activeName) ? 'Operational readiness' : activeName, status: active >= 5 ? 'active' : 'upcoming', progress: active >= 5 ? 12 : 0, owner: 'Operations' },
+  { name: 'Execution', status: active === 4 ? 'active' : active > 4 ? 'complete' : 'upcoming', progress: active === 4 ? 24 : active > 4 ? 100 : 0, owner: 'Projects' },
+  { name: ['Brief & scope', 'Design development', 'Procurement', 'Execution'].includes(activeName) ? 'Operational readiness' : activeName, status: active >= 5 ? 'active' : 'upcoming', progress: active >= 5 ? 12 : 0, owner: 'Operations' },
 ];
 
 export const defaultDemoProjects: Project[] = [
@@ -276,7 +276,7 @@ export const defaultDemoProjects: Project[] = [
     nextMilestone: 'Joinery package award',
     nextMilestoneDate: '2025-09-12',
     leadId: 'user-vikram-iyer',
-    phases: phases(3, 'Build & install', 'Design'),
+    phases: phases(3, 'Execution', 'Design'),
     milestones: [
       { title: 'Brief sign-off', date: '2025-05-06', status: 'complete' },
       { title: 'Joinery package award', date: '2025-09-12', status: 'upcoming' },
@@ -379,7 +379,7 @@ export const defaultDemoProjects: Project[] = [
     nextMilestone: 'Furniture mock-up',
     nextMilestoneDate: '2025-09-01',
     leadId: 'user-vikram-iyer',
-    phases: phases(3, 'Build & install', 'Projects'),
+    phases: phases(3, 'Execution', 'Projects'),
     milestones: [
       { title: 'Scope freeze', date: '2025-05-19', status: 'complete' },
       { title: 'Furniture mock-up', date: '2025-09-01', status: 'upcoming' },
@@ -404,7 +404,7 @@ export const defaultDemoProjects: Project[] = [
     nextMilestone: 'Stone sample approval',
     nextMilestoneDate: '2025-08-30',
     leadId: 'user-meera-nair',
-    phases: phases(3, 'Build & install', 'Sourcing'),
+    phases: phases(3, 'Execution', 'Sourcing'),
     milestones: [
       { title: 'Design freeze', date: '2025-04-11', status: 'complete' },
       { title: 'Stone sample approval', date: '2025-08-30', status: 'late' },
@@ -579,7 +579,7 @@ export const defaultDemoProjects: Project[] = [
     nextMilestone: 'Tenant coordination',
     nextMilestoneDate: '2025-09-08',
     leadId: 'user-vikram-iyer',
-    phases: phases(3, 'Build & install', 'Projects'),
+    phases: phases(3, 'Execution', 'Projects'),
     milestones: [
       { title: 'Tenant mix confirmed', date: '2025-05-30', status: 'complete' },
       { title: 'Tenant coordination', date: '2025-09-08', status: 'upcoming' },
@@ -604,7 +604,7 @@ export const defaultDemoProjects: Project[] = [
     nextMilestone: 'Authority NOC',
     nextMilestoneDate: '2025-08-26',
     leadId: 'user-meera-nair',
-    phases: phases(3, 'Build & install', 'PMO'),
+    phases: phases(3, 'Execution', 'PMO'),
     milestones: [
       { title: 'Design freeze', date: '2025-04-09', status: 'complete' },
       { title: 'Authority NOC', date: '2025-08-26', status: 'late' },

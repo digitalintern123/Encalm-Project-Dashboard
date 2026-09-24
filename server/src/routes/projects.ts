@@ -154,7 +154,7 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
       { name: 'Brief & scope', status: 'active', progress: 0, owner: 'PMO' },
       { name: 'Design development', status: 'upcoming', progress: 0, owner: 'Design' },
       { name: 'Procurement', status: 'upcoming', progress: 0, owner: 'Sourcing' },
-      { name: 'Build & install', status: 'upcoming', progress: 0, owner: 'Projects' },
+      { name: 'Execution', status: 'upcoming', progress: 0, owner: 'Projects' },
       { name: 'Handover', status: 'upcoming', progress: 0, owner: 'Operations' },
     ];
     const initialProgress = Number(body.progress) || 0;

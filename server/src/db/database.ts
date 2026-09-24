@@ -162,6 +162,9 @@ export function initDatabase() {
       db.prepare("ALTER TABLE phases ADD COLUMN weight REAL").run();
     }
 
+    // Safe migration of legacy 'Build & install' phase names to 'Execution'
+    db.prepare("UPDATE phases SET name = 'Execution' WHERE name IN ('Build & install', 'Build and install', 'Build & installation')").run();
+
     // Safe migration for users table CHECK constraint to support coordinator role
     const userTableInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get() as { sql?: string } | undefined;
     if (userTableInfo?.sql && !userTableInfo.sql.includes('coordinator')) {

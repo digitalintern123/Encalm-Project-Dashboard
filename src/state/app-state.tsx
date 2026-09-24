@@ -70,11 +70,19 @@ const PROJECTS_KEY = 'encalm-projects-data-v2';
 const ROLE_KEY = 'encalm-projects-role-v1';
 
 function normaliseProject(project: Project): Project {
-  const phases = (project.phases ?? []).map((phase, index) => ({
-    ...phase,
-    id: phase.id ?? `${project.id}-phase-${index}`,
-    weight: typeof phase.weight === 'number' ? phase.weight : undefined,
-  }));
+  const phases = (project.phases ?? []).map((phase, index) => {
+    const rawName = phase.name || '';
+    const normalisedName =
+      rawName === 'Build & install' || rawName === 'Build and install' || rawName === 'Build & installation'
+        ? 'Execution'
+        : rawName;
+    return {
+      ...phase,
+      id: phase.id ?? `${project.id}-phase-${index}`,
+      name: normalisedName,
+      weight: typeof phase.weight === 'number' ? phase.weight : undefined,
+    };
+  });
   const calculatedProgress =
     phases.length > 0
       ? calculateWeightedProgress(phases).overallProgress

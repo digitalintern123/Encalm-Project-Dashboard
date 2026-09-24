@@ -32,7 +32,7 @@ export function calculateProjectStatus(progress: number, phases?: StageLike[]): 
       if (/procure|tender|vendor|contract|sourcing|supplier|award/.test(name)) {
         return 'In Tendering';
       }
-      if (/build|construct|install|fit-out|civil|interior|mep|delivery|integration/.test(name)) {
+      if (/execution|build|construct|install|fit-out|civil|interior|mep|delivery|integration/.test(name)) {
         return 'Under Construction';
       }
       if (/handover|launch|opening|operational|readiness|trial|commissioning/.test(name)) {
