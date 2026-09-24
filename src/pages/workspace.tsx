@@ -7,6 +7,8 @@ import {
   Check,
   CheckCheck,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   CircleDollarSign,
   Clock3,
   Download,
@@ -22,11 +24,11 @@ import {
   ThumbsUp,
   TrendingUp,
 } from 'lucide-react';
-import { categories, formatCrore, healthOptions, locations, projectStatuses, type Category, type Health, type Project, type ProjectStatus } from '@/data/projects';
+import { categories, formatCrore, healthOptions, locations, projectStatuses, issueCategories, type Category, type Health, type Project, type ProjectStatus, type IssueCategory, type IssueStatus, type ProjectIssue } from '@/data/projects';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
 import { CRORE } from '@/data/projects';
-import { formatFullDate, isValidIsoDate, todayIso } from '@/lib/date';
+import { formatFullDate, isValidIsoDate, todayIso, todayLabel } from '@/lib/date';
 import { initialsOf, leadName } from '@/data/users';
 import { formatRatio, getCommercialSummary, getPortfolioCommercialSummary } from '@/lib/calculations';
 
@@ -540,22 +542,141 @@ function MilestonesView() {
 }
 
 function IssuesView() {
-  const { projects, role, canEdit, updateIssue } = useAppState();
+  const { projects, canEdit, updateIssue, addIssue } = useAppState();
   const { toast } = useToast();
+  const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'All' | 'Critical' | 'Open' | 'Resolved'>('All');
+  const [scope, setScope] = useState<'with-issues' | 'all'>('with-issues');
+  const [userToggled, setUserToggled] = useState<Record<string, boolean>>({});
+  const [addingForProjectId, setAddingForProjectId] = useState<string | null>(null);
 
-  const allIssues = useMemo(() => {
-    return projects.flatMap((project) =>
-      project.issues.map((issue, issueIndex) => ({ ...issue, project, issueIndex }))
-    );
+  const [newDraft, setNewDraft] = useState({
+    title: '',
+    detail: '',
+    category: 'Design' as IssueCategory,
+    severity: 'Medium' as 'High' | 'Medium' | 'Low',
+    stage: '',
+    owner: '',
+    dueDate: '',
+    issueAriseDate: todayLabel(),
+    targetClosureDate: '',
+    impactCost: '',
+    impactSchedule: '',
+    impactScope: '',
+    action: '',
+  });
+
+  const setDraftField = (key: keyof typeof newDraft, value: string) =>
+    setNewDraft((cur) => ({ ...cur, [key]: value }));
+
+  // Aggregate and filter issues per project
+  const projectIssueData = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    return projects.map((project) => {
+      const allProjectIssues = project.issues.map((issue, issueIndex) => ({
+        ...issue,
+        project,
+        issueIndex,
+      }));
+
+      const filteredIssues = allProjectIssues.filter((issue) => {
+        if (filter === 'Critical' && issue.severity !== 'High') return false;
+        if (filter === 'Open' && (issue.status === 'Resolved' || issue.status === 'Closed')) return false;
+        if (filter === 'Resolved' && issue.status !== 'Resolved' && issue.status !== 'Closed') return false;
+
+        if (term) {
+          const matchProject = `${project.name} ${project.code} ${project.location} ${leadName(project.leadId)}`.toLowerCase().includes(term);
+          const matchIssue = `${issue.title} ${issue.detail} ${issue.owner} ${issue.category ?? ''} ${issue.stage ?? ''}`.toLowerCase().includes(term);
+          if (!matchProject && !matchIssue) return false;
+        }
+
+        return true;
+      });
+
+      const totalProjectIssuesCount = project.issues.length;
+      const criticalCount = project.issues.filter((i) => i.severity === 'High').length;
+      const openCount = project.issues.filter((i) => i.status !== 'Resolved' && i.status !== 'Closed').length;
+      const resolvedCount = project.issues.filter((i) => i.status === 'Resolved' || i.status === 'Closed').length;
+
+      const projectMatchesSearch = term
+        ? `${project.name} ${project.code} ${project.location} ${leadName(project.leadId)}`.toLowerCase().includes(term)
+        : true;
+
+      return {
+        project,
+        allProjectIssues,
+        filteredIssues,
+        totalProjectIssuesCount,
+        criticalCount,
+        openCount,
+        resolvedCount,
+        projectMatchesSearch,
+      };
+    });
+  }, [projects, search, filter]);
+
+  // Portfolio-level summary counts
+  const portfolioCounts = useMemo(() => {
+    let total = 0;
+    let critical = 0;
+    let open = 0;
+    let resolved = 0;
+    let projectsWithIssues = 0;
+
+    for (const p of projects) {
+      if (p.issues.length > 0) projectsWithIssues++;
+      for (const i of p.issues) {
+        total++;
+        if (i.severity === 'High') critical++;
+        if (i.status !== 'Resolved' && i.status !== 'Closed') open++;
+        if (i.status === 'Resolved' || i.status === 'Closed') resolved++;
+      }
+    }
+    return { total, critical, open, resolved, projectsWithIssues };
   }, [projects]);
 
-  const filtered = useMemo(() => {
-    if (filter === 'Critical') return allIssues.filter((i) => i.severity === 'High');
-    if (filter === 'Open') return allIssues.filter((i) => i.status !== 'Resolved' && i.status !== 'Closed');
-    if (filter === 'Resolved') return allIssues.filter((i) => i.status === 'Resolved' || i.status === 'Closed');
-    return allIssues;
-  }, [allIssues, filter]);
+  // Filter project cards to display
+  const displayedProjects = useMemo(() => {
+    return projectIssueData.filter((item) => {
+      if (search.trim()) {
+        return item.projectMatchesSearch || item.filteredIssues.length > 0;
+      }
+      if (scope === 'with-issues') {
+        return item.filteredIssues.length > 0;
+      }
+      return true;
+    });
+  }, [projectIssueData, search, scope]);
+
+  // Determine if a project is expanded
+  const isProjectExpanded = (projectId: string, hasMatchingIssues: boolean) => {
+    if (projectId in userToggled) {
+      return !!userToggled[projectId];
+    }
+    // Default open if project has matching issues
+    return hasMatchingIssues;
+  };
+
+  const toggleProject = (projectId: string, currentState: boolean) => {
+    setUserToggled((prev) => ({ ...prev, [projectId]: !currentState }));
+  };
+
+  const expandAll = () => {
+    const next: Record<string, boolean> = {};
+    for (const item of displayedProjects) {
+      next[item.project.id] = true;
+    }
+    setUserToggled(next);
+  };
+
+  const collapseAll = () => {
+    const next: Record<string, boolean> = {};
+    for (const item of displayedProjects) {
+      next[item.project.id] = false;
+    }
+    setUserToggled(next);
+  };
 
   const handleStatusChange = (projectId: string, issueIndex: number, newStatus: string) => {
     updateIssue(projectId, issueIndex, { status: newStatus as any });
@@ -565,176 +686,600 @@ function IssuesView() {
     });
   };
 
-  const highIssues = filtered.filter((i) => i.severity === 'High');
-  const normalIssues = filtered.filter((i) => i.severity !== 'High');
+  const handleOpenAddForm = (project: Project) => {
+    setAddingForProjectId(project.id);
+    setUserToggled((prev) => ({ ...prev, [project.id]: true }));
+    setNewDraft({
+      title: '',
+      detail: '',
+      category: 'Design',
+      severity: 'Medium',
+      stage: project.phases.find((ph) => ph.status === 'active')?.name ?? project.phases[0]?.name ?? '',
+      owner: '',
+      dueDate: '',
+      issueAriseDate: todayLabel(),
+      targetClosureDate: '',
+      impactCost: '',
+      impactSchedule: '',
+      impactScope: '',
+      action: '',
+    });
+  };
+
+  const handleSaveNewIssue = (projectId: string) => {
+    if (!newDraft.title.trim() || !newDraft.detail.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Required fields missing',
+        description: 'Please provide both an issue title and description.',
+      });
+      return;
+    }
+
+    addIssue(projectId, {
+      ...newDraft,
+      owner: newDraft.owner.trim() || 'Project Lead',
+      status: 'Open',
+      dateRaised: newDraft.issueAriseDate || todayLabel(),
+      issueAriseDate: newDraft.issueAriseDate || todayLabel(),
+      dueDate: newDraft.targetClosureDate || newDraft.dueDate,
+      targetClosureDate: newDraft.targetClosureDate || newDraft.dueDate,
+    });
+
+    setAddingForProjectId(null);
+    toast({
+      title: 'Issue Logged',
+      description: `Added "${newDraft.title}" to project register.`,
+    });
+  };
 
   return (
     <>
       <PageHeader
-        eyebrow="Execution"
+        eyebrow="Execution Register"
         title="Issues & risks"
-        description="A focused register of the decisions, blockers, and risks that can change project outcomes."
-        action={
-          canEdit ? (
-            <Link
-              href="/my-projects"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#d6a95d] px-4 py-3 text-[11px] font-extrabold text-[#173e49] hover:bg-[#e2bd73]"
-            >
-              <Plus size={15} /> Log an issue
-            </Link>
-          ) : undefined
-        }
+        description="A project-centric register of the blockers, decisions, and risks that can change project outcomes."
       />
 
-      {/* Filter Tabs */}
-      <div className="mt-8 flex flex-wrap gap-2">
-        {(['All', 'Critical', 'Open', 'Resolved'] as const).map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setFilter(tab)}
-            className={`rounded-xl px-3.5 py-2 text-[11px] font-bold transition ${
-              filter === tab
-                ? 'bg-[#173e49] text-white'
-                : 'border border-border bg-card text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            {tab}
-            <span className="ml-1.5 font-mono text-[9px] opacity-70">
-              (
-              {tab === 'All'
-                ? allIssues.length
-                : tab === 'Critical'
-                  ? allIssues.filter((i) => i.severity === 'High').length
-                  : tab === 'Open'
-                    ? allIssues.filter((i) => i.status !== 'Resolved' && i.status !== 'Closed').length
-                    : allIssues.filter((i) => i.status === 'Resolved' || i.status === 'Closed').length}
-              )
-            </span>
-          </button>
-        ))}
+      {/* Filter and Control Bar */}
+      <div className="mt-8 space-y-4">
+        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center">
+          <label className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-background px-3 text-muted-foreground">
+            <Search size={15} />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by project, code, lead, issue title or owner..."
+              className="min-w-0 flex-1 bg-transparent text-[11px] outline-none"
+            />
+          </label>
+
+          {/* Project View Scope Toggle */}
+          <div className="flex rounded-xl border border-border bg-background p-1 text-[11px] font-bold">
+            <button
+              type="button"
+              onClick={() => setScope('with-issues')}
+              className={`rounded-lg px-3 py-1.5 transition ${
+                scope === 'with-issues' ? 'bg-[#173e49] text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Projects with issues ({portfolioCounts.projectsWithIssues})
+            </button>
+            <button
+              type="button"
+              onClick={() => setScope('all')}
+              className={`rounded-lg px-3 py-1.5 transition ${
+                scope === 'all' ? 'bg-[#173e49] text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              All projects ({projects.length})
+            </button>
+          </div>
+        </div>
+
+        {/* Issue Status Tabs & Quick Expand/Collapse Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-2">
+            {(['All', 'Critical', 'Open', 'Resolved'] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setFilter(tab)}
+                className={`rounded-xl px-3.5 py-2 text-[11px] font-bold transition ${
+                  filter === tab
+                    ? 'bg-[#173e49] text-white'
+                    : 'border border-border bg-card text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                {tab === 'Critical' ? 'Critical (High)' : tab}
+                <span className="ml-1.5 font-mono text-[9px] opacity-70">
+                  (
+                  {tab === 'All'
+                    ? portfolioCounts.total
+                    : tab === 'Critical'
+                      ? portfolioCounts.critical
+                      : tab === 'Open'
+                        ? portfolioCounts.open
+                        : portfolioCounts.resolved}
+                  )
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
+            <button
+              type="button"
+              onClick={expandAll}
+              className="rounded-lg border border-border bg-card px-2.5 py-1.5 hover:bg-muted hover:text-foreground"
+            >
+              Expand all
+            </button>
+            <button
+              type="button"
+              onClick={collapseAll}
+              className="rounded-lg border border-border bg-card px-2.5 py-1.5 hover:bg-muted hover:text-foreground"
+            >
+              Collapse all
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
-        {/* Critical issues */}
-        <section className="rounded-2xl border border-[#f0c8c2] bg-[#fff5f2] p-5 md:p-6">
-          <div className="flex items-center gap-3">
-            <span className="grid size-9 place-items-center rounded-xl bg-[#fae5e1] text-[#b2473d]">
-              <ShieldAlert size={16} />
-            </span>
-            <div>
-              <p className="font-mono text-[9px] uppercase tracking-[.14em] text-[#b2473d]">Critical issues</p>
-              <h2 className="mt-1 text-[18px] font-extrabold">Needs a decision</h2>
-            </div>
+      {/* Primary Project List with Issues Sub-Sections */}
+      <div className="mt-7 space-y-5">
+        {displayedProjects.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border p-12 text-center">
+            <ShieldAlert size={28} className="mx-auto text-muted-foreground/60" />
+            <h3 className="mt-3 text-[14px] font-extrabold text-foreground">No projects match this issues filter</h3>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Try switching to "All projects" or choosing a different filter tab above.
+            </p>
           </div>
+        ) : (
+          displayedProjects.map((item) => {
+            const { project, filteredIssues } = item;
+            const expanded = isProjectExpanded(project.id, filteredIssues.length > 0);
+            const highSeverityIssues = filteredIssues.filter((i) => i.severity === 'High');
+            const standardIssues = filteredIssues.filter((i) => i.severity !== 'High');
+            const isAdding = addingForProjectId === project.id;
 
-          <div className="mt-5 space-y-3">
-            {highIssues.length === 0 ? (
-              <p className="rounded-xl border border-[#f0c8c2] bg-white/70 p-4 text-[11px] text-muted-foreground">
-                No high-severity issues matching this view.
-              </p>
-            ) : (
-              highIssues.map((issue) => (
+            return (
+              <div
+                key={project.id}
+                className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:border-[#d9c585]"
+              >
+                {/* Project Header Bar */}
                 <div
-                  key={`${issue.project.id}-${issue.id ?? issue.title}`}
-                  className="rounded-xl border border-[#f0c8c2] bg-white/80 p-4"
+                  className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center bg-card hover:bg-[#fcf5e5]/50 transition cursor-pointer select-none"
+                  onClick={() => toggleProject(project.id, expanded)}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <Link
-                      href={`/project/${issue.project.id}`}
-                      className="text-[12px] font-bold hover:text-[#b2473d] hover:underline"
+                  <div className="flex items-start gap-3">
+                    <button
+                      type="button"
+                      aria-label={expanded ? 'Collapse project' : 'Expand project'}
+                      className="mt-1 grid size-7 place-items-center rounded-lg border border-border bg-background text-muted-foreground"
                     >
-                      {issue.title}
-                    </Link>
-                    <span className="font-mono text-[9px] uppercase font-bold text-[#b2473d]">High</span>
+                      {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                    </button>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/project/${project.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[14px] font-extrabold text-foreground hover:text-[#2e7c67] hover:underline"
+                        >
+                          {project.name}
+                        </Link>
+                        <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${statusTone[project.status || 'Yet to start']}`}>
+                          {project.status || 'Yet to start'}
+                        </span>
+                        <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${healthTone[project.health]}`}>
+                          {project.health}
+                        </span>
+                      </div>
+                      <p className="mt-1 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">
+                        {project.code} · {project.location} · {project.category} · Lead: {leadName(project.leadId)}
+                      </p>
+                    </div>
                   </div>
-                  <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{issue.detail}</p>
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-2 font-mono text-[9px]">
-                    <span className="uppercase tracking-[.1em] text-[#b2473d]">
-                      {issue.project.name} · Owner: {issue.owner}
-                    </span>
-                    {canEdit ? (
-                      <select
-                        value={issue.status || 'Open'}
-                        onChange={(e) => handleStatusChange(issue.project.id, issue.issueIndex, e.target.value)}
-                        className="rounded-lg border border-border bg-white px-2 py-0.5 text-[10px] font-bold"
+
+                  {/* Right Header Metrics & Actions */}
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                      {item.criticalCount > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[#fae5e1] px-2.5 py-1 font-bold text-[#b2473d]">
+                          <ShieldAlert size={11} /> {item.criticalCount} Critical
+                        </span>
+                      )}
+                      {item.openCount > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[#f8edcf] px-2.5 py-1 font-bold text-[#9a711f]">
+                          <AlertTriangle size={11} /> {item.openCount} Open
+                        </span>
+                      )}
+                      <span className="rounded-full bg-[#eef0ed] px-2.5 py-1 font-bold text-muted-foreground">
+                        {item.totalProjectIssuesCount} {item.totalProjectIssuesCount === 1 ? 'issue' : 'issues'}
+                      </span>
+                    </div>
+
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenAddForm(project)}
+                        className="inline-flex items-center gap-1 rounded-xl bg-[#d6a95d] px-3 py-1.5 text-[10px] font-bold text-[#173e49] hover:bg-[#e2bd73]"
                       >
-                        <option value="Open">Open</option>
-                        <option value="Under review">Under review</option>
-                        <option value="Action in progress">Action in progress</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Closed">Closed</option>
-                      </select>
-                    ) : (
-                      <span className="font-bold text-muted-foreground">{issue.status || 'Open'}</span>
+                        <Plus size={12} /> Log issue
+                      </button>
                     )}
+
+                    <Link
+                      href={`/project/${project.id}`}
+                      className="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-muted-foreground hover:text-foreground"
+                    >
+                      View project <ArrowUpRight size={12} />
+                    </Link>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        </section>
 
-        {/* Normal issues */}
-        <section className="rounded-2xl border border-[#eadcb1] bg-[#fbf1d8] p-5 md:p-6">
-          <div className="flex items-center gap-3">
-            <span className="grid size-9 place-items-center rounded-xl bg-[#f8edcf] text-[#9a711f]">
-              <AlertTriangle size={16} />
-            </span>
-            <div>
-              <p className="font-mono text-[9px] uppercase tracking-[.14em] text-[#9a711f]">Open issues & risks</p>
-              <h2 className="mt-1 text-[18px] font-extrabold">Track to closure</h2>
-            </div>
-          </div>
-
-          <div className="mt-5 space-y-3">
-            {normalIssues.length === 0 ? (
-              <p className="rounded-xl border border-[#eadcb1] bg-white/50 p-4 text-[11px] text-muted-foreground">
-                No standard issues recorded.
-              </p>
-            ) : (
-              normalIssues.map((issue) => (
-                <div
-                  key={`${issue.project.id}-${issue.id ?? issue.title}`}
-                  className="rounded-xl border border-[#eadcb1] bg-white/70 p-4"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <Link
-                      href={`/project/${issue.project.id}`}
-                      className="text-[12px] font-bold hover:text-[#9a711f] hover:underline"
-                    >
-                      {issue.title}
-                    </Link>
-                    <span className="font-mono text-[9px] uppercase font-bold text-[#9a711f]">
-                      {issue.severity || 'Medium'}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{issue.detail}</p>
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-2 font-mono text-[9px]">
-                    <span className="uppercase tracking-[.1em] text-[#9a711f]">
-                      {issue.project.name} · Owner: {issue.owner}
-                    </span>
-                    {canEdit ? (
-                      <select
-                        value={issue.status || 'Open'}
-                        onChange={(e) => handleStatusChange(issue.project.id, issue.issueIndex, e.target.value)}
-                        className="rounded-lg border border-border bg-white px-2 py-0.5 text-[10px] font-bold"
+                {/* Sub-Section: Issues and Risks within Project */}
+                {expanded && (
+                  <div className="border-t border-border/70 bg-[#fbfaf6]/70 p-5 md:p-6">
+                    {/* Inline Form to Add an Issue to this specific Project */}
+                    {isAdding && (
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleSaveNewIssue(project.id);
+                        }}
+                        className="mb-6 space-y-3 rounded-2xl border border-[#eadcb1] bg-[#fff8e9] p-5 shadow-sm"
                       >
-                        <option value="Open">Open</option>
-                        <option value="Under review">Under review</option>
-                        <option value="Action in progress">Action in progress</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Closed">Closed</option>
-                      </select>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[12px] font-extrabold text-[#9a711f]">Log issue for {project.name}</p>
+                          <button
+                            type="button"
+                            onClick={() => setAddingForProjectId(null)}
+                            className="text-[11px] text-muted-foreground hover:text-foreground"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <input
+                            required
+                            value={newDraft.title}
+                            onChange={(e) => setDraftField('title', e.target.value)}
+                            placeholder="Issue or risk title *"
+                            className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+                          />
+                          <select
+                            value={newDraft.category}
+                            onChange={(e) => setDraftField('category', e.target.value)}
+                            className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+                          >
+                            {issueCategories.map((cat) => (
+                              <option key={cat} value={cat}>
+                                Category: {cat}
+                              </option>
+                            ))}
+                          </select>
+                          <select
+                            value={newDraft.stage}
+                            onChange={(e) => setDraftField('stage', e.target.value)}
+                            className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+                          >
+                            {project.phases.map((ph, idx) => (
+                              <option key={`${ph.name}-${idx}`} value={ph.name}>
+                                Stage: {ph.name}
+                              </option>
+                            ))}
+                          </select>
+                          <select
+                            value={newDraft.severity}
+                            onChange={(e) => setDraftField('severity', e.target.value)}
+                            className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+                          >
+                            <option value="High">Severity: High (Critical decision)</option>
+                            <option value="Medium">Severity: Medium (Standard risk)</option>
+                            <option value="Low">Severity: Low (Minor tracking)</option>
+                          </select>
+                          <input
+                            value={newDraft.owner}
+                            onChange={(e) => setDraftField('owner', e.target.value)}
+                            placeholder="Owner / Responsible person"
+                            className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <label className="block">
+                              <span className="mb-1 block font-mono text-[9px] uppercase text-muted-foreground">Arise date</span>
+                              <input
+                                type="date"
+                                value={newDraft.issueAriseDate}
+                                onChange={(e) => setDraftField('issueAriseDate', e.target.value)}
+                                className="h-10 w-full rounded-lg border border-border bg-white px-2 text-[10px]"
+                              />
+                            </label>
+                            <label className="block">
+                              <span className="mb-1 block font-mono text-[9px] uppercase text-muted-foreground">Target closure</span>
+                              <input
+                                type="date"
+                                value={newDraft.targetClosureDate}
+                                onChange={(e) => setDraftField('targetClosureDate', e.target.value)}
+                                className="h-10 w-full rounded-lg border border-border bg-white px-2 text-[10px]"
+                              />
+                            </label>
+                          </div>
+                        </div>
+
+                        <textarea
+                          required
+                          value={newDraft.detail}
+                          onChange={(e) => setDraftField('detail', e.target.value)}
+                          placeholder="Describe the issue, root cause, and current situation *"
+                          rows={2}
+                          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-[11px]"
+                        />
+
+                        <div className="grid gap-3 md:grid-cols-4">
+                          <input
+                            value={newDraft.impactSchedule}
+                            onChange={(e) => setDraftField('impactSchedule', e.target.value)}
+                            placeholder="Schedule impact (e.g. +7 days)"
+                            className="h-9 rounded-lg border border-border bg-white px-2 text-[10px]"
+                          />
+                          <input
+                            value={newDraft.impactCost}
+                            onChange={(e) => setDraftField('impactCost', e.target.value)}
+                            placeholder="Cost impact (e.g. ₹5 Lakhs)"
+                            className="h-9 rounded-lg border border-border bg-white px-2 text-[10px]"
+                          />
+                          <input
+                            value={newDraft.impactScope}
+                            onChange={(e) => setDraftField('impactScope', e.target.value)}
+                            placeholder="Scope impact"
+                            className="h-9 rounded-lg border border-border bg-white px-2 text-[10px]"
+                          />
+                          <input
+                            value={newDraft.action}
+                            onChange={(e) => setDraftField('action', e.target.value)}
+                            placeholder="Immediate next action"
+                            className="h-9 rounded-lg border border-border bg-white px-2 text-[10px]"
+                          />
+                        </div>
+
+                        <div className="flex gap-2 pt-1">
+                          <button type="submit" className="rounded-lg bg-[#173e49] px-4 py-2 text-[10px] font-bold text-white">
+                            Save issue
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAddingForProjectId(null)}
+                            className="rounded-lg border border-border bg-white px-3 py-2 text-[10px] font-bold"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    )}
+
+                    {filteredIssues.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-border bg-white/70 p-6 text-center">
+                        <p className="text-[11px] text-muted-foreground">
+                          No issues or risks matching "{filter}" for {project.name}.
+                        </p>
+                        {canEdit && !isAdding && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAddForm(project)}
+                            className="mt-3 inline-flex items-center gap-1 rounded-lg border border-[#eadcb1] bg-[#fff8e9] px-3 py-1.5 text-[10px] font-bold text-[#9a711f]"
+                          >
+                            <Plus size={11} /> Log an issue for this project
+                          </button>
+                        )}
+                      </div>
                     ) : (
-                      <span className="font-bold text-muted-foreground">{issue.status || 'Open'}</span>
+                      <div className="space-y-6">
+                        {/* Sub-Section 1: Critical Issues (High Severity) */}
+                        {highSeverityIssues.length > 0 && (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <span className="grid size-6 place-items-center rounded-lg bg-[#fae5e1] text-[#b2473d]">
+                                <ShieldAlert size={14} />
+                              </span>
+                              <h4 className="text-[12px] font-extrabold text-[#b2473d] uppercase tracking-[.06em]">
+                                Critical Issues & Blockers ({highSeverityIssues.length})
+                              </h4>
+                            </div>
+
+                            <div className="grid gap-3 md:grid-cols-2">
+                              {highSeverityIssues.map((issue) => (
+                                <div
+                                  key={`${project.id}-${issue.id ?? issue.title}-${issue.issueIndex}`}
+                                  className="rounded-xl border border-[#f0c8c2] bg-[#fff5f2] p-4 shadow-sm"
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                      <div className="flex flex-wrap items-center gap-1.5">
+                                        <span className="rounded-full bg-[#fae5e1] px-2 py-0.5 font-mono text-[8px] uppercase font-bold text-[#b2473d]">
+                                          High Severity
+                                        </span>
+                                        {issue.category && (
+                                          <span className="rounded-full bg-white/80 px-2 py-0.5 font-mono text-[8px] uppercase tracking-[.08em] text-muted-foreground border border-[#f0c8c2]/50">
+                                            {issue.category}
+                                          </span>
+                                        )}
+                                        {issue.stage && (
+                                          <span className="font-mono text-[9px] text-muted-foreground">
+                                            Stage: <strong className="text-foreground">{issue.stage}</strong>
+                                          </span>
+                                        )}
+                                      </div>
+                                      <h5 className="mt-2 text-[12px] font-bold text-foreground">{issue.title}</h5>
+                                    </div>
+                                  </div>
+
+                                  <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{issue.detail}</p>
+
+                                  {(issue.impactSchedule || issue.impactCost || issue.impactScope || issue.action) && (
+                                    <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#f0c8c2]/60 pt-2 text-[10px]">
+                                      {issue.impactSchedule && (
+                                        <span className="rounded-md bg-white/90 px-2 py-0.5 font-mono text-[#b2473d] border border-[#f0c8c2]/60">
+                                          Schedule: {issue.impactSchedule}
+                                        </span>
+                                      )}
+                                      {issue.impactCost && (
+                                        <span className="rounded-md bg-white/90 px-2 py-0.5 font-mono text-[#b2473d] border border-[#f0c8c2]/60">
+                                          Cost: {issue.impactCost}
+                                        </span>
+                                      )}
+                                      {issue.action && (
+                                        <span className="rounded-md bg-white/90 px-2 py-0.5 text-muted-foreground border border-border">
+                                          Action: <strong className="text-foreground">{issue.action}</strong>
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#f0c8c2]/60 pt-2.5 font-mono text-[9px]">
+                                    <div className="text-muted-foreground">
+                                      <span>Owner: <strong className="text-foreground">{issue.owner || 'Unassigned'}</strong></span>
+                                      {(issue.targetClosureDate || issue.dueDate) && (
+                                        <span className="ml-2">
+                                          Target: <strong className="text-foreground">{issue.targetClosureDate || issue.dueDate}</strong>
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {canEdit ? (
+                                      <select
+                                        value={issue.status || 'Open'}
+                                        onChange={(e) => handleStatusChange(project.id, issue.issueIndex, e.target.value)}
+                                        className="rounded-lg border border-border bg-white px-2 py-1 text-[10px] font-bold outline-none"
+                                      >
+                                        <option value="Open">Open</option>
+                                        <option value="Under review">Under review</option>
+                                        <option value="Action in progress">Action in progress</option>
+                                        <option value="Resolved">Resolved</option>
+                                        <option value="Closed">Closed</option>
+                                      </select>
+                                    ) : (
+                                      <span className="rounded-full bg-white px-2 py-0.5 font-bold text-foreground">
+                                        {issue.status || 'Open'}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Sub-Section 2: Standard Issues & Risks (Medium / Low Severity) */}
+                        {standardIssues.length > 0 && (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <span className="grid size-6 place-items-center rounded-lg bg-[#f8edcf] text-[#9a711f]">
+                                <AlertTriangle size={14} />
+                              </span>
+                              <h4 className="text-[12px] font-extrabold text-[#9a711f] uppercase tracking-[.06em]">
+                                Standard Issues & Risks ({standardIssues.length})
+                              </h4>
+                            </div>
+
+                            <div className="grid gap-3 md:grid-cols-2">
+                              {standardIssues.map((issue) => (
+                                <div
+                                  key={`${project.id}-${issue.id ?? issue.title}-${issue.issueIndex}`}
+                                  className="rounded-xl border border-border bg-white p-4 shadow-sm hover:border-[#eadcb1] transition"
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                      <div className="flex flex-wrap items-center gap-1.5">
+                                        <span
+                                          className={`rounded-full px-2 py-0.5 font-mono text-[8px] uppercase font-bold ${
+                                            issue.severity === 'Medium' ? 'bg-[#f8edcf] text-[#9a711f]' : 'bg-[#eef0ed] text-muted-foreground'
+                                          }`}
+                                        >
+                                          {issue.severity || 'Medium'} Severity
+                                        </span>
+                                        {issue.category && (
+                                          <span className="rounded-full bg-[#f8f6f0] px-2 py-0.5 font-mono text-[8px] uppercase tracking-[.08em] text-muted-foreground border border-border/70">
+                                            {issue.category}
+                                          </span>
+                                        )}
+                                        {issue.stage && (
+                                          <span className="font-mono text-[9px] text-muted-foreground">
+                                            Stage: <strong className="text-foreground">{issue.stage}</strong>
+                                          </span>
+                                        )}
+                                      </div>
+                                      <h5 className="mt-2 text-[12px] font-bold text-foreground">{issue.title}</h5>
+                                    </div>
+                                  </div>
+
+                                  <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{issue.detail}</p>
+
+                                  {(issue.impactSchedule || issue.impactCost || issue.impactScope || issue.action) && (
+                                    <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border/60 pt-2 text-[10px]">
+                                      {issue.impactSchedule && (
+                                        <span className="rounded-md bg-[#f8f6f0] px-2 py-0.5 font-mono text-[#9a711f] border border-border/70">
+                                          Schedule: {issue.impactSchedule}
+                                        </span>
+                                      )}
+                                      {issue.impactCost && (
+                                        <span className="rounded-md bg-[#f8f6f0] px-2 py-0.5 font-mono text-[#9a711f] border border-border/70">
+                                          Cost: {issue.impactCost}
+                                        </span>
+                                      )}
+                                      {issue.action && (
+                                        <span className="rounded-md bg-[#f8f6f0] px-2 py-0.5 text-muted-foreground border border-border/70">
+                                          Action: <strong className="text-foreground">{issue.action}</strong>
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-2.5 font-mono text-[9px]">
+                                    <div className="text-muted-foreground">
+                                      <span>Owner: <strong className="text-foreground">{issue.owner || 'Unassigned'}</strong></span>
+                                      {(issue.targetClosureDate || issue.dueDate) && (
+                                        <span className="ml-2">
+                                          Target: <strong className="text-foreground">{issue.targetClosureDate || issue.dueDate}</strong>
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {canEdit ? (
+                                      <select
+                                        value={issue.status || 'Open'}
+                                        onChange={(e) => handleStatusChange(project.id, issue.issueIndex, e.target.value)}
+                                        className="rounded-lg border border-border bg-white px-2 py-1 text-[10px] font-bold outline-none"
+                                      >
+                                        <option value="Open">Open</option>
+                                        <option value="Under review">Under review</option>
+                                        <option value="Action in progress">Action in progress</option>
+                                        <option value="Resolved">Resolved</option>
+                                        <option value="Closed">Closed</option>
+                                      </select>
+                                    ) : (
+                                      <span className="rounded-full bg-[#f8f6f0] px-2 py-0.5 font-bold text-foreground">
+                                        {issue.status || 'Open'}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </>
   );
