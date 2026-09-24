@@ -19,6 +19,7 @@ import {
   Pencil,
   Plus,
   ReceiptText,
+  Scale,
   ShieldAlert,
   Target,
   ThumbsDown,
@@ -30,7 +31,7 @@ import { CRORE, formatCrore, formatShortDate, getProjectTemplate, issueCategorie
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullDate, isValidIsoDate, todayLabel } from '@/lib/date';
-import { getCommercialSummary, getProgressVariance, formatRatio } from '@/lib/calculations';
+import { getCommercialSummary, getProgressVariance, formatRatio, calculateWeightedProgress } from '@/lib/calculations';
 import { initialsOf, leadName } from '@/data/users';
 import { statusTone } from './workspace';
 
@@ -71,44 +72,671 @@ const issueStatuses: IssueStatus[] = ['Open', 'Under review', 'Action in progres
 
 function StageProgressPanel({ project, editable, onSave }: { project: Project; editable: boolean; onSave: (progress: number, comment: string, milestone: string) => void }) {
   const [editing, setEditing] = useState(false);
-  const [progress, setProgress] = useState(project.progress);
   const [comment, setComment] = useState('');
   const [milestone, setMilestone] = useState(project.nextMilestone);
   const activePhase = project.phases.find((phase) => phase.status === 'active');
-  return <div className="grid gap-5 xl:grid-cols-[1.1fr_.9fr]">
-    <DetailCard title="Project progress" eyebrow="Delivery path" icon={ClipboardCheck}>
-      <div className="mt-6 grid gap-7 md:grid-cols-[140px_1fr] md:items-center"><div className="flex flex-col items-center gap-3"><ProgressRing progress={editing ? progress : project.progress} /><span className="text-center text-[10px] leading-4 text-muted-foreground">Planned opening<br /><strong className="text-foreground">{project.targetLabel}</strong></span></div><PhaseList project={project} /></div>
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-5">{(() => {
-        // Planned progress is calculated from the project's own start/target
-        // dates (see getProgressVariance) — never a fixed offset from actual.
-        // When there isn't enough schedule data, the honest answer is
-        // "unavailable", not an invented number.
-        const { planned, variance } = getProgressVariance(project);
-        return <div className="flex flex-wrap gap-5 text-[11px]">
-          <span>Planned <strong>{planned === null ? 'Unavailable' : `${planned}%`}</strong></span>
-          <span>Actual <strong>{project.progress}%</strong></span>
-          <span className={variance !== null && variance < 0 ? 'text-[#b2473d]' : 'text-[#2e7c67]'}>Variance <strong>{variance === null ? '—' : `${variance > 0 ? '+' : ''}${variance}%`}</strong></span>
-        </div>;
-      })()}{editable && !editing && <button type="button" onClick={() => setEditing(true)} className="rounded-xl bg-[#d6a95d] px-3 py-2 text-[10px] font-extrabold text-[#173e49]">Update overall progress</button>}</div>
-      {editing && <form onSubmit={(event) => { event.preventDefault(); onSave(progress, comment, milestone); setEditing(false); }} className="mt-5 space-y-4 rounded-2xl border border-[#eadcb1] bg-[#fff8e9] p-4"><div className="flex items-center justify-between"><p className="text-[12px] font-extrabold">Update overall progress</p><button type="button" onClick={() => setEditing(false)} className="text-[11px] text-muted-foreground">Cancel</button></div><label className="block"><span className="mb-2 block text-[10px] font-bold">Overall progress · {progress}%</span><input type="range" min="0" max="100" value={progress} onChange={(event) => setProgress(Number(event.target.value))} className="w-full accent-[#d19b35]" /></label><label className="block"><span className="mb-2 block text-[10px] font-bold">Next expected milestone</span><input value={milestone} onChange={(event) => setMilestone(event.target.value)} className="h-10 w-full rounded-xl border border-border bg-white px-3 text-[11px] outline-none" /></label><label className="block"><span className="mb-2 block text-[10px] font-bold">Progress update</span><textarea value={comment} onChange={(event) => setComment(event.target.value)} rows={3} placeholder={`What changed in ${activePhase?.name ?? 'the current stage'}?`} className="w-full rounded-xl border border-border bg-white px-3 py-2 text-[11px] outline-none" /></label><button type="submit" className="rounded-xl bg-[#173e49] px-4 py-2.5 text-[10px] font-extrabold text-white">Save update</button></form>}
-    </DetailCard>
-    <DetailCard title="How to update this project" eyebrow="Stage control" icon={Target} tone="gold"><div className="mt-6 space-y-4 text-[11px] leading-5 text-muted-foreground"><p>Use the <strong className="text-foreground">Timeline</strong> tab to update the current stage with its own status, progress, dates, completed work, next action, and decision required.</p><p>Use <strong className="text-foreground">Issues & risks</strong> for problems tied to a stage, and <strong className="text-foreground">Milestones</strong> for approval and handover control points.</p><div className="rounded-xl border border-[#eadcb1] bg-white/60 p-4"><p className="font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">Current stage</p><p className="mt-2 text-[13px] font-extrabold text-foreground">{activePhase?.name ?? 'No active stage'}</p><p className="mt-1">{activePhase?.progress ?? 0}% complete · Owner {activePhase?.owner ?? 'Unassigned'}</p></div></div></DetailCard>
-  </div>;
+  const weighted = calculateWeightedProgress(project.phases);
+
+  return (
+    <div className="grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
+      <DetailCard title="Weighted Project Progress" eyebrow="Formula: Σ(Stage Progress × Weight)" icon={ClipboardCheck}>
+        <div className="mt-6 grid gap-7 md:grid-cols-[140px_1fr] md:items-center">
+          <div className="flex flex-col items-center gap-3">
+            <ProgressRing progress={weighted.overallProgress} />
+            <span className="text-center text-[10px] leading-4 text-muted-foreground">
+              Planned opening<br />
+              <strong className="text-foreground">{project.targetLabel}</strong>
+            </span>
+          </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-[12px] font-bold">Progress Breakdown by Stage</span>
+              <span className="font-mono text-[10px] text-muted-foreground">
+                {weighted.hasTimelineData ? `Timeline Total: ${weighted.totalDurationDays}d` : 'Equal Stage Weights'}
+              </span>
+            </div>
+
+            {/* Visual stacked contribution bar */}
+            <div className="mt-3 flex h-3 w-full overflow-hidden rounded-full bg-[#e7e7dc] p-0.5">
+              {weighted.stages.map((stage, idx) => {
+                if (stage.contribution <= 0) return null;
+                const colors = [
+                  'bg-[#3d9a7e]',
+                  'bg-[#2e7c67]',
+                  'bg-[#d19b35]',
+                  'bg-[#e0ab46]',
+                  'bg-[#173e49]',
+                  'bg-[#286070]',
+                ];
+                const color = colors[idx % colors.length];
+                return (
+                  <div
+                    key={stage.name}
+                    className={`h-full first:rounded-l-full last:rounded-r-full ${color}`}
+                    style={{ width: `${stage.contribution}%` }}
+                    title={`${stage.name}: +${stage.contribution}% (Weight: ${stage.weightPercent}%, Progress: ${stage.progress}%)`}
+                  />
+                );
+              })}
+            </div>
+
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              Overall completion is the mathematically weighted summation of each stage's progress proportional to its schedule duration and custom weightings.
+            </p>
+          </div>
+        </div>
+
+        {/* Matrix Table */}
+        <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+          <table className="w-full text-left text-[11px]">
+            <thead>
+              <tr className="border-b border-border bg-[#f8f6f0] text-[9px] font-bold uppercase tracking-[.1em] text-muted-foreground">
+                <th className="py-2.5 pl-3 pr-2">Stage</th>
+                <th className="px-2 py-2.5">Timeline</th>
+                <th className="px-2 py-2.5 text-center">Weight</th>
+                <th className="px-2 py-2.5 text-center">Progress</th>
+                <th className="py-2.5 pl-2 pr-3 text-right">Contribution</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {weighted.stages.map((stage) => {
+                const phase = project.phases[stage.phaseIndex];
+                return (
+                  <tr key={`${stage.name}-${stage.phaseIndex}`} className="hover:bg-[#fbfaf6]">
+                    <td className="py-2.5 pl-3 pr-2">
+                      <div className="font-bold text-foreground">{stage.name}</div>
+                      <div className="text-[10px] text-muted-foreground">{phase?.owner || 'Unassigned'}</div>
+                    </td>
+                    <td className="px-2 py-2.5 font-mono text-[10px] text-muted-foreground">
+                      {stage.durationDays !== null ? (
+                        <span>
+                          {phase?.plannedStart ? formatShortDate(phase.plannedStart) : ''}
+                          {phase?.plannedStart && phase?.plannedFinish ? ' – ' : ''}
+                          {phase?.plannedFinish ? formatShortDate(phase.plannedFinish) : ''}
+                          <span className="ml-1 text-[9px] font-bold text-foreground">({stage.durationDays}d)</span>
+                        </span>
+                      ) : (
+                        <span>No dates set</span>
+                      )}
+                    </td>
+                    <td className="px-2 py-2.5 text-center">
+                      <span className={`inline-block rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${stage.isCustomWeight ? 'bg-[#f8edcf] text-[#9a711f]' : 'bg-[#eef0ed] text-muted-foreground'}`}>
+                        {stage.weightPercent}%
+                      </span>
+                    </td>
+                    <td className="px-2 py-2.5 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="font-mono font-bold">{stage.progress}%</span>
+                      </div>
+                    </td>
+                    <td className="py-2.5 pl-2 pr-3 text-right font-mono font-bold text-[#2e7c67]">
+                      +{stage.contribution}%
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-border bg-[#f8f6f0] font-bold">
+                <td className="py-2.5 pl-3 pr-2">Total Project Delivery</td>
+                <td className="px-2 py-2.5 font-mono text-[10px] text-muted-foreground">
+                  {weighted.hasTimelineData ? `${weighted.totalDurationDays} calendar days` : '—'}
+                </td>
+                <td className="px-2 py-2.5 text-center font-mono">100%</td>
+                <td className="px-2 py-2.5 text-center text-muted-foreground">—</td>
+                <td className="py-2.5 pl-2 pr-3 text-right font-mono text-[12px] text-[#2e7c67]">
+                  {weighted.overallProgress}%
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-5">
+          {(() => {
+            const { planned, variance } = getProgressVariance(project);
+            return (
+              <div className="flex flex-wrap gap-5 text-[11px]">
+                <span>Planned <strong>{planned === null ? 'Unavailable' : `${planned}%`}</strong></span>
+                <span>Actual <strong>{weighted.overallProgress}%</strong></span>
+                <span className={variance !== null && variance < 0 ? 'text-[#b2473d]' : 'text-[#2e7c67]'}>
+                  Variance <strong>{variance === null ? '—' : `${variance > 0 ? '+' : ''}${variance}%`}</strong>
+                </span>
+              </div>
+            );
+          })()}
+          {editable && !editing && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="rounded-xl bg-[#d6a95d] px-3 py-2 text-[10px] font-extrabold text-[#173e49]"
+            >
+              Log progress note
+            </button>
+          )}
+        </div>
+
+        {editing && (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              onSave(weighted.overallProgress, comment, milestone);
+              setEditing(false);
+            }}
+            className="mt-5 space-y-4 rounded-2xl border border-[#eadcb1] bg-[#fff8e9] p-4"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-[12px] font-extrabold">Log progress update note</p>
+              <button type="button" onClick={() => setEditing(false)} className="text-[11px] text-muted-foreground">
+                Cancel
+              </button>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Overall progress is calculated automatically as <strong>{weighted.overallProgress}%</strong> based on stage weights and durations. To change stage progress or timeline dates, use the <strong>Timeline</strong> tab.
+            </p>
+            <label className="block">
+              <span className="mb-2 block text-[10px] font-bold">Next expected milestone</span>
+              <input
+                value={milestone}
+                onChange={(event) => setMilestone(event.target.value)}
+                className="h-10 w-full rounded-xl border border-border bg-white px-3 text-[11px] outline-none"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-[10px] font-bold">Progress note / status update</span>
+              <textarea
+                value={comment}
+                onChange={(event) => setComment(event.target.value)}
+                rows={3}
+                placeholder={`What changed in ${activePhase?.name ?? 'the current stage'}?`}
+                className="w-full rounded-xl border border-border bg-white px-3 py-2 text-[11px] outline-none"
+              />
+            </label>
+            <button type="submit" className="rounded-xl bg-[#173e49] px-4 py-2.5 text-[10px] font-extrabold text-white">
+              Save update note
+            </button>
+          </form>
+        )}
+      </DetailCard>
+
+      <DetailCard title="Weightage & Timeline Rules" eyebrow="Calculation Engine" icon={Scale} tone="gold">
+        <div className="mt-6 space-y-4 text-[11px] leading-5 text-muted-foreground">
+          <div className="rounded-xl border border-[#eadcb1] bg-white/70 p-4">
+            <p className="font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">Mathematical Formula</p>
+            <p className="mt-1 font-mono text-[11px] font-bold text-foreground">
+              Overall % = Σ ( Stage Progress × Stage Weight % )
+            </p>
+            <p className="mt-2 text-[10px] text-muted-foreground leading-4">
+              Where Stage Weight % is derived from timeline duration (Planned Finish – Planned Start in calendar days), custom weight override, or equal distribution.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <p className="font-bold text-foreground text-[11px]">How weights are assigned:</p>
+            <ul className="list-disc pl-4 space-y-1.5 text-[10px]">
+              <li>
+                <strong className="text-foreground">Custom Stage Weight:</strong> If an explicit weight % is specified in a stage, it is prioritized.
+              </li>
+              <li>
+                <strong className="text-foreground">Timeline Duration Weight:</strong> If planned start and finish dates are set, weight is automatically proportional to stage duration in days.
+              </li>
+              <li>
+                <strong className="text-foreground">Equal Distribution:</strong> Fallback when dates or weights are unspecified, dividing 100% equally among stages.
+              </li>
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-[#eadcb1] bg-white/60 p-4">
+            <p className="font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">Current Active Stage</p>
+            <p className="mt-2 text-[13px] font-extrabold text-foreground">{activePhase?.name ?? 'No active stage'}</p>
+            <p className="mt-1">{activePhase?.progress ?? 0}% complete · Owner {activePhase?.owner ?? 'Unassigned'}</p>
+          </div>
+        </div>
+      </DetailCard>
+    </div>
+  );
 }
 
 function StageEditorForm({ phase, onCancel, onSave }: { phase: Phase; onCancel: () => void; onSave: (patch: Partial<Phase>) => void }) {
-  const [draft, setDraft] = useState({ name: phase.name, owner: phase.owner, status: phase.status, progress: String(phase.progress), plannedStart: phase.plannedStart ?? '', plannedFinish: phase.plannedFinish ?? '', actualFinish: phase.actualFinish ?? '', workCompleted: phase.workCompleted ?? '', nextAction: phase.nextAction ?? '', decisionRequired: phase.decisionRequired ?? '' });
+  const [draft, setDraft] = useState({
+    name: phase.name,
+    owner: phase.owner,
+    status: phase.status,
+    progress: String(phase.progress),
+    weight: phase.weight !== undefined ? String(phase.weight) : '',
+    plannedStart: phase.plannedStart ?? '',
+    plannedFinish: phase.plannedFinish ?? '',
+    actualFinish: phase.actualFinish ?? '',
+    workCompleted: phase.workCompleted ?? '',
+    nextAction: phase.nextAction ?? '',
+    decisionRequired: phase.decisionRequired ?? '',
+  });
   const set = (key: keyof typeof draft, value: string) => setDraft((current) => ({ ...current, [key]: value }));
-  return <form onSubmit={(event) => { event.preventDefault(); onSave({ ...draft, progress: Math.max(0, Math.min(100, Number(draft.progress) || 0)), status: draft.status as Phase['status'], updatedAt: todayLabel() }); }} className="mt-4 rounded-xl border border-[#cbe4d9] bg-[#edf5f0] p-4"><div className="grid gap-3 md:grid-cols-4"><label><span className="mb-1.5 block text-[10px] font-bold">Stage name</span><input value={draft.name} onChange={(event) => set('name', event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]" /></label><label><span className="mb-1.5 block text-[10px] font-bold">Owner</span><input value={draft.owner} onChange={(event) => set('owner', event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]" /></label><label><span className="mb-1.5 block text-[10px] font-bold">Status</span><select value={draft.status} onChange={(event) => set('status', event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]">{stageStatuses.map((status) => <option key={status} value={status}>{status === 'active' ? 'In progress' : status === 'upcoming' ? 'Not started' : status}</option>)}</select></label><label><span className="mb-1.5 block text-[10px] font-bold">Progress %</span><input type="number" min="0" max="100" value={draft.progress} onChange={(event) => set('progress', event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]" /></label></div><div className="mt-3 grid gap-3 md:grid-cols-3"><label><span className="mb-1.5 block text-[10px] font-bold">Planned start</span><input type="date" value={draft.plannedStart} onChange={(event) => set('plannedStart', event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]" /></label><label><span className="mb-1.5 block text-[10px] font-bold">Planned finish</span><input type="date" value={draft.plannedFinish} onChange={(event) => set('plannedFinish', event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]" /></label><label><span className="mb-1.5 block text-[10px] font-bold">Actual finish</span><input type="date" value={draft.actualFinish} onChange={(event) => set('actualFinish', event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]" /></label></div><div className="mt-3 grid gap-3 md:grid-cols-2"><label><span className="mb-1.5 block text-[10px] font-bold">Work completed</span><textarea value={draft.workCompleted} onChange={(event) => set('workCompleted', event.target.value)} rows={3} placeholder="What was completed in this stage?" className="w-full rounded-lg border border-border bg-white px-2 py-2 text-[11px]" /></label><label><span className="mb-1.5 block text-[10px] font-bold">Next action</span><textarea value={draft.nextAction} onChange={(event) => set('nextAction', event.target.value)} rows={3} placeholder="What happens next?" className="w-full rounded-lg border border-border bg-white px-2 py-2 text-[11px]" /></label></div><label className="mt-3 block"><span className="mb-1.5 block text-[10px] font-bold">Decision required</span><textarea value={draft.decisionRequired} onChange={(event) => set('decisionRequired', event.target.value)} rows={2} placeholder="What decision or support is required from HOD?" className="w-full rounded-lg border border-border bg-white px-2 py-2 text-[11px]" /></label><div className="mt-3 flex gap-2"><button type="submit" className="rounded-lg bg-[#173e49] px-3 py-2 text-[10px] font-bold text-white">Save stage update</button><button type="button" onClick={onCancel} className="rounded-lg border border-border bg-white px-3 py-2 text-[10px] font-bold">Cancel</button></div></form>;
+
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSave({
+          ...draft,
+          progress: Math.max(0, Math.min(100, Number(draft.progress) || 0)),
+          weight: draft.weight !== '' && !isNaN(Number(draft.weight)) ? Math.max(0, Math.min(100, Number(draft.weight))) : undefined,
+          status: draft.status as Phase['status'],
+          updatedAt: todayLabel(),
+        });
+      }}
+      className="mt-4 rounded-xl border border-[#cbe4d9] bg-[#edf5f0] p-4"
+    >
+      <div className="grid gap-3 md:grid-cols-5">
+        <label>
+          <span className="mb-1.5 block text-[10px] font-bold">Stage name</span>
+          <input
+            value={draft.name}
+            onChange={(event) => set('name', event.target.value)}
+            className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]"
+          />
+        </label>
+        <label>
+          <span className="mb-1.5 block text-[10px] font-bold">Owner</span>
+          <input
+            value={draft.owner}
+            onChange={(event) => set('owner', event.target.value)}
+            className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]"
+          />
+        </label>
+        <label>
+          <span className="mb-1.5 block text-[10px] font-bold">Status</span>
+          <select
+            value={draft.status}
+            onChange={(event) => set('status', event.target.value)}
+            className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]"
+          >
+            {stageStatuses.map((status) => (
+              <option key={status} value={status}>
+                {status === 'active' ? 'In progress' : status === 'upcoming' ? 'Not started' : status}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span className="mb-1.5 block text-[10px] font-bold">Progress %</span>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            value={draft.progress}
+            onChange={(event) => set('progress', event.target.value)}
+            className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]"
+          />
+        </label>
+        <label>
+          <span className="mb-1.5 block text-[10px] font-bold" title="Leave empty to auto-weight by timeline duration">
+            Weight % (opt)
+          </span>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="0.5"
+            placeholder="Auto"
+            value={draft.weight}
+            onChange={(event) => set('weight', event.target.value)}
+            className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]"
+          />
+        </label>
+      </div>
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
+        <label>
+          <span className="mb-1.5 block text-[10px] font-bold">Planned start</span>
+          <input
+            type="date"
+            value={draft.plannedStart}
+            onChange={(event) => set('plannedStart', event.target.value)}
+            className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]"
+          />
+        </label>
+        <label>
+          <span className="mb-1.5 block text-[10px] font-bold">Planned finish</span>
+          <input
+            type="date"
+            value={draft.plannedFinish}
+            onChange={(event) => set('plannedFinish', event.target.value)}
+            className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]"
+          />
+        </label>
+        <label>
+          <span className="mb-1.5 block text-[10px] font-bold">Actual finish</span>
+          <input
+            type="date"
+            value={draft.actualFinish}
+            onChange={(event) => set('actualFinish', event.target.value)}
+            className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]"
+          />
+        </label>
+      </div>
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <label>
+          <span className="mb-1.5 block text-[10px] font-bold">Work completed</span>
+          <textarea
+            value={draft.workCompleted}
+            onChange={(event) => set('workCompleted', event.target.value)}
+            rows={3}
+            placeholder="What was completed in this stage?"
+            className="w-full rounded-lg border border-border bg-white px-2 py-2 text-[11px]"
+          />
+        </label>
+        <label>
+          <span className="mb-1.5 block text-[10px] font-bold">Next action</span>
+          <textarea
+            value={draft.nextAction}
+            onChange={(event) => set('nextAction', event.target.value)}
+            rows={3}
+            placeholder="What happens next?"
+            className="w-full rounded-lg border border-border bg-white px-2 py-2 text-[11px]"
+          />
+        </label>
+      </div>
+      <label className="mt-3 block">
+        <span className="mb-1.5 block text-[10px] font-bold">Decision required</span>
+        <textarea
+          value={draft.decisionRequired}
+          onChange={(event) => set('decisionRequired', event.target.value)}
+          rows={2}
+          placeholder="What decision or support is required from HOD?"
+          className="w-full rounded-lg border border-border bg-white px-2 py-2 text-[11px]"
+        />
+      </label>
+      <div className="mt-3 flex gap-2">
+        <button type="submit" className="rounded-lg bg-[#173e49] px-3 py-2 text-[10px] font-bold text-white">
+          Save stage update
+        </button>
+        <button type="button" onClick={onCancel} className="rounded-lg border border-border bg-white px-3 py-2 text-[10px] font-bold">
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
 }
 
-function StageTimelinePanel({ project, editable, onSave, onAdd, onRemove, onMove }: { project: Project; editable: boolean; onSave: (index: number, patch: Partial<Phase>) => void; onAdd: (phase: Phase) => void; onRemove: (index: number) => void; onMove: (index: number, direction: -1 | 1) => void }) {
+function StageTimelinePanel({
+  project,
+  editable,
+  onSave,
+  onAdd,
+  onRemove,
+  onMove,
+}: {
+  project: Project;
+  editable: boolean;
+  onSave: (index: number, patch: Partial<Phase>) => void;
+  onAdd: (phase: Phase) => void;
+  onRemove: (index: number) => void;
+  onMove: (index: number, direction: -1 | 1) => void;
+}) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
   const [owner, setOwner] = useState('');
   const [plannedFinish, setPlannedFinish] = useState('');
-  return <div className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]"><DetailCard title="Stage control plan" eyebrow={`${project.phases.length} stages · ${project.templateId ? getProjectTemplate(project.templateId).label : 'Project-specific workflow'}`} icon={CalendarDays}><div className="mt-8 space-y-4">{project.phases.map((phase, index) => <div key={`${phase.id ?? phase.name}-${index}`} className="relative rounded-xl border border-border bg-[#fbfaf6] p-4"><div className="flex gap-3"><span className={`relative grid size-7 shrink-0 place-items-center rounded-full ${phase.status === 'complete' ? 'bg-[#3d9a7e] text-white' : phase.status === 'active' ? 'bg-[#d6a95d] text-[#173e49]' : phase.status === 'blocked' ? 'bg-[#fae5e1] text-[#b2473d]' : 'bg-[#eef0ed] text-muted-foreground'}`}>{phase.status === 'complete' ? <Check size={12} /> : <span className="size-1.5 rounded-full bg-current" />}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-start justify-between gap-3"><div><strong className="text-[12px]">{phase.name}</strong><p className="mt-1 text-[10px] text-muted-foreground">{phase.status === 'complete' ? 'Complete' : phase.status === 'active' ? 'Current stage' : phase.status === 'blocked' ? 'Blocked' : 'Not started'} · Owner {phase.owner}</p></div><span className="font-mono text-[10px] text-muted-foreground">{phase.progress}%</span></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#e7e7dc]"><span className={`block h-full rounded-full ${phase.status === 'active' ? 'bg-[#d19b35]' : phase.status === 'blocked' ? 'bg-[#d66254]' : 'bg-[#3d9a7e]'}`} style={{ width: `${phase.progress}%` }} /></div>{(phase.workCompleted || phase.nextAction || phase.decisionRequired || phase.plannedFinish) && <div className="mt-3 grid gap-2 text-[10px] text-muted-foreground md:grid-cols-2">{phase.workCompleted && <p><strong className="text-foreground">Completed:</strong> {phase.workCompleted}</p>}{phase.nextAction && <p><strong className="text-foreground">Next:</strong> {phase.nextAction}</p>}{phase.decisionRequired && <p className="text-[#b2473d]"><strong>Decision:</strong> {phase.decisionRequired}</p>}{phase.plannedFinish && <p><strong className="text-foreground">Planned finish:</strong> {formatShortDate(phase.plannedFinish)}</p>}</div>}{editable && <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => setEditingIndex(editingIndex === index ? null : index)} className="rounded-lg border border-[#cbe4d9] bg-white px-2.5 py-1.5 text-[10px] font-bold text-[#2e7c67]">{editingIndex === index ? 'Close editor' : 'Update stage'}</button><button type="button" aria-label="Move stage up" disabled={index === 0} onClick={() => onMove(index, -1)} className="rounded-lg border border-border bg-white p-1.5 text-muted-foreground disabled:opacity-30"><ChevronUp size={13} /></button><button type="button" aria-label="Move stage down" disabled={index === project.phases.length - 1} onClick={() => onMove(index, 1)} className="rounded-lg border border-border bg-white p-1.5 text-muted-foreground disabled:opacity-30"><ChevronDown size={13} /></button><button type="button" aria-label={`Remove ${phase.name}`} disabled={project.phases.length <= 1} title={project.phases.length <= 1 ? 'A project must keep at least one stage' : undefined} onClick={() => { if (window.confirm(`Remove the stage "${phase.name}"? This cannot be undone.`)) onRemove(index); }} className="rounded-lg border border-[#f0c8c2] bg-white p-1.5 text-[#b2473d] disabled:opacity-30"><Trash2 size={13} /></button></div>}{editingIndex === index && <StageEditorForm phase={phase} onCancel={() => setEditingIndex(null)} onSave={(patch) => { onSave(index, patch); setEditingIndex(null); }} />}</div></div></div>)}</div>{editable && (adding ? <form onSubmit={(event) => { event.preventDefault(); if (!name.trim()) return; onAdd({ id: `${project.id}-phase-${Date.now()}`, name: name.trim(), owner: owner.trim() || 'Unassigned', status: 'upcoming', progress: 0, plannedFinish }); setName(''); setOwner(''); setPlannedFinish(''); setAdding(false); }} className="mt-5 grid gap-3 rounded-xl border border-[#eadcb1] bg-[#fff8e9] p-4 md:grid-cols-[1fr_180px_160px_auto]"><input required value={name} onChange={(event) => setName(event.target.value)} placeholder="New stage name" className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]" /><input value={owner} onChange={(event) => setOwner(event.target.value)} placeholder="Owner" className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]" /><input type="date" value={plannedFinish} onChange={(event) => setPlannedFinish(event.target.value)} className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]" /><button type="submit" className="rounded-lg bg-[#173e49] px-4 py-2 text-[10px] font-bold text-white">Add stage</button></form> : <button type="button" onClick={() => setAdding(true)} className="mt-5 inline-flex items-center gap-2 rounded-xl border border-border bg-[#f7f4ec] px-3 py-2 text-[10px] font-bold"><Plus size={13} /> Add custom stage</button>)}</DetailCard><DetailCard title="Stage review" eyebrow="Control points" icon={Target} tone="gold"><div className="mt-7 space-y-5"><div><p className="font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">Current stage</p><p className="mt-2 text-[14px] font-extrabold">{project.phases.find((phase) => phase.status === 'active')?.name ?? 'No active stage'}</p></div><div className="space-y-3">{project.phases.filter((phase) => phase.decisionRequired).map((phase) => <div key={phase.id ?? phase.name} className="rounded-xl border border-[#f0c8c2] bg-[#fff5f2] p-3"><p className="font-mono text-[9px] uppercase tracking-[.1em] text-[#b2473d]">Decision required</p><p className="mt-1 text-[11px] font-bold">{phase.name}</p><p className="mt-1 text-[10px] leading-4 text-muted-foreground">{phase.decisionRequired}</p></div>)}{!project.phases.some((phase) => phase.decisionRequired) && <p className="text-[11px] leading-5 text-muted-foreground">No stage decisions are currently waiting for review.</p>}</div><p className="text-[11px] leading-5 text-muted-foreground">Each stage can carry its own dates, owner, progress, completed work, next action, and HOD decision request.</p></div></DetailCard></div>;
+  const [plannedStart, setPlannedStart] = useState('');
+  const [weight, setWeight] = useState('');
+  const weighted = calculateWeightedProgress(project.phases);
+
+  return (
+    <div className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
+      <DetailCard
+        title="Stage control plan"
+        eyebrow={`${project.phases.length} stages · ${project.templateId ? getProjectTemplate(project.templateId).label : 'Project-specific workflow'}`}
+        icon={CalendarDays}
+      >
+        <div className="mt-8 space-y-4">
+          {project.phases.map((phase, index) => {
+            const stageInfo = weighted.stages[index];
+            return (
+              <div key={`${phase.id ?? phase.name}-${index}`} className="relative rounded-xl border border-border bg-[#fbfaf6] p-4">
+                <div className="flex gap-3">
+                  <span
+                    className={`relative grid size-7 shrink-0 place-items-center rounded-full ${
+                      phase.status === 'complete'
+                        ? 'bg-[#3d9a7e] text-white'
+                        : phase.status === 'active'
+                          ? 'bg-[#d6a95d] text-[#173e49]'
+                          : phase.status === 'blocked'
+                            ? 'bg-[#fae5e1] text-[#b2473d]'
+                            : 'bg-[#eef0ed] text-muted-foreground'
+                    }`}
+                  >
+                    {phase.status === 'complete' ? <Check size={12} /> : <span className="size-1.5 rounded-full bg-current" />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <strong className="text-[12px]">{phase.name}</strong>
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          {phase.status === 'complete'
+                            ? 'Complete'
+                            : phase.status === 'active'
+                              ? 'Current stage'
+                              : phase.status === 'blocked'
+                                ? 'Blocked'
+                                : 'Not started'}{' '}
+                          · Owner {phase.owner}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className={`inline-block rounded-full px-2 py-0.5 font-mono text-[9px] font-bold ${stageInfo?.isCustomWeight ? 'bg-[#f8edcf] text-[#9a711f]' : 'bg-[#eef0ed] text-muted-foreground'}`}>
+                          Weight {stageInfo?.weightPercent ?? 0}%
+                        </span>
+                        <span className="inline-block rounded-full bg-[#e4f1ec] px-2 py-0.5 font-mono text-[9px] font-bold text-[#2e7c67]">
+                          +{stageInfo?.contribution ?? 0}% to overall
+                        </span>
+                        <span className="font-mono text-[10px] font-bold text-foreground">{phase.progress}%</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#e7e7dc]">
+                      <span
+                        className={`block h-full rounded-full ${
+                          phase.status === 'active' ? 'bg-[#d19b35]' : phase.status === 'blocked' ? 'bg-[#d66254]' : 'bg-[#3d9a7e]'
+                        }`}
+                        style={{ width: `${phase.progress}%` }}
+                      />
+                    </div>
+
+                    {(phase.workCompleted || phase.nextAction || phase.decisionRequired || phase.plannedStart || phase.plannedFinish) && (
+                      <div className="mt-3 grid gap-2 text-[10px] text-muted-foreground md:grid-cols-2">
+                        {phase.workCompleted && (
+                          <p>
+                            <strong className="text-foreground">Completed:</strong> {phase.workCompleted}
+                          </p>
+                        )}
+                        {phase.nextAction && (
+                          <p>
+                            <strong className="text-foreground">Next:</strong> {phase.nextAction}
+                          </p>
+                        )}
+                        {phase.decisionRequired && (
+                          <p className="text-[#b2473d]">
+                            <strong>Decision:</strong> {phase.decisionRequired}
+                          </p>
+                        )}
+                        {(phase.plannedStart || phase.plannedFinish) && (
+                          <p>
+                            <strong className="text-foreground">Timeline:</strong>{' '}
+                            {phase.plannedStart ? formatShortDate(phase.plannedStart) : ''}
+                            {phase.plannedStart && phase.plannedFinish ? ' – ' : ''}
+                            {phase.plannedFinish ? formatShortDate(phase.plannedFinish) : ''}
+                            {stageInfo?.durationDays !== null ? ` (${stageInfo?.durationDays}d)` : ''}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {editable && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingIndex(editingIndex === index ? null : index)}
+                          className="rounded-lg border border-[#cbe4d9] bg-white px-2.5 py-1.5 text-[10px] font-bold text-[#2e7c67]"
+                        >
+                          {editingIndex === index ? 'Close editor' : 'Update stage'}
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Move stage up"
+                          disabled={index === 0}
+                          onClick={() => onMove(index, -1)}
+                          className="rounded-lg border border-border bg-white p-1.5 text-muted-foreground disabled:opacity-30"
+                        >
+                          <ChevronUp size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Move stage down"
+                          disabled={index === project.phases.length - 1}
+                          onClick={() => onMove(index, 1)}
+                          className="rounded-lg border border-border bg-white p-1.5 text-muted-foreground disabled:opacity-30"
+                        >
+                          <ChevronDown size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`Remove ${phase.name}`}
+                          disabled={project.phases.length <= 1}
+                          title={project.phases.length <= 1 ? 'A project must keep at least one stage' : undefined}
+                          onClick={() => {
+                            if (window.confirm(`Remove the stage "${phase.name}"? This cannot be undone.`)) onRemove(index);
+                          }}
+                          className="rounded-lg border border-[#f0c8c2] bg-white p-1.5 text-[#b2473d] disabled:opacity-30"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    )}
+
+                    {editingIndex === index && (
+                      <StageEditorForm
+                        phase={phase}
+                        onCancel={() => setEditingIndex(null)}
+                        onSave={(patch) => {
+                          onSave(index, patch);
+                          setEditingIndex(null);
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {editable &&
+          (adding ? (
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!name.trim()) return;
+                onAdd({
+                  id: `${project.id}-phase-${Date.now()}`,
+                  name: name.trim(),
+                  owner: owner.trim() || 'Unassigned',
+                  status: 'upcoming',
+                  progress: 0,
+                  plannedStart: plannedStart || undefined,
+                  plannedFinish: plannedFinish || undefined,
+                  weight: weight.trim() !== '' && !isNaN(Number(weight)) ? Number(weight) : undefined,
+                });
+                setName('');
+                setOwner('');
+                setPlannedStart('');
+                setPlannedFinish('');
+                setWeight('');
+                setAdding(false);
+              }}
+              className="mt-5 grid gap-3 rounded-xl border border-[#eadcb1] bg-[#fff8e9] p-4 md:grid-cols-5"
+            >
+              <input
+                required
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="New stage name *"
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+              />
+              <input
+                value={owner}
+                onChange={(event) => setOwner(event.target.value)}
+                placeholder="Owner"
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+              />
+              <input
+                type="date"
+                value={plannedStart}
+                onChange={(event) => setPlannedStart(event.target.value)}
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+                title="Planned start"
+              />
+              <input
+                type="date"
+                value={plannedFinish}
+                onChange={(event) => setPlannedFinish(event.target.value)}
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+                title="Planned finish"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={weight}
+                  onChange={(event) => setWeight(event.target.value)}
+                  placeholder="Weight % (opt)"
+                  className="h-10 w-24 rounded-lg border border-border bg-white px-2 text-[11px]"
+                />
+                <button type="submit" className="rounded-lg bg-[#173e49] px-3 py-2 text-[10px] font-bold text-white">
+                  Add
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setAdding(true)}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl border border-border bg-[#f7f4ec] px-3 py-2 text-[10px] font-bold"
+            >
+              <Plus size={13} /> Add custom stage
+            </button>
+          ))}
+      </DetailCard>
+
+      <DetailCard title="Stage review" eyebrow="Control points" icon={Target} tone="gold">
+        <div className="mt-7 space-y-5">
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">Current stage</p>
+            <p className="mt-2 text-[14px] font-extrabold">{project.phases.find((phase) => phase.status === 'active')?.name ?? 'No active stage'}</p>
+          </div>
+          <div className="space-y-3">
+            {project.phases
+              .filter((phase) => phase.decisionRequired)
+              .map((phase) => (
+                <div key={phase.id ?? phase.name} className="rounded-xl border border-[#f0c8c2] bg-[#fff5f2] p-3">
+                  <p className="font-mono text-[9px] uppercase tracking-[.1em] text-[#b2473d]">Decision required</p>
+                  <p className="mt-1 text-[11px] font-bold">{phase.name}</p>
+                  <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{phase.decisionRequired}</p>
+                </div>
+              ))}
+            {!project.phases.some((phase) => phase.decisionRequired) && (
+              <p className="text-[11px] leading-5 text-muted-foreground">No stage decisions are currently waiting for review.</p>
+            )}
+          </div>
+          <p className="text-[11px] leading-5 text-muted-foreground">
+            Each stage can carry its own dates, owner, progress, completed work, next action, and HOD decision request. Overall progress is calculated from their weighted summation.
+          </p>
+        </div>
+      </DetailCard>
+    </div>
+  );
 }
 
 function StageMilestonesPanel({ project, editable, onAdd }: { project: Project; editable: boolean; onAdd: (milestone: { title: string; date: string; status: 'upcoming'; stage: string; owner: string; approvalRequired: boolean; approvalStatus: 'Not required' | 'Pending' }) => void }) {

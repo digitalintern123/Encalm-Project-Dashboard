@@ -31,6 +31,7 @@ export type Phase = {
   name: string;
   status: StageStatus;
   progress: number;
+  weight?: number;
   owner: string;
   plannedStart?: string;
   plannedFinish?: string;

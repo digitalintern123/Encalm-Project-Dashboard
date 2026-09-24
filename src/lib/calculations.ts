@@ -1,4 +1,4 @@
-import type { Project } from '@/data/projects';
+import type { Project, Phase } from '@/data/projects';
 import { parseIsoDate } from '@/lib/date';
 
 /**
@@ -66,6 +66,116 @@ export function getProgressVariance(project: Project, now: Date = new Date()): P
     actual: project.progress,
     planned,
     variance: planned === null ? null : project.progress - planned,
+  };
+}
+
+export type StageProgressWeight = {
+  phase: Phase;
+  index: number;
+  phaseIndex: number;
+  name: string;
+  progress: number;
+  weightPct: number;
+  weightPercent: number;
+  durationDays: number | null;
+  contributionPct: number;
+  contribution: number;
+  isExplicitWeight: boolean;
+  isCustomWeight: boolean;
+};
+
+export type WeightedProgressResult = {
+  overallProgress: number;
+  stages: StageProgressWeight[];
+  hasTimelineData: boolean;
+  totalDurationDays: number;
+};
+
+/**
+ * Calculates overall project progress as a weighted summation of timeline duration
+ * and stage progress.
+ *
+ * Priority for weighting:
+ * 1. Explicit stage weight (`phase.weight` if specified and > 0)
+ * 2. Timeline duration (`plannedFinish - plannedStart` in days)
+ * 3. Equal distribution fallback (1 / N)
+ */
+export function calculateWeightedProgress(phases: Phase[]): WeightedProgressResult {
+  if (!phases || phases.length === 0) {
+    return {
+      overallProgress: 0,
+      stages: [],
+      hasTimelineData: false,
+      totalDurationDays: 0,
+    };
+  }
+
+  // 1. Calculate duration for each phase where planned dates are provided
+  const phaseDurations = phases.map((phase) => {
+    const start = parseIsoDate(phase.plannedStart);
+    const finish = parseIsoDate(phase.plannedFinish);
+    if (start && finish && finish.getTime() >= start.getTime()) {
+      const diffMs = finish.getTime() - start.getTime();
+      return Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+    }
+    return null;
+  });
+
+  const totalDurationDays = phaseDurations.reduce<number>(
+    (sum, d) => sum + (d !== null ? d : 0),
+    0,
+  );
+  const hasTimelineData = totalDurationDays > 0;
+
+  // 2. Determine raw weights
+  // If any stage has an explicit weight, honor it; otherwise proportional to timeline duration
+  const hasAnyExplicitWeight = phases.some(
+    (p) => typeof p.weight === 'number' && Number.isFinite(p.weight) && p.weight > 0,
+  );
+
+  const rawWeights = phases.map((phase, idx) => {
+    if (typeof phase.weight === 'number' && Number.isFinite(phase.weight) && phase.weight > 0) {
+      return phase.weight;
+    }
+    if (!hasAnyExplicitWeight && phaseDurations[idx] !== null) {
+      return phaseDurations[idx]!;
+    }
+    return 1;
+  });
+
+  const sumRawWeights = rawWeights.reduce((sum, w) => sum + w, 0) || 1;
+
+  // 3. Compute normalized percentage weights and contribution towards overall progress
+  let totalWeightedContribution = 0;
+  const stages: StageProgressWeight[] = phases.map((phase, idx) => {
+    const weightPct = Number(((rawWeights[idx] / sumRawWeights) * 100).toFixed(1));
+    const cleanProgress = Math.max(0, Math.min(100, Number(phase.progress) || 0));
+    const contributionPct = Number(((weightPct / 100) * cleanProgress).toFixed(1));
+    totalWeightedContribution += contributionPct;
+
+    return {
+      phase,
+      index: idx,
+      phaseIndex: idx,
+      name: phase.name,
+      progress: cleanProgress,
+      weightPct,
+      weightPercent: weightPct,
+      durationDays: phaseDurations[idx],
+      contributionPct,
+      contribution: contributionPct,
+      isExplicitWeight: typeof phase.weight === 'number' && phase.weight > 0,
+      isCustomWeight: typeof phase.weight === 'number' && phase.weight > 0,
+    };
+  });
+
+  const overallProgress = Math.max(0, Math.min(100, Math.round(totalWeightedContribution)));
+
+  return {
+    overallProgress,
+    stages,
+    hasTimelineData,
+    totalDurationDays,
   };
 }
 

@@ -5,6 +5,46 @@ import { fetchFullProject } from './projects.js';
 
 const router = Router({ mergeParams: true });
 
+function recomputeProjectProgress(projectId: string): number {
+  const phases = db.prepare('SELECT progress, weight, planned_start, planned_finish FROM phases WHERE project_id = ? ORDER BY order_index ASC').all(projectId) as any[];
+  if (!phases || phases.length === 0) return 0;
+
+  // Calculate durations
+  const phaseDurations = phases.map((p) => {
+    if (p.planned_start && p.planned_finish) {
+      const d1 = new Date(p.planned_start).getTime();
+      const d2 = new Date(p.planned_finish).getTime();
+      if (!isNaN(d1) && !isNaN(d2) && d2 >= d1) {
+        return Math.max(1, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
+      }
+    }
+    return null;
+  });
+
+  const hasExplicit = phases.some((p) => typeof p.weight === 'number' && p.weight > 0);
+  const rawWeights = phases.map((p, idx) => {
+    if (typeof p.weight === 'number' && p.weight > 0) return p.weight;
+    if (!hasExplicit && phaseDurations[idx] !== null) return phaseDurations[idx]!;
+    return 1;
+  });
+
+  const sumWeights = rawWeights.reduce((sum, w) => sum + w, 0) || 1;
+  let totalWeighted = 0;
+  phases.forEach((p, idx) => {
+    const wPct = (rawWeights[idx] / sumWeights) * 100;
+    const prog = Math.max(0, Math.min(100, Number(p.progress) || 0));
+    totalWeighted += (wPct / 100) * prog;
+  });
+
+  const computed = Math.max(0, Math.min(100, Math.round(totalWeighted)));
+  db.prepare('UPDATE projects SET progress = ?, last_updated = ? WHERE id = ?').run(
+    computed,
+    new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    projectId,
+  );
+  return computed;
+}
+
 // POST add phase
 router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
@@ -18,11 +58,11 @@ router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedR
 
   db.prepare(`
     INSERT INTO phases (
-      id, project_id, name, status, progress, owner, order_index,
+      id, project_id, name, status, progress, weight, owner, order_index,
       planned_start, planned_finish, actual_finish, work_completed, next_action,
       decision_required, updated_at
     ) VALUES (
-      @id, @project_id, @name, @status, @progress, @owner, @order_index,
+      @id, @project_id, @name, @status, @progress, @weight, @owner, @order_index,
       @planned_start, @planned_finish, @actual_finish, @work_completed, @next_action,
       @decision_required, @updated_at
     )
@@ -32,6 +72,7 @@ router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedR
     name: body.name || 'New stage',
     status: body.status || 'upcoming',
     progress: body.progress || 0,
+    weight: body.weight !== undefined && body.weight !== '' && body.weight !== null ? Number(body.weight) : null,
     owner: body.owner || 'PMO',
     order_index: nextOrder,
     planned_start: body.plannedStart || null,
@@ -42,6 +83,8 @@ router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedR
     decision_required: body.decisionRequired || null,
     updated_at: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
   });
+
+  recomputeProjectProgress(projectId);
 
   const updatedProject = fetchFullProject(projectId);
   return res.status(201).json({ project: updatedProject });
@@ -61,6 +104,10 @@ router.patch('/:phaseId', requireAuth, requireRole(['lead', 'hod']), (req: Authe
   if (patch.name !== undefined) { updates.push('name = ?'); values.push(patch.name); }
   if (patch.status !== undefined) { updates.push('status = ?'); values.push(patch.status); }
   if (patch.progress !== undefined) { updates.push('progress = ?'); values.push(patch.progress); }
+  if (patch.weight !== undefined) {
+    updates.push('weight = ?');
+    values.push(patch.weight === '' || patch.weight === null ? null : Number(patch.weight));
+  }
   if (patch.owner !== undefined) { updates.push('owner = ?'); values.push(patch.owner); }
   if (patch.plannedStart !== undefined) { updates.push('planned_start = ?'); values.push(patch.plannedStart); }
   if (patch.plannedFinish !== undefined) { updates.push('planned_finish = ?'); values.push(patch.plannedFinish); }
@@ -90,6 +137,8 @@ router.patch('/:phaseId', requireAuth, requireRole(['lead', 'hod']), (req: Authe
 
   db.prepare(`UPDATE phases SET ${updates.join(', ')} WHERE id = ? AND project_id = ?`).run(...values);
 
+  recomputeProjectProgress(projectId);
+
   const updatedProject = fetchFullProject(projectId);
   return res.json({ project: updatedProject });
 });
@@ -113,6 +162,8 @@ router.delete('/:phaseId', requireAuth, requireRole(['lead', 'hod']), (req: Auth
     });
   });
   reindexTx();
+
+  recomputeProjectProgress(projectId);
 
   const updatedProject = fetchFullProject(projectId);
   return res.json({ project: updatedProject });
@@ -138,6 +189,8 @@ router.post('/move', requireAuth, requireRole(['lead', 'hod']), (req: Authentica
     });
   });
   transaction();
+
+  recomputeProjectProgress(projectId);
 
   const updatedProject = fetchFullProject(projectId);
   return res.json({ project: updatedProject });

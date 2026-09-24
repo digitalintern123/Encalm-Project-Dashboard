@@ -18,6 +18,7 @@ import { readJson, removeItem, writeJson } from '@/lib/storage';
 import { todayLabel } from '@/lib/date';
 import { DEMO_HOD_ID, DEMO_LEAD_ID, getUserById, type User } from '@/data/users';
 import { api, getStoredToken, setStoredToken, type NotificationItem } from '@/lib/api';
+import { calculateWeightedProgress } from '@/lib/calculations';
 
 export type AppRole = 'hod' | 'lead';
 export type DemoUser = User;
@@ -64,12 +65,20 @@ const PROJECTS_KEY = 'encalm-projects-data-v2';
 const ROLE_KEY = 'encalm-projects-role-v1';
 
 function normaliseProject(project: Project): Project {
+  const phases = (project.phases ?? []).map((phase, index) => ({
+    ...phase,
+    id: phase.id ?? `${project.id}-phase-${index}`,
+    weight: typeof phase.weight === 'number' ? phase.weight : undefined,
+  }));
+  const calculatedProgress =
+    phases.length > 0
+      ? calculateWeightedProgress(phases).overallProgress
+      : (project.progress ?? 0);
+
   return {
     ...project,
-    phases: (project.phases ?? []).map((phase, index) => ({
-      ...phase,
-      id: phase.id ?? `${project.id}-phase-${index}`,
-    })),
+    progress: calculatedProgress,
+    phases,
     milestones: (project.milestones ?? []).map((milestone, index) => ({
       ...milestone,
       id: (milestone as any).id ?? `${project.id}-milestone-${index}`,
@@ -322,11 +331,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
       const ok = patchById(id, (project) => {
         if (phaseIndex < 0 || phaseIndex >= project.phases.length) return project;
+        const newPhases = project.phases.map((p, index) =>
+          index === phaseIndex ? { ...p, ...patch, updatedAt: todayLabel() } : p,
+        );
+        const { overallProgress } = calculateWeightedProgress(newPhases);
         return {
           ...project,
-          phases: project.phases.map((p, index) =>
-            index === phaseIndex ? { ...p, ...patch, updatedAt: todayLabel() } : p,
-          ),
+          phases: newPhases,
+          progress: overallProgress,
           lastUpdated: todayLabel(),
         };
       });
@@ -348,11 +360,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const generatedId = phase.id ?? `${id}-phase-${Date.now()}`;
       const newPhase = { ...phase, id: generatedId };
 
-      const ok = patchById(id, (project) => ({
-        ...project,
-        phases: [...project.phases, newPhase],
-        lastUpdated: todayLabel(),
-      }));
+      const ok = patchById(id, (project) => {
+        const newPhases = [...project.phases, newPhase];
+        const { overallProgress } = calculateWeightedProgress(newPhases);
+        return {
+          ...project,
+          phases: newPhases,
+          progress: overallProgress,
+          lastUpdated: todayLabel(),
+        };
+      });
 
       if (ok) {
         api.phases.add(id, newPhase).then((res) => {
@@ -375,9 +392,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const ok = patchById(id, (project) => {
         if (project.phases.length <= 1) return project;
         if (phaseIndex < 0 || phaseIndex >= project.phases.length) return project;
+        const newPhases = project.phases.filter((_, index) => index !== phaseIndex);
+        const { overallProgress } = calculateWeightedProgress(newPhases);
         return {
           ...project,
-          phases: project.phases.filter((_, index) => index !== phaseIndex),
+          phases: newPhases,
+          progress: overallProgress,
           lastUpdated: todayLabel(),
         };
       });
@@ -402,7 +422,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         if (targetIndex < 0 || targetIndex >= project.phases.length) return project;
         const phases = [...project.phases];
         [phases[phaseIndex], phases[targetIndex]] = [phases[targetIndex], phases[phaseIndex]];
-        return { ...project, phases, lastUpdated: todayLabel() };
+        const { overallProgress } = calculateWeightedProgress(phases);
+        return { ...project, phases, progress: overallProgress, lastUpdated: todayLabel() };
       });
 
       if (ok) {

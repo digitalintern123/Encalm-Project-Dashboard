@@ -155,6 +155,12 @@ export function initDatabase() {
     if (!colNames.has('pax_keys')) {
       db.prepare("ALTER TABLE projects ADD COLUMN pax_keys TEXT").run();
     }
+
+    const phaseColumns = db.prepare("PRAGMA table_info(phases)").all() as { name: string }[];
+    const phaseColNames = new Set(phaseColumns.map((c) => c.name));
+    if (!phaseColNames.has('weight')) {
+      db.prepare("ALTER TABLE phases ADD COLUMN weight REAL").run();
+    }
   } catch (err) {
     console.warn('Column migration note:', err);
   }

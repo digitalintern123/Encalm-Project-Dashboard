@@ -49,6 +49,7 @@ export function fetchFullProject(projectId: string) {
       workCompleted: ph.work_completed,
       nextAction: ph.next_action,
       decisionRequired: ph.decision_required,
+      weight: ph.weight ?? null,
       updatedAt: ph.updated_at,
     })),
     milestones: milestones.map((m) => ({
@@ -141,9 +142,9 @@ router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedR
 
   const insertPhase = db.prepare(`
     INSERT INTO phases (
-      id, project_id, name, status, progress, owner, order_index
+      id, project_id, name, status, progress, weight, owner, order_index
     ) VALUES (
-      @id, @project_id, @name, @status, @progress, @owner, @order_index
+      @id, @project_id, @name, @status, @progress, @weight, @owner, @order_index
     )
   `);
 
@@ -189,6 +190,7 @@ router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedR
         name: ph.name,
         status: ph.status || 'upcoming',
         progress: ph.progress || 0,
+        weight: ph.weight || null,
         owner: ph.owner || 'PMO',
         order_index: idx,
       });
