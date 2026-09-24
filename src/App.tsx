@@ -38,6 +38,7 @@ function Router() {
           <Route path="/commercial">{() => <Workspace view="commercial" />}</Route>
           <Route path="/updates">{() => <Workspace view="updates" />}</Route>
           <Route path="/reports">{() => <Workspace view="reports" />}</Route>
+          <Route path="/team">{() => <Workspace view="team" />}</Route>
           <Route path="/new-project">{() => <Workspace view="new-project" />}</Route>
           <Route path="/project/:projectId" component={ProjectDetail} />
           <Route component={NotFound} />

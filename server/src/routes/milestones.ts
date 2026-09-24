@@ -5,8 +5,8 @@ import { fetchFullProject } from './projects.js';
 
 const router = Router({ mergeParams: true });
 
-// POST add milestone (Lead and HOD)
-router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
+// POST add milestone (Lead and Coordinator)
+router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const project = fetchFullProject(projectId);
   if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -56,21 +56,14 @@ router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedR
   return res.status(201).json({ project: updatedProject });
 });
 
-// PATCH update milestone (Allows both Lead and HOD to update approvalStatus or mark complete)
-router.patch('/:milestoneId', requireAuth, (req: AuthenticatedRequest, res) => {
+// PATCH update milestone (Lead and Coordinator)
+router.patch('/:milestoneId', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const milestoneId = req.params.milestoneId as string;
   const milestone = db.prepare('SELECT * FROM milestones WHERE id = ? AND project_id = ?').get(milestoneId, projectId) as any;
   if (!milestone) return res.status(404).json({ error: 'Milestone not found' });
 
   const patch = req.body;
-  const isHod = req.user!.role === 'hod';
-
-  // HOD can approve or reject, or Lead can edit everything
-  if (isHod && (patch.title || patch.date || patch.stage)) {
-    return res.status(403).json({ error: 'HOD can only update approval status or completion on milestones' });
-  }
-
   const updates: string[] = [];
   const values: any[] = [];
 
@@ -93,8 +86,8 @@ router.patch('/:milestoneId', requireAuth, (req: AuthenticatedRequest, res) => {
   return res.json({ project: updatedProject });
 });
 
-// DELETE milestone (Lead and HOD)
-router.delete('/:milestoneId', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
+// DELETE milestone (Lead and Coordinator)
+router.delete('/:milestoneId', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const milestoneId = req.params.milestoneId as string;
   db.prepare('DELETE FROM milestones WHERE id = ? AND project_id = ?').run(milestoneId, projectId);

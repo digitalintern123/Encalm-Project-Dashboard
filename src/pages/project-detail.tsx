@@ -1230,12 +1230,12 @@ export default function ProjectDetail() {
   const project = projects.find((item) => item.id === projectId);
   if (!project) return <div className="mx-auto max-w-4xl px-5 py-20 text-center"><p className="font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground">Project not found</p><h1 className="mt-3 font-serif text-4xl text-[#173e49]">That project is not in this portfolio.</h1><Link href="/" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground"><ArrowLeft size={14} /> Return to portfolio</Link></div>;
   const health = healthStyles[project.health];
-  const canEdit = role === 'lead' || role === 'hod';
+  const canEdit = role === 'lead' || role === 'coordinator';
   const activePhase = project.phases.find((phase) => phase.status === 'active')?.name ?? 'planning';
   const saveProgress = (progress: number, comment: string, nextMilestone: string) => {
     const saved = updateProject(project.id, { progress: clampPercent(progress), nextMilestone: nextMilestone.trim() || project.nextMilestone });
     if (!saved) {
-      toast({ variant: 'destructive', title: 'Not saved', description: 'Project edits require lead or HOD permissions.' });
+      toast({ variant: 'destructive', title: 'Not saved', description: 'Project edits require Lead or Coordinator permissions.' });
       return;
     }
     if (comment.trim()) {
@@ -1317,12 +1317,14 @@ export default function ProjectDetail() {
 }
 
 function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCancel: () => void; onSave: (patch: Partial<Project>) => void }) {
+  const { leads, role } = useAppState();
   const [name, setName] = useState(project.name);
   const [targetDate, setTargetDate] = useState(project.targetDate);
   const [health, setHealth] = useState(project.health);
   const [status, setStatus] = useState<ProjectStatus>(project.status || 'Yet to start');
   const [area, setArea] = useState(project.area || project.specification?.area || '');
   const [paxKeys, setPaxKeys] = useState(project.paxKeys || project.specification?.capacity || '');
+  const [leadId, setLeadId] = useState(project.leadId);
   const [error, setError] = useState('');
 
   const handleSubmit = (event: FormEvent) => {
@@ -1336,6 +1338,7 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
       targetLabel: formatFullDate(targetDate),
       health,
       status,
+      leadId: role === 'coordinator' ? leadId : project.leadId,
       area: area.trim(),
       paxKeys: paxKeys.trim(),
       specification: {
@@ -1354,7 +1357,9 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
     <form onSubmit={handleSubmit} noValidate className="mt-6 rounded-2xl border border-[#eadcb1] bg-[#fff8e9] p-5 md:p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-mono text-[9px] uppercase tracking-[.13em] text-[#9a711f]">Project lead controls</p>
+          <p className="font-mono text-[9px] uppercase tracking-[.13em] text-[#9a711f]">
+            {role === 'coordinator' ? 'Project coordinator controls' : 'Project lead controls'}
+          </p>
           <h2 className="mt-1 text-[16px] font-extrabold">Edit project information</h2>
         </div>
         <button type="button" onClick={onCancel} className="text-[11px] text-muted-foreground">Cancel</button>
@@ -1370,6 +1375,24 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
             {projectStatuses.map((item) => <option key={item} value={item}>{item}</option>)}
           </select>
         </label>
+
+        {role === 'coordinator' && leads.length > 0 && (
+          <label className="md:col-span-3">
+            <span className="mb-2 block text-[10px] font-bold text-[#664b14]">Allotted Project Lead</span>
+            <select
+              value={leadId}
+              onChange={(event) => setLeadId(event.target.value)}
+              className="h-10 w-full rounded-lg border border-[#d6a95d] bg-white px-3 text-[11px] font-bold text-[#173e49]"
+            >
+              {leads.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name} ({l.title}) — {l.email}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
         <label>
           <span className="mb-2 block text-[10px] font-bold">Target completion (Project Completion Date)</span>
           <input type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />

@@ -6,7 +6,7 @@ import { fetchFullProject } from './projects.js';
 const router = Router({ mergeParams: true });
 
 // POST add issue (Lead and HOD)
-router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
+router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const project = fetchFullProject(projectId);
   if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -64,7 +64,7 @@ router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedR
 });
 
 // PATCH update issue (Lead and HOD)
-router.patch('/:issueId', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
+router.patch('/:issueId', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const issueId = req.params.issueId as string;
   const issue = db.prepare('SELECT * FROM issues WHERE id = ? AND project_id = ?').get(issueId, projectId) as any;
@@ -102,7 +102,7 @@ router.patch('/:issueId', requireAuth, requireRole(['lead', 'hod']), (req: Authe
 });
 
 // DELETE issue (Lead and HOD)
-router.delete('/:issueId', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
+router.delete('/:issueId', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const issueId = req.params.issueId as string;
   db.prepare('DELETE FROM issues WHERE id = ? AND project_id = ?').run(issueId, projectId);

@@ -7,11 +7,8 @@ import { users as seedUsers } from '../../../src/data/users.js';
 export function ensureUsersSeeded() {
   initDatabase();
 
-  const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
-  if (userCount.count > 0) return;
-
   const insertUser = db.prepare(`
-    INSERT INTO users (id, name, email, password_hash, role, title, initials)
+    INSERT OR IGNORE INTO users (id, name, email, password_hash, role, title, initials)
     VALUES (@id, @name, @email, @password_hash, @role, @title, @initials)
   `);
 
@@ -32,7 +29,7 @@ export function ensureUsersSeeded() {
   });
 
   tx();
-  console.log('✓ User accounts initialized for authentication.');
+  console.log('✓ User accounts synchronized for authentication.');
 }
 
 /** Clears all project records, stages, milestones, issues, updates, and notifications for a clean slate. */

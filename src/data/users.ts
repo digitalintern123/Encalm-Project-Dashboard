@@ -10,12 +10,12 @@
  * database primary key rather than a hand-written slug.
  */
 
-export type UserRole = 'hod' | 'lead';
+export type UserRole = 'hod' | 'lead' | 'coordinator';
 
 export type User = {
   id: string;
   name: string;
-  /** Only the two demo login accounts have one. */
+  /** Demo login accounts have one. */
   email?: string;
   role: UserRole;
   title: string;
@@ -23,11 +23,13 @@ export type User = {
 };
 
 export const DEMO_HOD_ID = 'user-ruchika-chauhan';
+export const DEMO_COORDINATOR_ID = 'user-rajesh-sharma';
 export const DEMO_LEAD_ID = 'user-chinmay-saxena';
 
 export const users: User[] = [
-  // The two accounts the login screen accepts.
+  // The accounts the login screen accepts.
   { id: DEMO_HOD_ID, name: 'Ruchika Chauhan', email: 'hod@encalm.com', role: 'hod', title: 'Project HOD', initials: 'RC' },
+  { id: DEMO_COORDINATOR_ID, name: 'Rajesh Sharma', email: 'coordinator@encalm.com', role: 'coordinator', title: 'Project Coordinator', initials: 'RS' },
   { id: DEMO_LEAD_ID, name: 'Chinmay Saxena', email: 'lead@encalm.com', role: 'lead', title: 'Project Lead', initials: 'CS' },
 
   // Other project leads on record in the seed data. They have no login in

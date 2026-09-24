@@ -34,8 +34,8 @@ globalUpdatesRouter.get('/', (req, res) => {
   return res.json({ updates });
 });
 
-// POST add update to project (Lead and HOD)
-projectUpdatesRouter.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
+// POST add update to project (Lead and Coordinator)
+projectUpdatesRouter.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const project = fetchFullProject(projectId);
   if (!project) return res.status(404).json({ error: 'Project not found' });

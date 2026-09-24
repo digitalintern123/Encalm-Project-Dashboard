@@ -23,6 +23,8 @@ import {
   ThumbsDown,
   ThumbsUp,
   TrendingUp,
+  UserPlus,
+  Users,
 } from 'lucide-react';
 import { categories, formatCrore, healthOptions, locations, projectStatuses, issueCategories, type Category, type Health, type Project, type ProjectStatus, type IssueCategory, type IssueStatus, type ProjectIssue } from '@/data/projects';
 import { useAppState } from '@/state/app-state';
@@ -32,7 +34,7 @@ import { formatFullDate, isValidIsoDate, todayIso, todayLabel } from '@/lib/date
 import { initialsOf, leadName } from '@/data/users';
 import { formatRatio, getCommercialSummary, getPortfolioCommercialSummary } from '@/lib/calculations';
 
-export type WorkspaceView = 'projects' | 'my-projects' | 'timeline' | 'milestones' | 'issues' | 'commercial' | 'updates' | 'reports' | 'new-project';
+export type WorkspaceView = 'projects' | 'my-projects' | 'timeline' | 'milestones' | 'issues' | 'commercial' | 'updates' | 'reports' | 'new-project' | 'team';
 
 const healthTone: Record<Health, string> = { 'On track': 'bg-[#e4f1ec] text-[#2e7c67]', 'At risk': 'bg-[#f8edcf] text-[#9a711f]', Delayed: 'bg-[#fae5e1] text-[#b2473d]', 'Not started': 'bg-[#eef0ed] text-[#69716b]' };
 
@@ -502,7 +504,7 @@ function MilestonesView() {
                   </Link>
 
                   <div className="flex items-center gap-2">
-                    {isPendingApproval && (
+                    {canEdit && isPendingApproval && (
                       <>
                         <button
                           type="button"
@@ -521,7 +523,7 @@ function MilestonesView() {
                       </>
                     )}
 
-                    {!isComplete && (
+                    {canEdit && !isComplete && (
                       <button
                         type="button"
                         onClick={() => handleComplete(item.project.id, item.id)}
@@ -1516,7 +1518,7 @@ function ReportsView() {
 }
 
 function NewProjectView() {
-  const { addProject, user, canEdit } = useAppState();
+  const { addProject, user, canEdit, role, leads } = useAppState();
   const { toast } = useToast();
   const [createdName, setCreatedName] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
@@ -1526,6 +1528,7 @@ function NewProjectView() {
     category: 'Hotel' as Category,
     status: 'Yet to start' as ProjectStatus,
     projectType: 'Business hotel',
+    leadId: (role === 'lead' ? user?.id : leads[0]?.id) || user?.id || '',
     startDate: todayIso(),
     targetDate: '',
     progress: '0',
@@ -1541,7 +1544,7 @@ function NewProjectView() {
     setForm((current) => ({ ...current, [key]: value }));
 
   if (!canEdit) {
-    return <><PageHeader eyebrow="Project lead workspace" title="Create new project" description="Creating projects is restricted to Project Leads." /><div className="mt-8 flex max-w-[620px] items-start gap-3 rounded-2xl border border-[#eadcb1] bg-[#fbf1d8] p-5"><ShieldAlert size={18} className="mt-0.5 shrink-0 text-[#9a711f]" /><p className="text-[12px] leading-6 text-[#8e681c]">You are signed in with read-only portfolio access. Ask a Project Lead to create the project, or sign in as a Lead to continue.</p></div></>;
+    return <><PageHeader eyebrow="Project workspace" title="Create new project" description="Creating projects is restricted to Project Leads and Coordinators." /><div className="mt-8 flex max-w-[620px] items-start gap-3 rounded-2xl border border-[#eadcb1] bg-[#fbf1d8] p-5"><ShieldAlert size={18} className="mt-0.5 shrink-0 text-[#9a711f]" /><p className="text-[12px] leading-6 text-[#8e681c]">You are signed in with read-only portfolio access. Project creation is managed by the Project Coordinator or Leads.</p></div></>;
   }
 
   const submit = (event: FormEvent) => {
@@ -1596,7 +1599,7 @@ function NewProjectView() {
       paxKeys: form.paxKeys.trim(),
       nextMilestone: 'Project brief',
       nextMilestoneDate: form.startDate,
-      leadId: user?.id ?? '',
+      leadId: form.leadId || user?.id || '',
       startDate: form.startDate,
       specification: {
         projectType: form.projectType,
@@ -1628,14 +1631,14 @@ function NewProjectView() {
     toast({ title: 'Project created', description: `${name} is now in the portfolio.` });
   };
 
-  if (createdName) return <div className="mx-auto max-w-[760px] py-16 text-center"><span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#e4f1ec] text-[#2e7c67]"><CheckCircle2 size={25} /></span><p className="mt-6 font-mono text-[10px] uppercase tracking-[.16em] text-[#2e7c67]">Project created</p><h1 className="mt-3 font-serif text-[44px] leading-none tracking-[-.05em] text-[#173e49]">{createdName} is ready for updates.</h1><p className="mx-auto mt-4 max-w-[480px] text-[13px] leading-6 text-muted-foreground">The project is saved and synced with the portfolio database.</p><Link href="/my-projects" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-3 text-[11px] font-bold text-white">Open my projects <ArrowUpRight size={15} /></Link></div>;
+  if (createdName) return <div className="mx-auto max-w-[760px] py-16 text-center"><span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#e4f1ec] text-[#2e7c67]"><CheckCircle2 size={25} /></span><p className="mt-6 font-mono text-[10px] uppercase tracking-[.16em] text-[#2e7c67]">Project created</p><h1 className="mt-3 font-serif text-[44px] leading-none tracking-[-.05em] text-[#173e49]">{createdName} is ready for updates.</h1><p className="mx-auto mt-4 max-w-[480px] text-[13px] leading-6 text-muted-foreground">The project is saved and synced with the portfolio database.</p><Link href="/projects" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-3 text-[11px] font-bold text-white">View all projects <ArrowUpRight size={15} /></Link></div>;
 
   return (
     <>
       <PageHeader
-        eyebrow="Project lead workspace"
+        eyebrow="Portfolio creation"
         title="Create new project"
-        description="Capture the core project metrics, status lifecycle, commercial budget, and capacity details."
+        description="Capture the core project metrics, status lifecycle, commercial budget, and assign a Project Lead."
       />
       <form onSubmit={submit} noValidate className="mt-8 max-w-[1000px] space-y-5">
         {errors.length > 0 && (
@@ -1650,7 +1653,7 @@ function NewProjectView() {
         )}
 
         <section className="rounded-2xl border border-border bg-card p-5 md:p-7">
-          <h2 className="text-[18px] font-extrabold">1. Basic Information & Status</h2>
+          <h2 className="text-[18px] font-extrabold">1. Basic Information & Ownership</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <label className="md:col-span-2">
               <span className="mb-2 block text-[11px] font-bold">Project Name *</span>
@@ -1662,6 +1665,23 @@ function NewProjectView() {
                 className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none focus:border-[#c9a04e]"
               />
             </label>
+
+            {role === 'coordinator' && leads.length > 0 && (
+              <label className="md:col-span-2">
+                <span className="mb-2 block text-[11px] font-bold text-[#664b14]">Allot to Project Lead *</span>
+                <select
+                  value={form.leadId}
+                  onChange={(event) => set('leadId', event.target.value)}
+                  className="h-11 w-full rounded-xl border border-[#d6a95d] bg-white px-3 text-[12px] font-bold text-[#173e49]"
+                >
+                  {leads.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name} ({l.title}) — {l.email}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label>
               <span className="mb-2 block text-[11px] font-bold">Location *</span>
               <select
@@ -1813,6 +1833,305 @@ function NewProjectView() {
   );
 }
 
+function TeamView() {
+  const { leads, projects, createLead, allotProject, role } = useAppState();
+  const { toast } = useToast();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('encalm');
+  const [title, setTitle] = useState('Project Lead');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [allottingProjectId, setAllottingProjectId] = useState<string | null>(null);
+
+  const handleCreateLead = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setError('Please provide a name, email, and password.');
+      return;
+    }
+    setError('');
+    setSubmitting(true);
+    try {
+      const res = await createLead({
+        name: name.trim(),
+        email: email.trim(),
+        password: password.trim(),
+        title: title.trim() || 'Project Lead',
+      });
+      if (res.success && res.lead) {
+        toast({
+          title: 'Project Lead Created',
+          description: `Account created for ${res.lead.name}. They can now sign in with ${res.lead.email}.`,
+        });
+        setName('');
+        setEmail('');
+        setPassword('encalm');
+        setTitle('Project Lead');
+      } else {
+        setError(res.error || 'Failed to create lead account');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error creating lead');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAllot = async (projectId: string, leadId: string) => {
+    setAllottingProjectId(projectId);
+    const res = await allotProject(projectId, leadId);
+    setAllottingProjectId(null);
+    if (res.success) {
+      const lead = leads.find((l) => l.id === leadId);
+      const project = projects.find((p) => p.id === projectId);
+      toast({
+        title: 'Project Allotted',
+        description: `${project?.name || 'Project'} assigned to ${lead?.name || 'lead'}.`,
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Allotment failed',
+        description: res.error || 'Could not allot project',
+      });
+    }
+  };
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="Project Coordinator Workspace"
+        title="Team & Project Allotment"
+        description="Create Project Leads with real credentials, assign and allot projects, and manage portfolio ownership."
+      />
+
+      <div className="mt-8 grid gap-7 lg:grid-cols-[1.05fr_1.95fr]">
+        {/* Left Column: Create Project Lead */}
+        <div className="space-y-6">
+          <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="grid size-9 place-items-center rounded-xl bg-[#ebdcb9] text-[#664b14]">
+                <UserPlus size={18} />
+              </span>
+              <div>
+                <h2 className="text-[16px] font-extrabold text-[#173e49]">Create Project Lead</h2>
+                <p className="text-[11px] text-muted-foreground">Add a new Project Lead to the system</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateLead} className="mt-5 space-y-4">
+              {error && (
+                <p className="rounded-xl bg-[#fae5e1] p-3 text-[11px] font-bold text-[#b2473d]">
+                  {error}
+                </p>
+              )}
+
+              <label className="block">
+                <span className="mb-1.5 block text-[11px] font-bold text-[#173e49]">Full Name *</span>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Karan Verma"
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none focus:border-[#d6a95d]"
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-[11px] font-bold text-[#173e49]">Email Address *</span>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="e.g. karan.verma@encalm.com"
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none focus:border-[#d6a95d]"
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-[11px] font-bold text-[#173e49]">Initial Password *</span>
+                <input
+                  type="text"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-mono outline-none focus:border-[#d6a95d]"
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-[11px] font-bold text-[#173e49]">Role Title</span>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Senior Project Lead"
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none focus:border-[#d6a95d]"
+                />
+              </label>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#d6a95d] px-4 py-3 text-[12px] font-extrabold text-[#173e49] hover:bg-[#e2bd73] transition disabled:opacity-50"
+              >
+                <UserPlus size={15} /> {submitting ? 'Creating Lead...' : 'Create Project Lead Account'}
+              </button>
+            </form>
+          </section>
+
+          {/* Active Leads Roster Card */}
+          <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[14px] font-extrabold text-[#173e49]">Active Project Leads ({leads.length})</h3>
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-800">
+                Live Roster
+              </span>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {leads.length === 0 ? (
+                <p className="text-[11px] text-muted-foreground">No leads found in database.</p>
+              ) : (
+                leads.map((lead) => {
+                  const assignedProjects = projects.filter((p) => p.leadId === lead.id);
+                  return (
+                    <div
+                      key={lead.id}
+                      className="rounded-xl border border-border bg-background p-3.5 transition hover:border-[#eadcb1]"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <span className="grid size-8 place-items-center rounded-full bg-[#173e49] text-[10px] font-bold text-white">
+                            {lead.initials}
+                          </span>
+                          <div>
+                            <p className="text-[12px] font-bold text-foreground">{lead.name}</p>
+                            <p className="font-mono text-[9px] text-muted-foreground">{lead.email}</p>
+                          </div>
+                        </div>
+                        <span className="rounded-full bg-[#eef0ed] px-2 py-0.5 font-mono text-[9px] font-bold text-muted-foreground">
+                          {assignedProjects.length} {assignedProjects.length === 1 ? 'project' : 'projects'}
+                        </span>
+                      </div>
+
+                      {assignedProjects.length > 0 && (
+                        <div className="mt-2.5 flex flex-wrap gap-1.5 border-t border-border/50 pt-2">
+                          {assignedProjects.map((p) => (
+                            <Link
+                              key={p.id}
+                              href={`/project/${p.id}`}
+                              className="rounded-md bg-card px-2 py-0.5 text-[9px] font-semibold text-muted-foreground hover:text-foreground border border-border hover:border-[#d6a95d]"
+                            >
+                              {p.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* Right Column: Project Allotment Matrix */}
+        <div>
+          <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+              <div>
+                <h2 className="text-[16px] font-extrabold text-[#173e49]">Project Allotment & Ownership</h2>
+                <p className="text-[11px] text-muted-foreground">
+                  Assign projects to leads. Changes are saved directly to the database.
+                </p>
+              </div>
+              <span className="font-mono text-[10px] uppercase tracking-[.1em] text-muted-foreground">
+                Total Projects: {projects.length}
+              </span>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              {projects.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-border p-10 text-center text-[12px] text-muted-foreground">
+                  No projects in portfolio.
+                </p>
+              ) : (
+                projects.map((project) => {
+                  const currentLead = leads.find((l) => l.id === project.leadId);
+                  const isAllotting = allottingProjectId === project.id;
+
+                  return (
+                    <div
+                      key={project.id}
+                      className="rounded-xl border border-border bg-background p-4 transition hover:border-[#d6a95d]"
+                    >
+                      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Link
+                              href={`/project/${project.id}`}
+                              className="text-[13px] font-extrabold text-foreground hover:text-[#2e7c67] hover:underline"
+                            >
+                              {project.name}
+                            </Link>
+                            <span className="rounded-full bg-[#eef0ed] px-2 py-0.5 font-mono text-[9px] text-muted-foreground">
+                              {project.code}
+                            </span>
+                            <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${statusTone[project.status || 'Yet to start']}`}>
+                              {project.status || 'Yet to start'}
+                            </span>
+                          </div>
+                          <p className="mt-1 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">
+                            {project.location} · {project.category} · Target: {project.targetLabel} · Progress: {project.progress}%
+                          </p>
+                        </div>
+
+                        {/* Allotment Control */}
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <span className="block font-mono text-[8px] uppercase tracking-[.1em] text-muted-foreground">
+                              Assigned Lead
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 font-bold text-[11px] text-[#173e49]">
+                              <span className="grid size-5 place-items-center rounded-full bg-[#ebdcb9] text-[9px] font-bold text-[#664b14]">
+                                {currentLead ? currentLead.initials : initialsOf(leadName(project.leadId))}
+                              </span>
+                              {currentLead ? currentLead.name : leadName(project.leadId)}
+                            </span>
+                          </div>
+
+                          <select
+                            disabled={isAllotting}
+                            value={project.leadId || ''}
+                            onChange={(e) => handleAllot(project.id, e.target.value)}
+                            className="h-9 rounded-xl border border-border bg-white px-2.5 text-[11px] font-bold text-[#173e49] outline-none focus:border-[#d6a95d] disabled:opacity-50"
+                          >
+                            <option value="" disabled>Select lead...</option>
+                            {leads.map((l) => (
+                              <option key={l.id} value={l.id}>
+                                Allot to {l.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </section>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function Workspace({ view }: { view: WorkspaceView }) {
   return (
     <div className="mx-auto max-w-[1500px] px-5 pb-14 pt-8 md:px-10 md:pt-10">
@@ -1825,6 +2144,7 @@ export default function Workspace({ view }: { view: WorkspaceView }) {
       {view === 'updates' && <UpdatesView />}
       {view === 'reports' && <ReportsView />}
       {view === 'new-project' && <NewProjectView />}
+      {view === 'team' && <TeamView />}
     </div>
   );
 }

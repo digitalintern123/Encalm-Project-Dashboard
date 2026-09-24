@@ -73,6 +73,12 @@ export const api = {
     me: () => request<{ user: User }>('/api/auth/me'),
     logout: () => request<{ message: string }>('/api/auth/logout', { method: 'POST' }),
     getUsers: () => request<{ users: User[] }>('/api/auth/users'),
+    getLeads: () => request<{ leads: User[] }>('/api/auth/leads'),
+    createLead: (data: { name: string; email: string; password: string; title?: string }) =>
+      request<{ message: string; lead: User }>('/api/auth/create-lead', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
   },
 
   projects: {
@@ -87,6 +93,11 @@ export const api = {
       request<{ project: Project }>(`/api/projects/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(patch),
+      }),
+    allot: (id: string, leadId: string) =>
+      request<{ project: Project }>(`/api/projects/${id}/allot`, {
+        method: 'PATCH',
+        body: JSON.stringify({ leadId }),
       }),
     delete: (id: string) =>
       request<{ message: string }>(`/api/projects/${id}`, {

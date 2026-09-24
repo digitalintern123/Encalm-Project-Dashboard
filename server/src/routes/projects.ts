@@ -111,8 +111,8 @@ router.get('/:id', optionalAuth, (req, res) => {
   return res.json({ project });
 });
 
-// POST create project (Lead and HOD)
-router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
+// POST create project (Lead and Coordinator)
+router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const body = req.body;
   if (!body.name || !body.location || !body.category) {
     return res.status(400).json({ error: 'Name, location, and category are required' });
@@ -277,8 +277,50 @@ router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedR
   return res.status(201).json({ project: created });
 });
 
-// PATCH update project (Lead and HOD)
-router.patch('/:id', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
+// PATCH allot project (Coordinator only)
+router.patch('/:id/allot', requireAuth, requireRole(['coordinator']), (req: AuthenticatedRequest, res) => {
+  const id = req.params.id as string;
+  const { leadId } = req.body;
+  if (!leadId) {
+    return res.status(400).json({ error: 'leadId is required' });
+  }
+
+  // Validate lead exists and has role 'lead'
+  const lead = db.prepare('SELECT id, name FROM users WHERE id = ? AND role = ?').get(leadId, 'lead') as any;
+  if (!lead) {
+    return res.status(400).json({ error: 'Selected lead does not exist or is not a project lead' });
+  }
+
+  const project = fetchFullProject(id);
+  if (!project) {
+    return res.status(404).json({ error: 'Project not found' });
+  }
+
+  const todayFormatted = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  db.prepare('UPDATE projects SET lead_id = ?, last_updated = ? WHERE id = ?').run(
+    leadId,
+    todayFormatted,
+    id
+  );
+
+  // Add notification
+  db.prepare(`
+    INSERT INTO notifications (id, type, title, message, project_id, link, read, created_at)
+    VALUES (?, 'system', ?, ?, ?, ?, 0, datetime('now'))
+  `).run(
+    `notif-allot-${id}-${Date.now()}`,
+    `Project Allotted: ${project.name}`,
+    `${project.name} has been assigned to ${lead.name} by ${req.user!.name}.`,
+    id,
+    `/project/${id}`
+  );
+
+  const updated = fetchFullProject(id);
+  return res.json({ project: updated });
+});
+
+// PATCH update project (Lead and Coordinator)
+router.patch('/:id', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const id = req.params.id as string;
   const project = fetchFullProject(id);
   if (!project) {
@@ -319,8 +361,8 @@ router.patch('/:id', requireAuth, requireRole(['lead', 'hod']), (req: Authentica
   return res.json({ project: updated });
 });
 
-// DELETE project (Lead and HOD)
-router.delete('/:id', requireAuth, requireRole(['lead', 'hod']), (req, res) => {
+// DELETE project (Lead and Coordinator)
+router.delete('/:id', requireAuth, requireRole(['lead', 'coordinator']), (req, res) => {
   const id = req.params.id as string;
   const result = db.prepare('DELETE FROM projects WHERE id = ?').run(id);
   if (result.changes === 0) {

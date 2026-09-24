@@ -8,7 +8,7 @@ export type UserPayload = {
   id: string;
   name: string;
   email: string;
-  role: 'hod' | 'lead';
+  role: 'hod' | 'lead' | 'coordinator';
   title: string;
   initials: string;
 };
@@ -40,7 +40,7 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
   }
 }
 
-export function requireRole(allowedRoles: ('hod' | 'lead')[]) {
+export function requireRole(allowedRoles: ('hod' | 'lead' | 'coordinator')[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized: Authentication required' });

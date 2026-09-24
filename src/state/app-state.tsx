@@ -16,19 +16,20 @@ import {
 } from '@/data/projects';
 import { readJson, removeItem, writeJson } from '@/lib/storage';
 import { todayLabel } from '@/lib/date';
-import { DEMO_HOD_ID, DEMO_LEAD_ID, getUserById, type User } from '@/data/users';
+import { DEMO_HOD_ID, DEMO_LEAD_ID, DEMO_COORDINATOR_ID, getUserById, type User } from '@/data/users';
 import { api, getStoredToken, setStoredToken, type NotificationItem } from '@/lib/api';
 import { calculateWeightedProgress } from '@/lib/calculations';
 
-export type AppRole = 'hod' | 'lead';
+export type AppRole = 'hod' | 'lead' | 'coordinator';
 export type DemoUser = User;
 
 const demoUserIds: Record<AppRole, string> = {
   hod: DEMO_HOD_ID,
   lead: DEMO_LEAD_ID,
+  coordinator: DEMO_COORDINATOR_ID,
 };
 
-const EDITOR_ROLES: readonly AppRole[] = ['lead', 'hod'];
+const EDITOR_ROLES: readonly AppRole[] = ['lead', 'coordinator'];
 
 type AppStateValue = {
   role: AppRole | null;
@@ -38,6 +39,10 @@ type AppStateValue = {
   isConnected: boolean;
   notifications: NotificationItem[];
   unreadNotifCount: number;
+  leads: User[];
+  refreshLeads: () => Promise<void>;
+  createLead: (data: { name: string; email: string; password: string; title?: string }) => Promise<{ success: boolean; error?: string; lead?: User }>;
+  allotProject: (projectId: string, leadId: string) => Promise<{ success: boolean; error?: string }>;
   login: (roleOrEmail: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   refreshProjects: () => Promise<void>;
@@ -128,7 +133,7 @@ function hydrateProjects(): Project[] {
 
 function hydrateRole(): AppRole | null {
   const saved = readJson<unknown>(ROLE_KEY);
-  return saved === 'hod' || saved === 'lead' ? saved : null;
+  return saved === 'hod' || saved === 'lead' || saved === 'coordinator' ? saved : null;
 }
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
@@ -141,6 +146,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
+  const [leads, setLeads] = useState<User[]>([]);
 
   // Sync with localStorage as cache / fallback
   useEffect(() => {
@@ -195,6 +201,46 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Fetch leads list from backend
+  const refreshLeads = useCallback(async () => {
+    try {
+      const data = await api.auth.getLeads();
+      if (Array.isArray(data.leads)) {
+        setLeads(data.leads);
+      }
+    } catch {
+      // Offline fallback
+    }
+  }, []);
+
+  const createLead = useCallback(
+    async (data: { name: string; email: string; password: string; title?: string }) => {
+      try {
+        const res = await api.auth.createLead(data);
+        await refreshLeads();
+        return { success: true, lead: res.lead };
+      } catch (err: any) {
+        return { success: false, error: err.message || 'Failed to create lead' };
+      }
+    },
+    [refreshLeads],
+  );
+
+  const allotProject = useCallback(
+    async (projectId: string, leadId: string) => {
+      try {
+        const res = await api.projects.allot(projectId, leadId);
+        setProjectState((prev) =>
+          prev.map((p) => (p.id === projectId ? normaliseProject(res.project) : p)),
+        );
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err.message || 'Failed to allot project' };
+      }
+    },
+    [],
+  );
+
   // Initial load & authentication check
   useEffect(() => {
     const initAuthAndData = async () => {
@@ -214,6 +260,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
       await refreshProjects();
       await refreshNotifications();
+      await refreshLeads();
     };
 
     initAuthAndData();
@@ -222,10 +269,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const interval = setInterval(() => {
       refreshProjects();
       refreshNotifications();
+      refreshLeads();
     }, 15000);
 
     return () => clearInterval(interval);
-  }, [refreshProjects, refreshNotifications]);
+  }, [refreshProjects, refreshNotifications, refreshLeads]);
 
   const canEdit = role !== null && EDITOR_ROLES.includes(role);
 
@@ -234,6 +282,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       let email = roleOrEmail.trim().toLowerCase();
       if (email === 'hod') email = 'hod@encalm.com';
       if (email === 'lead') email = 'lead@encalm.com';
+      if (email === 'coordinator') email = 'coordinator@encalm.com';
 
       try {
         const result = await api.auth.login(email, password);
@@ -243,10 +292,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setIsConnected(true);
         refreshProjects();
         refreshNotifications();
+        refreshLeads();
         return { success: true };
       } catch (err: any) {
         // Fallback for offline demo mode
-        const targetRole: AppRole | null = email === 'hod@encalm.com' ? 'hod' : email === 'lead@encalm.com' ? 'lead' : null;
+        const targetRole: AppRole | null =
+          email === 'hod@encalm.com' ? 'hod'
+          : email === 'lead@encalm.com' ? 'lead'
+          : email === 'coordinator@encalm.com' ? 'coordinator'
+          : null;
         if (targetRole) {
           setRole(targetRole);
           setUser(getUserById(demoUserIds[targetRole]) ?? null);
@@ -255,7 +309,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return { success: false, error: err.message || 'Login failed' };
       }
     },
-    [refreshProjects, refreshNotifications],
+    [refreshProjects, refreshNotifications, refreshLeads],
   );
 
   const logout = useCallback(() => {
@@ -616,6 +670,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       isConnected,
       notifications,
       unreadNotifCount,
+      leads,
+      refreshLeads,
+      createLead,
+      allotProject,
       login,
       logout,
       refreshProjects,
@@ -644,6 +702,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       isConnected,
       notifications,
       unreadNotifCount,
+      leads,
+      refreshLeads,
+      createLead,
+      allotProject,
       login,
       logout,
       refreshProjects,

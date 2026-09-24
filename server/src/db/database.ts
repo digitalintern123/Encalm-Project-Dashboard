@@ -25,7 +25,7 @@ export function initDatabase() {
       name TEXT NOT NULL,
       email TEXT UNIQUE,
       password_hash TEXT NOT NULL,
-      role TEXT NOT NULL CHECK(role IN ('hod', 'lead')),
+      role TEXT NOT NULL CHECK(role IN ('hod', 'lead', 'coordinator')),
       title TEXT NOT NULL,
       initials TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -160,6 +160,31 @@ export function initDatabase() {
     const phaseColNames = new Set(phaseColumns.map((c) => c.name));
     if (!phaseColNames.has('weight')) {
       db.prepare("ALTER TABLE phases ADD COLUMN weight REAL").run();
+    }
+
+    // Safe migration for users table CHECK constraint to support coordinator role
+    const userTableInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get() as { sql?: string } | undefined;
+    if (userTableInfo?.sql && !userTableInfo.sql.includes('coordinator')) {
+      db.exec(`
+        ALTER TABLE users RENAME TO users_old;
+
+        CREATE TABLE users (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT UNIQUE,
+          password_hash TEXT NOT NULL,
+          role TEXT NOT NULL CHECK(role IN ('hod', 'lead', 'coordinator')),
+          title TEXT NOT NULL,
+          initials TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        INSERT INTO users (id, name, email, password_hash, role, title, initials, created_at)
+        SELECT id, name, email, password_hash, role, title, initials, created_at FROM users_old;
+
+        DROP TABLE users_old;
+      `);
+      console.log('✓ Migrated users table schema to support coordinator role.');
     }
   } catch (err) {
     console.warn('Column migration note:', err);

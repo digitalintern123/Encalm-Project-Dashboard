@@ -46,7 +46,7 @@ function recomputeProjectProgress(projectId: string): number {
 }
 
 // POST add phase
-router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
+router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const project = fetchFullProject(projectId);
   if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -91,7 +91,7 @@ router.post('/', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedR
 });
 
 // PATCH update phase
-router.patch('/:phaseId', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
+router.patch('/:phaseId', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const phaseId = req.params.phaseId as string;
   const phase = db.prepare('SELECT * FROM phases WHERE id = ? AND project_id = ?').get(phaseId, projectId) as any;
@@ -144,7 +144,7 @@ router.patch('/:phaseId', requireAuth, requireRole(['lead', 'hod']), (req: Authe
 });
 
 // DELETE remove phase
-router.delete('/:phaseId', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
+router.delete('/:phaseId', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const phaseId = req.params.phaseId as string;
   const count = db.prepare('SELECT COUNT(*) as count FROM phases WHERE project_id = ?').get(projectId) as { count: number };
@@ -170,7 +170,7 @@ router.delete('/:phaseId', requireAuth, requireRole(['lead', 'hod']), (req: Auth
 });
 
 // POST move / reorder phase
-router.post('/move', requireAuth, requireRole(['lead', 'hod']), (req: AuthenticatedRequest, res) => {
+router.post('/move', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const { phaseIndex, direction } = req.body; // direction is -1 or 1
 

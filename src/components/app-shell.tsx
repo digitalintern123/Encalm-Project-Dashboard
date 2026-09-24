@@ -26,14 +26,27 @@ import {
   Clock3,
   Activity,
   Server,
+  Users,
 } from 'lucide-react';
-import { useAppState } from '@/state/app-state';
+import { useAppState, type AppRole } from '@/state/app-state';
 import { readItem, writeItem } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 
 type AppShellProps = { children: ReactNode };
 
-const groups = [
+type NavItem = {
+  label: string;
+  href: string;
+  icon: any;
+  allowedRoles?: AppRole[];
+};
+
+type NavGroup = {
+  label: string;
+  items: NavItem[];
+};
+
+const groups: NavGroup[] = [
   {
     label: 'Command center',
     items: [{ label: 'Portfolio overview', href: '/', icon: LayoutDashboard }],
@@ -42,8 +55,9 @@ const groups = [
     label: 'Projects',
     items: [
       { label: 'All projects', href: '/projects', icon: ListChecks },
-      { label: 'New project', href: '/new-project', icon: Plus, leadOnly: true },
-      { label: 'My projects', href: '/my-projects', icon: Target, leadOnly: true },
+      { label: 'New project', href: '/new-project', icon: Plus, allowedRoles: ['lead', 'coordinator'] },
+      { label: 'My projects', href: '/my-projects', icon: Target, allowedRoles: ['lead'] },
+      { label: 'Team & Allotment', href: '/team', icon: Users, allowedRoles: ['coordinator'] },
     ],
   },
   {
@@ -185,7 +199,13 @@ export function AppShell({ children }: AppShellProps) {
 
         <nav className="mt-9 flex-1 space-y-6 overflow-y-auto">
           {groups.map((group) => {
-            const visible = group.items.filter((item) => !item.leadOnly || canEdit);
+            const visible = group.items.filter((item) => {
+              if (item.allowedRoles) {
+                return role ? item.allowedRoles.includes(role) : false;
+              }
+              return true;
+            });
+            if (visible.length === 0) return null;
             return (
               <div key={group.label}>
                 <p
@@ -329,10 +349,18 @@ export function AppShell({ children }: AppShellProps) {
           <div className="flex items-center gap-3">
             <span
               className={`hidden rounded-full px-3 py-1.5 font-mono text-[9px] uppercase tracking-[.12em] sm:inline-flex ${
-                isLead ? 'bg-[#e4f1ec] text-[#2e7c67]' : 'bg-[#f8edcf] text-[#9a711f]'
+                role === 'coordinator'
+                  ? 'bg-[#ebdcb9] text-[#664b14]'
+                  : isLead
+                    ? 'bg-[#e4f1ec] text-[#2e7c67]'
+                    : 'bg-[#dbeef7] text-[#1a5068]'
               }`}
             >
-              {isLead ? 'Project lead' : 'Project HOD'}
+              {role === 'coordinator'
+                ? 'Project coordinator'
+                : isLead
+                  ? 'Project lead'
+                  : 'Project HOD · Read-only'}
             </span>
 
             {/* Live Server Sync Indicator */}
