@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  type Health,
   type Milestone,
   type Phase,
   type Project,
@@ -88,11 +89,16 @@ function normaliseProject(project: Project): Project {
       ? calculateWeightedProgress(phases).overallProgress
       : (project.progress ?? 0);
   const calculatedStatus = calculateProjectStatus(calculatedProgress, phases);
+  const normalisedHealth: Health =
+    (project.health === 'Not started' || !project.health) && calculatedProgress > 0
+      ? 'On track'
+      : (project.health || 'Not started');
 
   return {
     ...project,
     progress: calculatedProgress,
     status: calculatedStatus,
+    health: normalisedHealth,
     phases,
     milestones: (project.milestones ?? []).map((milestone, index) => ({
       ...milestone,
@@ -376,10 +382,17 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const newPhases = patch.phases !== undefined ? patch.phases : project.phases;
         const autoStatus =
           patch.status !== undefined ? patch.status : calculateProjectStatus(newProgress, newPhases);
+        const autoHealth =
+          patch.health !== undefined
+            ? patch.health
+            : (project.health === 'Not started' || !project.health) && newProgress > 0
+            ? 'On track'
+            : project.health;
         return {
           ...project,
           ...patch,
           status: autoStatus,
+          health: autoHealth,
           lastUpdated: todayLabel(),
         };
       });
@@ -407,11 +420,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         );
         const { overallProgress } = calculateWeightedProgress(newPhases);
         const autoStatus = calculateProjectStatus(overallProgress, newPhases);
+        const autoHealth =
+          (project.health === 'Not started' || !project.health) && overallProgress > 0
+            ? 'On track'
+            : project.health;
         return {
           ...project,
           phases: newPhases,
           progress: overallProgress,
           status: autoStatus,
+          health: autoHealth,
           lastUpdated: todayLabel(),
         };
       });

@@ -1599,7 +1599,7 @@ function NewProjectView() {
       location: form.location,
       category: form.category,
       code: `${form.location.slice(0, 3).toUpperCase()}-NEW-${new Date().getFullYear() % 100}`,
-      health: 'Not started',
+      health: progressNum > 0 ? 'On track' : 'Not started',
       status: liveStatus,
       progress: progressNum,
       targetDate: form.targetDate,

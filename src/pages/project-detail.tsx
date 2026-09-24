@@ -12,7 +12,6 @@ import {
   ClipboardCheck,
   Clock3,
   FileText,
-  Flag,
   Layers3,
   MapPin,
   MessageSquareText,
@@ -29,7 +28,7 @@ import {
 import { CRORE, formatCrore, formatShortDate, getProjectTemplate, issueCategories, projectStatuses, type Health, type IssueCategory, type IssueStatus, type Phase, type Project, type ProjectIssue, type ProjectStatus } from '@/data/projects';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
-import { formatFullDate, isValidIsoDate, todayLabel } from '@/lib/date';
+import { formatFullDate, isValidIsoDate, parseIsoDate, todayLabel } from '@/lib/date';
 import { getCommercialSummary, getProgressVariance, formatRatio, calculateWeightedProgress } from '@/lib/calculations';
 import { initialsOf, leadName } from '@/data/users';
 import { statusTone } from './workspace';
@@ -1198,6 +1197,7 @@ export default function ProjectDetail() {
   };
   const tabs: [Tab, string, typeof Target][] = [['overview', 'Overview', Layers3], ['progress', 'Progress', TrendingUp], ['timeline', 'Timeline', Clock3], ['milestones', 'Milestones', CalendarDays], ['commercial', 'Commercial', CircleDollarSign], ['issues', 'Issues & risks', ShieldAlert], ['updates', 'Updates', MessageSquareText]];
   const commercial = getCommercialSummary(project);
+  const progressVariance = getProgressVariance(project);
   return <div className="mx-auto max-w-[1400px] px-5 pb-14 pt-7 md:px-10 md:pt-9">
     <Link href="/" className="fade-up inline-flex items-center gap-2 text-[11px] font-bold text-muted-foreground hover:text-foreground"><ArrowLeft size={15} /> Back to portfolio</Link>
     <section className="fade-up mt-8 flex flex-col justify-between gap-7 lg:flex-row lg:items-end">
@@ -1250,7 +1250,16 @@ export default function ProjectDetail() {
 
     <section className="fade-up mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
       <Metric label="Project Status" value={project.status || 'Yet to start'} note={`Stage: ${activePhase}`} icon={Layers3} />
-      <Metric label="Completion %" value={`${project.progress}%`} note={`Target: ${project.targetLabel}`} icon={TrendingUp} />
+      <Metric
+        label="Completion %"
+        value={`${project.progress}%`}
+        note={
+          progressVariance.variance !== null
+            ? `${progressVariance.variance >= 0 ? '+' : ''}${progressVariance.variance}% vs planned`
+            : 'Target schedule'
+        }
+        icon={TrendingUp}
+      />
       <Metric
         label="Approved Budget (AOP)"
         value={formatCrore(project.aop)}
@@ -1274,7 +1283,24 @@ export default function ProjectDetail() {
         }
         icon={ReceiptText}
       />
-      <Metric label="Next Milestone" value={formatShortDate(project.nextMilestoneDate)} note={project.nextMilestone} icon={Flag} />
+      <Metric
+        label="Completion Date"
+        value={project.targetLabel || (project.targetDate ? formatFullDate(project.targetDate) : 'Not set')}
+        note={
+          (() => {
+            const target = parseIsoDate(project.targetDate);
+            if (!target) return 'Planned opening schedule';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffMs = target.getTime() - today.getTime();
+            const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+            if (diffDays > 0) return `${diffDays} days remaining`;
+            if (diffDays === 0) return 'Due today';
+            return `${Math.abs(diffDays)} days past target`;
+          })()
+        }
+        icon={CalendarDays}
+      />
     </section>
 
     <div className="mt-9 flex gap-1 overflow-x-auto border-b border-border">{tabs.map(([value, label, Icon]) => <button type="button" key={value} onClick={() => setTab(value)} className={`relative flex shrink-0 items-center gap-2 px-3 py-3 text-[11px] font-bold ${tab === value ? 'text-[#173e49]' : 'text-muted-foreground hover:text-foreground'}`}><Icon size={14} />{label}{tab === value && <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-[#d19b35]" />}</button>)}</div>

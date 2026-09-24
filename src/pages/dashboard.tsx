@@ -192,7 +192,7 @@ export default function Dashboard() {
       <div className="rounded-2xl border border-border bg-card p-5 shadow-sm shadow-[#173e49]/[.03] md:p-6">
         <div className="flex items-start justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Portfolio health</p><h2 className="mt-2 text-[19px] font-extrabold tracking-[-.03em]">Where management time goes</h2></div><span className="rounded-full bg-[#e4f1ec] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[.1em] text-[#2e7c67]">Live view</span></div>
         <div className="mt-7 grid gap-7 md:grid-cols-[.75fr_1.25fr] md:items-center">
-          <div className="relative mx-auto grid size-40 place-items-center rounded-full" role="img" aria-label={`${onTrackCount} on track, ${atRiskCount} at risk, ${delayedCount} delayed`} style={{ background: healthGradient }}><div className="grid size-[118px] place-items-center rounded-full bg-card text-center"><span className="font-mono text-[27px] font-medium text-foreground">{averageProgress}%</span><span className="font-mono text-[9px] uppercase tracking-[.13em] text-muted-foreground">avg. complete</span></div></div>
+          <div className="relative mx-auto grid size-40 place-items-center rounded-full" role="img" aria-label={`Average progress ${averageProgress}%. ${onTrackCount} on track, ${atRiskCount} at risk, ${delayedCount} delayed`} style={{ background: healthGradient }}><div className="grid size-[118px] place-items-center rounded-full bg-card text-center"><span className="font-mono text-[27px] font-medium text-foreground">{averageProgress}%</span><span className="font-mono text-[9px] uppercase tracking-[.13em] text-muted-foreground">avg. complete</span></div></div>
           <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-1"><div className="flex items-center justify-between border-b border-border/70 pb-3"><span className="flex items-center gap-2 text-[12px] font-semibold"><span className="size-2 rounded-full bg-[#3d9a7e]" />On track</span><span className="font-mono text-[12px] font-medium">{onTrackCount} <span className="text-muted-foreground">/ {projects.length}</span></span></div><div className="flex items-center justify-between border-b border-border/70 pb-3"><span className="flex items-center gap-2 text-[12px] font-semibold"><span className="size-2 rounded-full bg-[#d19b35]" />At risk</span><span className="font-mono text-[12px] font-medium">{atRiskCount} <span className="text-muted-foreground">/ {projects.length}</span></span></div><div className="flex items-center justify-between"><span className="flex items-center gap-2 text-[12px] font-semibold"><span className="size-2 rounded-full bg-[#d66254]" />Delayed</span><span className="font-mono text-[12px] font-medium">{delayedCount} <span className="text-muted-foreground">/ {projects.length}</span></span></div></div>
         </div>
       </div>
@@ -315,24 +315,45 @@ export default function Dashboard() {
   </div>;
 }
 
-/** Builds the donut gradient from live counts instead of fixed stops. */
-function buildHealthGradient(stats: { total: number; onTrackCount: number; atRiskCount: number; delayedCount: number; notStartedCount: number }): string {
-  if (stats.total === 0) return '#e4e4d9';
+/** Builds the donut gradient representing overall portfolio progress and health distribution. */
+function buildHealthGradient(stats: {
+  total: number;
+  averageProgress: number;
+  onTrackCount: number;
+  atRiskCount: number;
+  delayedCount: number;
+  notStartedCount: number;
+}): string {
+  const avg = Math.max(0, Math.min(100, stats.averageProgress));
+  const trackColor = '#e4e4d9';
+
+  if (stats.total === 0 || avg === 0) return trackColor;
+
+  const activeCount = stats.onTrackCount + stats.atRiskCount + stats.delayedCount;
+
+  // Fallback if no projects are marked onTrack/atRisk/delayed yet:
+  if (activeCount === 0) {
+    return `conic-gradient(#3d9a7e 0% ${avg}%, ${trackColor} ${avg}% 100%)`;
+  }
 
   const segments: [string, number][] = [
     ['#3d9a7e', stats.onTrackCount],
     ['#d19b35', stats.atRiskCount],
     ['#d66254', stats.delayedCount],
-    ['#8c938d', stats.notStartedCount],
   ];
 
   const stops: string[] = [];
   let cursor = 0;
   for (const [colour, count] of segments) {
     if (count <= 0) continue;
-    const end = cursor + (count / stats.total) * 100;
-    stops.push(`${colour} ${cursor}% ${end}%`);
+    const slice = (count / activeCount) * avg;
+    const end = cursor + slice;
+    stops.push(`${colour} ${cursor.toFixed(1)}% ${end.toFixed(1)}%`);
     cursor = end;
+  }
+
+  if (cursor < 100) {
+    stops.push(`${trackColor} ${cursor.toFixed(1)}% 100%`);
   }
 
   return `conic-gradient(${stops.join(', ')})`;

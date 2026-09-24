@@ -166,7 +166,7 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
       location: body.location,
       category: body.category,
       code,
-      health: body.health || 'Not started',
+      health: body.health || (initialProgress > 0 ? 'On track' : 'Not started'),
       status: resolvedStatus,
       progress: initialProgress,
       target_date: body.targetDate || '',
