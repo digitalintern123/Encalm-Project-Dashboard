@@ -20,7 +20,7 @@ import systemRouter from './routes/system.js';
 dotenv.config();
 
 const app = express();
-const PORT = Number(process.env.API_PORT || process.env.BACKEND_PORT || 5000);
+const PORT = Number(process.env.PORT || process.env.API_PORT || process.env.BACKEND_PORT || 5000);
 
 // Middleware
 app.use(cors({ origin: true, credentials: true }));
