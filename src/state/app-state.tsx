@@ -81,7 +81,10 @@ function normaliseProject(project: Project): Project {
       id: issue.id ?? `${project.id}-issue-${index}`,
       category: issue.category ?? 'Other',
       status: issue.status ?? 'Open',
-      dateRaised: issue.dateRaised ?? project.lastUpdated ?? todayLabel(),
+      dateRaised: issue.dateRaised ?? issue.issueAriseDate ?? project.lastUpdated ?? todayLabel(),
+      issueAriseDate: issue.issueAriseDate ?? issue.dateRaised ?? project.lastUpdated ?? todayLabel(),
+      dueDate: issue.dueDate ?? issue.targetClosureDate,
+      targetClosureDate: issue.targetClosureDate ?? issue.dueDate,
     })),
     updates: (project.updates ?? []).map((update) => ({
       ...update,

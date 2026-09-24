@@ -26,12 +26,13 @@ import {
   Trash2,
   TrendingUp,
 } from 'lucide-react';
-import { CRORE, formatCrore, formatShortDate, getProjectTemplate, type Health, type IssueCategory, type IssueStatus, type Phase, type Project, type ProjectIssue } from '@/data/projects';
+import { CRORE, formatCrore, formatShortDate, getProjectTemplate, issueCategories, projectStatuses, type Health, type IssueCategory, type IssueStatus, type Phase, type Project, type ProjectIssue, type ProjectStatus } from '@/data/projects';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullDate, isValidIsoDate, todayLabel } from '@/lib/date';
 import { getCommercialSummary, getProgressVariance, formatRatio } from '@/lib/calculations';
 import { initialsOf, leadName } from '@/data/users';
+import { statusTone } from './workspace';
 
 const healthStyles: Record<Health, { dot: string; text: string; bg: string; border: string }> = {
   'On track': { dot: 'bg-[#3d9a7e]', text: 'text-[#2e7c67]', bg: 'bg-[#e4f1ec]', border: 'border-[#cbe4d9]' },
@@ -66,7 +67,6 @@ function DetailCard({ title, eyebrow, icon: Icon, children, tone = 'card' }: { t
 }
 
 const stageStatuses: Phase['status'][] = ['upcoming', 'active', 'blocked', 'complete'];
-const issueCategories: IssueCategory[] = ['Design', 'Approval', 'Procurement', 'Vendor', 'Site', 'Commercial', 'Operations', 'Safety', 'Quality', 'Other'];
 const issueStatuses: IssueStatus[] = ['Open', 'Under review', 'Action in progress', 'Resolved', 'Closed'];
 
 function StageProgressPanel({ project, editable, onSave }: { project: Project; editable: boolean; onSave: (progress: number, comment: string, milestone: string) => void }) {
@@ -328,11 +328,260 @@ function StageMilestonesPanel({ project, editable, onAdd }: { project: Project; 
   );
 }
 
-function StageIssuesPanel({ project, editable, onAdd, onUpdate }: { project: Project; editable: boolean; onAdd: (issue: ProjectIssue) => void; onUpdate: (index: number, patch: Partial<ProjectIssue>) => void }) {
+function StageIssuesPanel({
+  project,
+  editable,
+  onAdd,
+  onUpdate,
+}: {
+  project: Project;
+  editable: boolean;
+  onAdd: (issue: ProjectIssue) => void;
+  onUpdate: (index: number, patch: Partial<ProjectIssue>) => void;
+}) {
   const [adding, setAdding] = useState(false);
-  const [draft, setDraft] = useState({ title: '', detail: '', category: 'Other' as IssueCategory, severity: 'Medium' as ProjectIssue['severity'], stage: project.phases.find((phase) => phase.status === 'active')?.name ?? project.phases[0]?.name ?? '', owner: '', dueDate: '', impactCost: '', impactSchedule: '', impactScope: '', action: '' });
+  const [draft, setDraft] = useState({
+    title: '',
+    detail: '',
+    category: 'Design' as IssueCategory,
+    severity: 'Medium' as ProjectIssue['severity'],
+    stage: project.phases.find((phase) => phase.status === 'active')?.name ?? project.phases[0]?.name ?? '',
+    owner: '',
+    issueAriseDate: todayLabel(),
+    targetClosureDate: '',
+    dueDate: '',
+    impactCost: '',
+    impactSchedule: '',
+    impactScope: '',
+    action: '',
+  });
   const set = (key: keyof typeof draft, value: string) => setDraft((current) => ({ ...current, [key]: value }));
-  return <DetailCard title="Issues & risks" eyebrow="Decision radar" icon={ShieldAlert} tone="gold"><div className="mt-5 space-y-3">{project.issues.length ? project.issues.map((issue, index) => <div key={`${issue.id ?? issue.title}-${index}`} className="rounded-xl border border-[#eadcb1] bg-[#fff8e9]/70 p-3.5"><div className="flex items-start gap-3"><span className={`mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg ${issue.severity === 'High' ? 'bg-[#fae5e1] text-[#b2473d]' : 'bg-[#f8edcf] text-[#9a711f]'}`}><AlertTriangle size={14} /></span><span className="min-w-0 flex-1"><span className="flex flex-wrap items-center justify-between gap-2"><span className="text-[11px] font-bold">{issue.title}</span><span className="flex items-center gap-2 font-mono text-[8px] uppercase tracking-[.1em] text-[#9a711f]">{issue.severity} · {issue.category ?? 'Other'}</span></span><span className="mt-1.5 block text-[10px] leading-4 text-muted-foreground">{issue.detail}</span><div className="mt-2 flex flex-wrap gap-2 text-[9px] text-muted-foreground"><span className="rounded-full bg-white px-2 py-1">{issue.stage ?? 'General project issue'}</span><span className="rounded-full bg-white px-2 py-1">Owner · {issue.owner}</span>{issue.dueDate && <span className="rounded-full bg-white px-2 py-1">Due · {formatShortDate(issue.dueDate)}</span>}</div>{(issue.action || issue.impactCost || issue.impactSchedule || issue.impactScope) && <div className="mt-3 grid gap-2 text-[10px] text-muted-foreground md:grid-cols-2">{issue.action && <p><strong className="text-foreground">Action:</strong> {issue.action}</p>}{issue.impactSchedule && <p><strong className="text-foreground">Schedule impact:</strong> {issue.impactSchedule}</p>}{issue.impactCost && <p><strong className="text-foreground">Cost impact:</strong> {issue.impactCost}</p>}{issue.impactScope && <p><strong className="text-foreground">Scope / quality impact:</strong> {issue.impactScope}</p>}</div>}{editable ? <label className="mt-3 flex items-center gap-2 text-[10px] font-bold"><span>Status</span><select value={issue.status ?? 'Open'} onChange={(event) => onUpdate(index, { status: event.target.value as IssueStatus })} className="h-8 rounded-lg border border-border bg-white px-2 text-[10px]">{issueStatuses.map((status) => <option key={status}>{status}</option>)}</select></label> : <span className="mt-3 inline-block font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">{issue.status ?? 'Open'}</span>}</span></div></div>) : <p className="rounded-xl border border-[#eadcb1] bg-[#fff8e9]/70 p-4 text-[11px] text-muted-foreground">No issues or risks recorded for this project.</p>}</div>{editable && (adding ? <form onSubmit={(event) => { event.preventDefault(); if (!draft.title || !draft.detail) return; onAdd({ ...draft, owner: draft.owner || 'Project Lead', status: 'Open', dateRaised: todayLabel() }); setDraft({ title: '', detail: '', category: 'Other', severity: 'Medium', stage: project.phases.find((phase) => phase.status === 'active')?.name ?? project.phases[0]?.name ?? '', owner: '', dueDate: '', impactCost: '', impactSchedule: '', impactScope: '', action: '' }); setAdding(false); }} className="mt-5 space-y-3 rounded-xl border border-[#eadcb1] bg-[#fff8e9] p-4"><div className="grid gap-3 md:grid-cols-2"><input required value={draft.title} onChange={(event) => set('title', event.target.value)} placeholder="Issue or risk title" className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]" /><select value={draft.category} onChange={(event) => set('category', event.target.value)} className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]">{issueCategories.map((category) => <option key={category}>{category}</option>)}</select><select value={draft.stage} onChange={(event) => set('stage', event.target.value)} className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]">{project.phases.map((phase, index) => <option key={`${phase.name}-${index}`}>{phase.name}</option>)}</select><select value={draft.severity} onChange={(event) => set('severity', event.target.value)} className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"><option>High</option><option>Medium</option><option>Low</option></select><input value={draft.owner} onChange={(event) => set('owner', event.target.value)} placeholder="Issue owner" className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]" /><input type="date" value={draft.dueDate} onChange={(event) => set('dueDate', event.target.value)} className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]" /></div><textarea required value={draft.detail} onChange={(event) => set('detail', event.target.value)} placeholder="Describe the issue, cause, and current situation" rows={3} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-[11px]" /><div className="grid gap-3 md:grid-cols-2"><input value={draft.impactSchedule} onChange={(event) => set('impactSchedule', event.target.value)} placeholder="Schedule impact" className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]" /><input value={draft.impactCost} onChange={(event) => set('impactCost', event.target.value)} placeholder="Cost impact" className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]" /><input value={draft.impactScope} onChange={(event) => set('impactScope', event.target.value)} placeholder="Scope / quality impact" className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]" /><input value={draft.action} onChange={(event) => set('action', event.target.value)} placeholder="Next action" className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]" /></div><div className="flex gap-2"><button type="submit" className="rounded-lg bg-[#173e49] px-4 py-2 text-[10px] font-bold text-white">Add issue</button><button type="button" onClick={() => setAdding(false)} className="rounded-lg border border-border bg-white px-4 py-2 text-[10px] font-bold">Cancel</button></div></form> : <button type="button" onClick={() => setAdding(true)} className="mt-5 rounded-xl border border-[#eadcb1] bg-white/60 px-3 py-2 text-[10px] font-bold text-[#9a711f]"><Plus size={13} className="mr-1 inline" /> Add issue or risk</button>)}</DetailCard>;
+  return (
+    <DetailCard title="Issues & risks" eyebrow="Decision radar" icon={ShieldAlert} tone="gold">
+      <div className="mt-5 space-y-3">
+        {project.issues.length ? (
+          project.issues.map((issue, index) => {
+            const ariseDate = issue.issueAriseDate || issue.dateRaised;
+            const closureDate = issue.targetClosureDate || issue.dueDate;
+            return (
+              <div key={`${issue.id ?? issue.title}-${index}`} className="rounded-xl border border-[#eadcb1] bg-[#fff8e9]/70 p-3.5">
+                <div className="flex items-start gap-3">
+                  <span
+                    className={`mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg ${
+                      issue.severity === 'High' ? 'bg-[#fae5e1] text-[#b2473d]' : 'bg-[#f8edcf] text-[#9a711f]'
+                    }`}
+                  >
+                    <AlertTriangle size={14} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold">{issue.title}</span>
+                      <span className="flex items-center gap-2 font-mono text-[8px] uppercase tracking-[.1em] text-[#9a711f]">
+                        {issue.severity} · Category: {issue.category ?? 'Other'}
+                      </span>
+                    </span>
+                    <span className="mt-1.5 block text-[10px] leading-4 text-muted-foreground">{issue.detail}</span>
+                    <div className="mt-2 flex flex-wrap gap-2 text-[9px] text-muted-foreground">
+                      <span className="rounded-full bg-white px-2 py-1">{issue.stage ?? 'General project issue'}</span>
+                      <span className="rounded-full bg-white px-2 py-1">Owner · {issue.owner}</span>
+                      {ariseDate && (
+                        <span className="rounded-full bg-white px-2 py-1 font-semibold text-[#8b631d]">
+                          Issue Arise Date: {formatShortDate(ariseDate)}
+                        </span>
+                      )}
+                      {closureDate && (
+                        <span className="rounded-full bg-white px-2 py-1 font-semibold text-[#173e49]">
+                          Target Closure Date: {formatShortDate(closureDate)}
+                        </span>
+                      )}
+                    </div>
+                    {(issue.action || issue.impactCost || issue.impactSchedule || issue.impactScope) && (
+                      <div className="mt-3 grid gap-2 text-[10px] text-muted-foreground md:grid-cols-2">
+                        {issue.action && <p><strong className="text-foreground">Action:</strong> {issue.action}</p>}
+                        {issue.impactSchedule && <p><strong className="text-foreground">Schedule impact:</strong> {issue.impactSchedule}</p>}
+                        {issue.impactCost && <p><strong className="text-foreground">Cost impact:</strong> {issue.impactCost}</p>}
+                        {issue.impactScope && <p><strong className="text-foreground">Scope / quality impact:</strong> {issue.impactScope}</p>}
+                      </div>
+                    )}
+                    {editable ? (
+                      <label className="mt-3 flex items-center gap-2 text-[10px] font-bold">
+                        <span>Status</span>
+                        <select
+                          value={issue.status ?? 'Open'}
+                          onChange={(event) => onUpdate(index, { status: event.target.value as IssueStatus })}
+                          className="h-8 rounded-lg border border-border bg-white px-2 text-[10px]"
+                        >
+                          {issueStatuses.map((status) => (
+                            <option key={status}>{status}</option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : (
+                      <span className="mt-3 inline-block font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">
+                        {issue.status ?? 'Open'}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <p className="rounded-xl border border-[#eadcb1] bg-[#fff8e9]/70 p-4 text-[11px] text-muted-foreground">
+            No issues or risks recorded for this project.
+          </p>
+        )}
+      </div>
+
+      {editable && (
+        adding ? (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!draft.title || !draft.detail) return;
+              onAdd({
+                ...draft,
+                owner: draft.owner || 'Project Lead',
+                status: 'Open',
+                dateRaised: draft.issueAriseDate || todayLabel(),
+                issueAriseDate: draft.issueAriseDate || todayLabel(),
+                dueDate: draft.targetClosureDate || draft.dueDate,
+                targetClosureDate: draft.targetClosureDate || draft.dueDate,
+              });
+              setDraft({
+                title: '',
+                detail: '',
+                category: 'Design',
+                severity: 'Medium',
+                stage: project.phases.find((phase) => phase.status === 'active')?.name ?? project.phases[0]?.name ?? '',
+                owner: '',
+                dueDate: '',
+                issueAriseDate: todayLabel(),
+                targetClosureDate: '',
+                impactCost: '',
+                impactSchedule: '',
+                impactScope: '',
+                action: '',
+              });
+              setAdding(false);
+            }}
+            className="mt-5 space-y-3 rounded-xl border border-[#eadcb1] bg-[#fff8e9] p-4"
+          >
+            <div className="grid gap-3 md:grid-cols-2">
+              <input
+                required
+                value={draft.title}
+                onChange={(event) => set('title', event.target.value)}
+                placeholder="Issue or risk title *"
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+              />
+              <select
+                value={draft.category}
+                onChange={(event) => set('category', event.target.value)}
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+              >
+                {issueCategories.map((category) => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+              <select
+                value={draft.stage}
+                onChange={(event) => set('stage', event.target.value)}
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+              >
+                {project.phases.map((phase, index) => (
+                  <option key={`${phase.name}-${index}`}>{phase.name}</option>
+                ))}
+              </select>
+              <select
+                value={draft.severity}
+                onChange={(event) => set('severity', event.target.value as any)}
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+              >
+                <option>High</option>
+                <option>Medium</option>
+                <option>Low</option>
+              </select>
+              <input
+                value={draft.owner}
+                onChange={(event) => set('owner', event.target.value)}
+                placeholder="Issue owner"
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+              />
+              <label className="block">
+                <span className="mb-1 block font-mono text-[9px] uppercase text-muted-foreground">Issue Arise Date</span>
+                <input
+                  type="date"
+                  value={draft.issueAriseDate}
+                  onChange={(event) => set('issueAriseDate', event.target.value)}
+                  className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]"
+                />
+              </label>
+              <label className="block md:col-span-2">
+                <span className="mb-1 block font-mono text-[9px] uppercase text-muted-foreground">Target Closure Date</span>
+                <input
+                  type="date"
+                  value={draft.targetClosureDate}
+                  onChange={(event) => set('targetClosureDate', event.target.value)}
+                  className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]"
+                />
+              </label>
+            </div>
+            <textarea
+              required
+              value={draft.detail}
+              onChange={(event) => set('detail', event.target.value)}
+              placeholder="Describe the issue, cause, and current situation *"
+              rows={3}
+              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-[11px]"
+            />
+            <div className="grid gap-3 md:grid-cols-2">
+              <input
+                value={draft.impactSchedule}
+                onChange={(event) => set('impactSchedule', event.target.value)}
+                placeholder="Schedule impact"
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+              />
+              <input
+                value={draft.impactCost}
+                onChange={(event) => set('impactCost', event.target.value)}
+                placeholder="Cost impact"
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+              />
+              <input
+                value={draft.impactScope}
+                onChange={(event) => set('impactScope', event.target.value)}
+                placeholder="Scope / quality impact"
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+              />
+              <input
+                value={draft.action}
+                onChange={(event) => set('action', event.target.value)}
+                placeholder="Next action / resolution"
+                className="h-10 rounded-lg border border-border bg-white px-3 text-[11px]"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" className="rounded-lg bg-[#173e49] px-4 py-2 text-[10px] font-bold text-white">
+                Add issue
+              </button>
+              <button type="button" onClick={() => setAdding(false)} className="rounded-lg border border-border bg-white px-4 py-2 text-[10px] font-bold">
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="mt-5 rounded-xl border border-[#eadcb1] bg-white/60 px-3 py-2 text-[10px] font-bold text-[#9a711f]"
+          >
+            <Plus size={13} className="mr-1 inline" /> Add issue or risk
+          </button>
+        )
+      )}
+    </DetailCard>
+  );
 }
 
 function StageUpdatesPanel({ project, editable, onAdd }: { project: Project; editable: boolean; onAdd: (update: { text: string; date: string; author: string; role: string; stage: string; kind: 'Progress' | 'Decision' | 'Risk' | 'General' }) => void }) {
@@ -367,13 +616,75 @@ export default function ProjectDetail() {
     toast({ title: 'Progress updated', description: `${project.name} is now at ${clampPercent(progress)}%.` });
   };
   const tabs: [Tab, string, typeof Target][] = [['overview', 'Overview', Layers3], ['progress', 'Progress', TrendingUp], ['timeline', 'Timeline', Clock3], ['milestones', 'Milestones', CalendarDays], ['commercial', 'Commercial', CircleDollarSign], ['issues', 'Issues & risks', ShieldAlert], ['updates', 'Updates', MessageSquareText]];
+  const commercial = getCommercialSummary(project);
   return <div className="mx-auto max-w-[1400px] px-5 pb-14 pt-7 md:px-10 md:pt-9">
     <Link href="/" className="fade-up inline-flex items-center gap-2 text-[11px] font-bold text-muted-foreground hover:text-foreground"><ArrowLeft size={15} /> Back to portfolio</Link>
-    <section className="fade-up mt-8 flex flex-col justify-between gap-7 lg:flex-row lg:items-end"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground"><span>{project.code}</span><span className="text-border">/</span><span className="flex items-center gap-1"><MapPin size={11} /> {project.location}</span><span className="text-border">/</span><span>{project.category}</span></div><h1 className="mt-4 max-w-[780px] font-serif text-[42px] leading-[.98] tracking-[-.045em] text-[#173e49] md:text-[58px]">{project.name}</h1><p className="mt-4 max-w-[600px] text-[13px] leading-6 text-muted-foreground">A clear line of sight from brief to opening. This project is currently in <strong className="font-bold text-foreground">{activePhase}</strong>.</p></div><div className="flex items-center gap-3"><div className={`flex shrink-0 items-center gap-3 rounded-2xl border ${health.border} ${health.bg} px-4 py-3`}><span className={`grid size-9 place-items-center rounded-xl ${health.bg} ${health.text}`}><span className={`size-2.5 rounded-full ${health.dot}`} /></span><span><span className={`block font-mono text-[9px] uppercase tracking-[.14em] ${health.text}`}>Current health</span><span className={`mt-1 block text-[13px] font-extrabold ${health.text}`}>{project.health}</span></span></div>{isLead ? <button type="button" onClick={() => setEditing((value) => !value)} className="flex items-center gap-2 rounded-xl bg-[#d6a95d] px-3 py-3 text-[10px] font-extrabold text-[#173e49]"><Pencil size={14} /> Edit project</button> : <span className="rounded-xl border border-border bg-card px-3 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">View only</span>}</div></section>
+    <section className="fade-up mt-8 flex flex-col justify-between gap-7 lg:flex-row lg:items-end">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground">
+          <span>{project.code}</span>
+          <span className="text-border">/</span>
+          <span className="flex items-center gap-1"><MapPin size={11} /> {project.location}</span>
+          <span className="text-border">/</span>
+          <span>{project.category}</span>
+        </div>
+        <h1 className="mt-4 max-w-[780px] font-serif text-[42px] leading-[.98] tracking-[-.045em] text-[#173e49] md:text-[58px]">{project.name}</h1>
+        <p className="mt-4 max-w-[600px] text-[13px] leading-6 text-muted-foreground">
+          A clear line of sight from brief to opening. Current delivery stage: <strong className="font-bold text-foreground">{activePhase}</strong>.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3">
+          <span className="size-2.5 rounded-full bg-[#173e49]" />
+          <span>
+            <span className="block font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Project status</span>
+            <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-extrabold ${statusTone[project.status || 'Yet to start']}`}>
+              {project.status || 'Yet to start'}
+            </span>
+          </span>
+        </div>
+
+        <div className={`flex shrink-0 items-center gap-3 rounded-2xl border ${health.border} ${health.bg} px-4 py-3`}>
+          <span className={`grid size-9 place-items-center rounded-xl ${health.bg} ${health.text}`}>
+            <span className={`size-2.5 rounded-full ${health.dot}`} />
+          </span>
+          <span>
+            <span className={`block font-mono text-[9px] uppercase tracking-[.14em] ${health.text}`}>Current health</span>
+            <span className={`mt-1 block text-[13px] font-extrabold ${health.text}`}>{project.health}</span>
+          </span>
+        </div>
+
+        {isLead ? (
+          <button type="button" onClick={() => setEditing((value) => !value)} className="flex items-center gap-2 rounded-xl bg-[#d6a95d] px-3.5 py-3 text-[10px] font-extrabold text-[#173e49]">
+            <Pencil size={14} /> Edit project
+          </button>
+        ) : (
+          <span className="rounded-xl border border-border bg-card px-3 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">View only</span>
+        )}
+      </div>
+    </section>
+
     {editing && isLead && <EditProjectForm project={project} onCancel={() => setEditing(false)} onSave={(patch) => { updateProject(project.id, patch); setEditing(false); }} />}
-    <section className="fade-up mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Overall progress" value={`${project.progress}%`} note={`Target completion ${project.targetLabel}`} icon={TrendingUp} /><Metric label="AOP envelope" value={formatCrore(project.aop)} note={`${formatCrore(project.awarded)} awarded`} icon={CircleDollarSign} /><Metric label="Spent to date" value={formatCrore(project.spent)} note={`${project.awarded ? Math.round((project.spent / project.awarded) * 100) : 0}% of awarded`} icon={ReceiptText} /><Metric label="Next milestone" value={formatShortDate(project.nextMilestoneDate)} note={project.nextMilestone} icon={Flag} /></section>
+
+    <section className="fade-up mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <Metric label="Project Status" value={project.status || 'Yet to start'} note={`Stage: ${activePhase}`} icon={Layers3} />
+      <Metric label="Completion %" value={`${project.progress}%`} note={`Target: ${project.targetLabel}`} icon={TrendingUp} />
+      <Metric label="Approved Budget (AOP)" value={formatCrore(project.aop)} note={`${formatCrore(project.awarded)} committed`} icon={CircleDollarSign} />
+      <Metric label="Projected Cost" value={formatCrore(project.projectedCost ?? project.aop)} note={`Spent: ${formatCrore(project.spent)}`} icon={ReceiptText} />
+      <Metric label="Next Milestone" value={formatShortDate(project.nextMilestoneDate)} note={project.nextMilestone} icon={Flag} />
+    </section>
+
     <div className="mt-9 flex gap-1 overflow-x-auto border-b border-border">{tabs.map(([value, label, Icon]) => <button type="button" key={value} onClick={() => setTab(value)} className={`relative flex shrink-0 items-center gap-2 px-3 py-3 text-[11px] font-bold ${tab === value ? 'text-[#173e49]' : 'text-muted-foreground hover:text-foreground'}`}><Icon size={14} />{label}{tab === value && <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-[#d19b35]" />}</button>)}</div>
-     <div className="fade-up mt-6">{tab === 'overview' && <OverviewPanel project={project} />}{tab === 'progress' && <StageProgressPanel project={project} editable={isLead} onSave={saveProgress} />}{tab === 'timeline' && <StageTimelinePanel project={project} editable={isLead} onSave={(index, patch) => updatePhase(project.id, index, patch)} onAdd={(phase) => addPhase(project.id, phase)} onRemove={(index) => removePhase(project.id, index)} onMove={(index, direction) => movePhase(project.id, index, direction)} />}{tab === 'milestones' && <StageMilestonesPanel project={project} editable={isLead} onAdd={(milestone) => addMilestone(project.id, milestone)} />}{tab === 'commercial' && <CommercialPanel project={project} editable={isLead} onSave={(patch) => updateProject(project.id, patch)} />}{tab === 'issues' && <StageIssuesPanel project={project} editable={isLead} onAdd={(issue) => addIssue(project.id, issue)} onUpdate={(index, patch) => updateIssue(project.id, index, patch)} />}{tab === 'updates' && <StageUpdatesPanel project={project} editable={isLead} onAdd={(update) => addUpdate(project.id, update)} />}</div>
+    <div className="fade-up mt-6">
+      {tab === 'overview' && <OverviewPanel project={project} />}
+      {tab === 'progress' && <StageProgressPanel project={project} editable={isLead} onSave={saveProgress} />}
+      {tab === 'timeline' && <StageTimelinePanel project={project} editable={isLead} onSave={(index, patch) => updatePhase(project.id, index, patch)} onAdd={(phase) => addPhase(project.id, phase)} onRemove={(index) => removePhase(project.id, index)} onMove={(index, direction) => movePhase(project.id, index, direction)} />}
+      {tab === 'milestones' && <StageMilestonesPanel project={project} editable={isLead} onAdd={(milestone) => addMilestone(project.id, milestone)} />}
+      {tab === 'commercial' && <CommercialPanel project={project} editable={isLead} onSave={(patch) => updateProject(project.id, patch)} />}
+      {tab === 'issues' && <StageIssuesPanel project={project} editable={isLead} onAdd={(issue) => addIssue(project.id, issue)} onUpdate={(index, patch) => updateIssue(project.id, index, patch)} />}
+      {tab === 'updates' && <StageUpdatesPanel project={project} editable={isLead} onAdd={(update) => addUpdate(project.id, update)} />}
+    </div>
   </div>;
 }
 
@@ -381,28 +692,160 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
   const [name, setName] = useState(project.name);
   const [targetDate, setTargetDate] = useState(project.targetDate);
   const [health, setHealth] = useState(project.health);
+  const [status, setStatus] = useState<ProjectStatus>(project.status || 'Yet to start');
+  const [area, setArea] = useState(project.area || project.specification?.area || '');
+  const [paxKeys, setPaxKeys] = useState(project.paxKeys || project.specification?.capacity || '');
   const [error, setError] = useState('');
-  // Clearing the date input used to produce an Invalid Date and a RangeError
-  // out of Intl.DateTimeFormat, which crashed the whole panel.
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (!name.trim()) { setError('Project name cannot be empty.'); return; }
     if (!isValidIsoDate(targetDate)) { setError('Enter a valid target completion date.'); return; }
     setError('');
-    onSave({ name: name.trim(), targetDate, targetLabel: formatFullDate(targetDate), health });
+    onSave({
+      name: name.trim(),
+      targetDate,
+      targetLabel: formatFullDate(targetDate),
+      health,
+      status,
+      area: area.trim(),
+      paxKeys: paxKeys.trim(),
+      specification: {
+        projectType: project.specification?.projectType ?? project.category,
+        area: area.trim(),
+        capacity: paxKeys.trim(),
+        units: project.specification?.units ?? '',
+        terminal: project.specification?.terminal ?? project.location,
+        floor: project.specification?.floor ?? '',
+        scope: project.specification?.scope ?? '',
+        customFields: project.specification?.customFields,
+      },
+    });
   };
-  return <form onSubmit={handleSubmit} noValidate className="mt-6 rounded-2xl border border-[#eadcb1] bg-[#fff8e9] p-5 md:p-6"><div className="flex items-center justify-between"><div><p className="font-mono text-[9px] uppercase tracking-[.13em] text-[#9a711f]">Project lead controls</p><h2 className="mt-1 text-[16px] font-extrabold">Edit project information</h2></div><button type="button" onClick={onCancel} className="text-[11px] text-muted-foreground">Cancel</button></div><div className="mt-5 grid gap-3 md:grid-cols-3"><label><span className="mb-2 block text-[10px] font-bold">Project name</span><input value={name} onChange={(event) => setName(event.target.value)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" /></label><label><span className="mb-2 block text-[10px] font-bold">Target completion</span><input type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" /></label><label><span className="mb-2 block text-[10px] font-bold">Health</span><select value={health} onChange={(event) => setHealth(event.target.value as Health)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]">{(Object.keys(healthStyles) as Health[]).map((item) => <option key={item} value={item}>{item}</option>)}</select></label></div>{error && <p role="alert" className="mt-3 rounded-lg bg-[#fae5e1] px-3 py-2 text-[11px] font-semibold text-[#b2473d]">{error}</p>}<button type="submit" className="mt-4 rounded-lg bg-[#173e49] px-4 py-2.5 text-[10px] font-bold text-white">Save project</button></form>;
+  return (
+    <form onSubmit={handleSubmit} noValidate className="mt-6 rounded-2xl border border-[#eadcb1] bg-[#fff8e9] p-5 md:p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-mono text-[9px] uppercase tracking-[.13em] text-[#9a711f]">Project lead controls</p>
+          <h2 className="mt-1 text-[16px] font-extrabold">Edit project information</h2>
+        </div>
+        <button type="button" onClick={onCancel} className="text-[11px] text-muted-foreground">Cancel</button>
+      </div>
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <label className="md:col-span-2">
+          <span className="mb-2 block text-[10px] font-bold">Project name</span>
+          <input value={name} onChange={(event) => setName(event.target.value)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+        </label>
+        <label>
+          <span className="mb-2 block text-[10px] font-bold">Project status</span>
+          <select value={status} onChange={(event) => setStatus(event.target.value as ProjectStatus)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px] font-bold">
+            {projectStatuses.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+        <label>
+          <span className="mb-2 block text-[10px] font-bold">Target completion (Project Completion Date)</span>
+          <input type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+        </label>
+        <label>
+          <span className="mb-2 block text-[10px] font-bold">Health</span>
+          <select value={health} onChange={(event) => setHealth(event.target.value as Health)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]">
+            {(Object.keys(healthStyles) as Health[]).map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+        <label>
+          <span className="mb-2 block text-[10px] font-bold">Area</span>
+          <input value={area} onChange={(event) => setArea(event.target.value)} placeholder="e.g. 24,000 sqft" className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+        </label>
+        <label className="md:col-span-3">
+          <span className="mb-2 block text-[10px] font-bold">Pax / Keys</span>
+          <input value={paxKeys} onChange={(event) => setPaxKeys(event.target.value)} placeholder="e.g. 180 Pax / 45 Keys" className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+        </label>
+      </div>
+      {error && <p role="alert" className="mt-3 rounded-lg bg-[#fae5e1] px-3 py-2 text-[11px] font-semibold text-[#b2473d]">{error}</p>}
+      <button type="submit" className="mt-4 rounded-lg bg-[#173e49] px-4 py-2.5 text-[10px] font-bold text-white">Save project</button>
+    </form>
+  );
 }
 
 function OverviewPanel({ project }: { project: Project }) {
   const health = healthStyles[project.health];
   const spec = project.specification;
-  return <div className="grid gap-5 xl:grid-cols-[1.18fr_.82fr]"><div className="space-y-5"><DetailCard title="Project information" eyebrow="Overview" icon={FileText}><div className="mt-6 grid gap-3 sm:grid-cols-2"><Info label="Project name" value={project.name} /><Info label="Location" value={project.location} /><Info label="Category" value={project.category} /><Info label="Project lead" value={leadName(project.leadId)} /><Info label="Project type" value={spec?.projectType ?? project.category} /><Info label="Start date" value={project.startDate ?? '01 Jan 2026'} /><Info label="Target completion" value={project.targetLabel} /><Info label="Area / capacity" value={`${spec?.area ?? '—'} · ${spec?.capacity ?? '—'}`} /></div>{spec?.customFields?.length ? <div className="mt-3 grid gap-3 sm:grid-cols-2">{spec.customFields.filter((field) => field.value).map((field) => <Info key={field.label} label={field.label} value={field.value} />)}</div> : null}{spec?.scope && <p className="mt-5 rounded-xl bg-[#f7f4ec] p-4 text-[11px] leading-5 text-muted-foreground">{spec.scope}</p>}</DetailCard><DetailCard title="Phase progress" eyebrow="Delivery path" icon={ClipboardCheck}><div className="mt-5 grid gap-6 md:grid-cols-[140px_1fr] md:items-center"><div className="flex flex-col items-center gap-3"><ProgressRing progress={project.progress} /><span className="text-center text-[10px] leading-4 text-muted-foreground">Planned opening<br /><strong className="text-foreground">{project.targetLabel}</strong></span></div><PhaseList project={project} /></div></DetailCard></div><div className="space-y-5"><DetailCard title="Project health" eyebrow="Portfolio signal" icon={ShieldAlert} tone="gold"><div className="mt-6 space-y-3"><HealthRow label="Schedule" value={project.health} tone={health} /><HealthRow label="Current stage" value={activePhaseLabel(project)} tone={healthStyles[project.health]} /><HealthRow label="Open issues" value={openIssueLabel(project)} tone={openIssueTone(project)} /><HealthRow label="Budget" value={budgetLabel(project)} tone={budgetTone(project)} /></div></DetailCard><DetailCard title="Key issue" eyebrow="Decision radar" icon={AlertTriangle} tone="gold">{project.issues[0] ? <div className="mt-6"><div className="flex items-center gap-2"><span className="size-2 rounded-full bg-[#d19b35]" /><span className="font-mono text-[9px] uppercase tracking-[.12em] text-[#9a711f]">{project.issues[0].severity} priority</span></div><h3 className="mt-3 text-[14px] font-extrabold">{project.issues[0].title}</h3><p className="mt-2 text-[11px] leading-5 text-muted-foreground">{project.issues[0].detail}</p><p className="mt-4 font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">Owner · {project.issues[0].owner}</p></div> : <p className="mt-6 text-[11px] leading-5 text-muted-foreground">No active issues. The next decision point is {project.nextMilestone}.</p>}</DetailCard></div></div>;
+  return (
+    <div className="grid gap-5 xl:grid-cols-[1.18fr_.82fr]">
+      <div className="space-y-5">
+        <DetailCard title="Project information" eyebrow="Overview" icon={FileText}>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <Info label="Project name" value={project.name} />
+            <Info label="Location" value={project.location} />
+            <Info label="Project status" value={project.status || 'Yet to start'} />
+            <Info label="Category" value={project.category} />
+            <Info label="Project lead" value={leadName(project.leadId)} />
+            <Info label="Project type" value={spec?.projectType ?? project.category} />
+            <Info label="Start date" value={project.startDate ?? '—'} />
+            <Info label="Target completion" value={project.targetLabel} />
+            <Info label="Area" value={project.area || spec?.area || '—'} />
+            <Info label="Pax / Keys" value={project.paxKeys || spec?.capacity || '—'} />
+            <Info label="Completion %" value={`${project.progress}%`} />
+          </div>
+          {spec?.customFields?.length ? (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {spec.customFields.filter((field) => field.value).map((field) => (
+                <Info key={field.label} label={field.label} value={field.value} />
+              ))}
+            </div>
+          ) : null}
+          {spec?.scope && (
+            <p className="mt-5 rounded-xl bg-[#f7f4ec] p-4 text-[11px] leading-5 text-muted-foreground">{spec.scope}</p>
+          )}
+        </DetailCard>
+        <DetailCard title="Phase progress" eyebrow="Delivery path" icon={ClipboardCheck}>
+          <div className="mt-5 grid gap-6 md:grid-cols-[140px_1fr] md:items-center">
+            <div className="flex flex-col items-center gap-3">
+              <ProgressRing progress={project.progress} />
+              <span className="text-center text-[10px] leading-4 text-muted-foreground">
+                Planned opening<br /><strong className="text-foreground">{project.targetLabel}</strong>
+              </span>
+            </div>
+            <PhaseList project={project} />
+          </div>
+        </DetailCard>
+      </div>
+      <div className="space-y-5">
+        <DetailCard title="Project health" eyebrow="Portfolio signal" icon={ShieldAlert} tone="gold">
+          <div className="mt-6 space-y-3">
+            <HealthRow label="Schedule" value={project.health} tone={health} />
+            <HealthRow label="Current stage" value={activePhaseLabel(project)} tone={healthStyles[project.health]} />
+            <HealthRow label="Open issues" value={openIssueLabel(project)} tone={openIssueTone(project)} />
+            <HealthRow label="Budget" value={budgetLabel(project)} tone={budgetTone(project)} />
+          </div>
+        </DetailCard>
+        <DetailCard title="Key issue" eyebrow="Decision radar" icon={AlertTriangle} tone="gold">
+          {project.issues[0] ? (
+            <div className="mt-6">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-[#d19b35]" />
+                <span className="font-mono text-[9px] uppercase tracking-[.12em] text-[#9a711f]">
+                  {project.issues[0].severity} priority · {project.issues[0].category ?? 'Other'}
+                </span>
+              </div>
+              <h3 className="mt-3 text-[14px] font-extrabold">{project.issues[0].title}</h3>
+              <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{project.issues[0].detail}</p>
+              <p className="mt-4 font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">
+                Owner · {project.issues[0].owner}
+              </p>
+            </div>
+          ) : (
+            <p className="mt-6 text-[11px] leading-5 text-muted-foreground">
+              No active issues. The next decision point is {project.nextMilestone}.
+            </p>
+          )}
+        </DetailCard>
+      </div>
+    </div>
+  );
 }
 
 function CommercialPanel({ project, editable, onSave }: { project: Project; editable: boolean; onSave: (patch: Partial<Project>) => void }) {
-  // Same function CommercialView in workspace.tsx uses — one commercial
-  // calculation, not two independently-rounded copies of the same ratio.
   const commercial = getCommercialSummary(project);
   const awardRateLabel = formatRatio(commercial.awardRatePct, 0);
   const spentRateLabel = formatRatio(commercial.spentRatePct, 0);
@@ -412,8 +855,117 @@ function CommercialPanel({ project, editable, onSave }: { project: Project; edit
   const [aop, setAop] = useState(String(project.aop / CRORE));
   const [awarded, setAwarded] = useState(String(project.awarded / CRORE));
   const [spent, setSpent] = useState(String(project.spent / CRORE));
+  const [projectedCost, setProjectedCost] = useState(String((project.projectedCost ?? project.aop) / CRORE));
   const [commercialError, setCommercialError] = useState('');
-  return <div className="grid gap-5 lg:grid-cols-[.9fr_1.1fr]"><DetailCard title="Capital position" eyebrow="Commercial summary" icon={CircleDollarSign}><div className="mt-7 space-y-5"><div><div className="flex justify-between text-[11px] font-semibold"><span>Awarded against AOP</span><span>{awardRateLabel}</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e7e7dc]"><div className="h-full rounded-full bg-[#d19b35]" style={{ width: `${awardRateWidth}%` }} /></div></div><div><div className="flex justify-between text-[11px] font-semibold"><span>Spend against awarded</span><span>{spentRateLabel}</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e7e7dc]"><div className="h-full rounded-full bg-[#3d9a7e]" style={{ width: `${spentRateWidth}%` }} /></div></div><div className="grid grid-cols-3 gap-2"><Info label="AOP" value={formatCrore(project.aop)} /><Info label="Awarded" value={formatCrore(project.awarded)} /><Info label="Remaining" value={formatCrore(commercial.remaining)} /></div>{editable && (editing ? <form onSubmit={(event) => { event.preventDefault(); const next = parseCroreFields({ aop, awarded, spent }); if (!next) { setCommercialError('Enter AOP, awarded and spent as numbers of 0 or more.'); return; } setCommercialError(''); onSave(next); setEditing(false); }} className="space-y-3 rounded-xl border border-[#eadcb1] bg-[#fff8e9] p-4"><p className="text-[11px] font-extrabold">Edit commercial values · ₹ Cr</p>{commercialError && <p role="alert" className="rounded-lg bg-[#fae5e1] px-3 py-2 text-[10px] font-semibold text-[#b2473d]">{commercialError}</p>}<div className="grid gap-2 sm:grid-cols-3"><input type="number" min="0" value={aop} onChange={(event) => setAop(event.target.value)} className="h-9 rounded-lg border border-border bg-white px-2 text-[11px]" placeholder="AOP" /><input type="number" min="0" value={awarded} onChange={(event) => setAwarded(event.target.value)} className="h-9 rounded-lg border border-border bg-white px-2 text-[11px]" placeholder="Awarded" /><input type="number" min="0" value={spent} onChange={(event) => setSpent(event.target.value)} className="h-9 rounded-lg border border-border bg-white px-2 text-[11px]" placeholder="Spent" /></div><div className="flex gap-2"><button type="submit" className="rounded-lg bg-[#173e49] px-3 py-2 text-[10px] font-bold text-white">Save</button><button type="button" onClick={() => setEditing(false)} className="rounded-lg border border-border px-3 py-2 text-[10px] font-bold">Cancel</button></div></form> : <button type="button" onClick={() => setEditing(true)} className="rounded-xl border border-[#eadcb1] bg-[#fff8e9] px-3 py-2 text-[10px] font-bold text-[#9a711f]">Edit commercial data</button>)}</div></DetailCard><DetailCard title="Budget by phase" eyebrow="Indicative cost line" icon={ReceiptText}><div className="mt-6 space-y-4"><p className="text-[10px] leading-4 text-muted-foreground">Indicative split of the awarded value across the first four stages. Per-stage budgets are not tracked separately yet.</p>{project.phases.slice(0, 4).map((phase, index) => { const amounts = [0.12, 0.24, 0.31, 0.33]; return <div key={`${phase.name}-${index}`}><div className="mb-1.5 flex justify-between text-[11px]"><span className="font-semibold">{phase.name}</span><span className="font-mono text-muted-foreground">{formatCrore(project.awarded * amounts[index])}</span></div><div className="h-2 overflow-hidden rounded-full bg-[#e7e7dc]"><div className={`h-full rounded-full ${index === 2 ? 'bg-[#d19b35]' : 'bg-[#3d9a7e]'}`} style={{ width: `${Math.max(phase.progress, 8)}%` }} /></div></div>; })}</div></DetailCard></div>;
+  return (
+    <div className="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
+      <DetailCard title="Capital position & commercial metrics" eyebrow="Commercial summary" icon={CircleDollarSign}>
+        <div className="mt-7 space-y-5">
+          <div>
+            <div className="flex justify-between text-[11px] font-semibold">
+              <span>Committed / Awarded against Approved Budget (AOP)</span>
+              <span>{awardRateLabel}</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e7e7dc]">
+              <div className="h-full rounded-full bg-[#d19b35]" style={{ width: `${Math.min(100, awardRateWidth)}%` }} />
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-between text-[11px] font-semibold">
+              <span>Spend till date against Committed / Awarded</span>
+              <span>{spentRateLabel}</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e7e7dc]">
+              <div className="h-full rounded-full bg-[#3d9a7e]" style={{ width: `${Math.min(100, spentRateWidth)}%` }} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <Info label="Approved Budget (AOP)" value={formatCrore(project.aop)} />
+            <Info label="Committed / Awarded" value={formatCrore(project.awarded)} />
+            <Info label="Projected Cost" value={formatCrore(commercial.projectedCost)} />
+            <Info label="Spent Till Date" value={formatCrore(project.spent)} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Info label="Balance Remaining" value={formatCrore(commercial.remaining)} />
+            <Info
+              label="Cost Variance (Projected - AOP)"
+              value={`${commercial.costVariance > 0 ? '+' : ''}${formatCrore(commercial.costVariance)}`}
+            />
+          </div>
+
+          {editable && (
+            editing ? (
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const next = parseCroreFields({ aop, awarded, spent, projectedCost });
+                  if (!next) {
+                    setCommercialError('Enter AOP, awarded, spent, and projected cost as numbers of 0 or more.');
+                    return;
+                  }
+                  setCommercialError('');
+                  onSave(next);
+                  setEditing(false);
+                }}
+                className="space-y-3 rounded-xl border border-[#eadcb1] bg-[#fff8e9] p-4"
+              >
+                <p className="text-[11px] font-extrabold">Edit commercial values (in ₹ Cr)</p>
+                {commercialError && <p role="alert" className="rounded-lg bg-[#fae5e1] px-3 py-2 text-[10px] font-semibold text-[#b2473d]">{commercialError}</p>}
+                <div className="grid gap-2 sm:grid-cols-4">
+                  <label>
+                    <span className="mb-1 block font-mono text-[9px] uppercase text-muted-foreground">Approved AOP</span>
+                    <input type="number" min="0" step="0.01" value={aop} onChange={(event) => setAop(event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]" />
+                  </label>
+                  <label>
+                    <span className="mb-1 block font-mono text-[9px] uppercase text-muted-foreground">Committed Cost</span>
+                    <input type="number" min="0" step="0.01" value={awarded} onChange={(event) => setAwarded(event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]" />
+                  </label>
+                  <label>
+                    <span className="mb-1 block font-mono text-[9px] uppercase text-muted-foreground">Projected Cost</span>
+                    <input type="number" min="0" step="0.01" value={projectedCost} onChange={(event) => setProjectedCost(event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]" />
+                  </label>
+                  <label>
+                    <span className="mb-1 block font-mono text-[9px] uppercase text-muted-foreground">Spent Till Date</span>
+                    <input type="number" min="0" step="0.01" value={spent} onChange={(event) => setSpent(event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]" />
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="rounded-lg bg-[#173e49] px-3 py-2 text-[10px] font-bold text-white">Save</button>
+                  <button type="button" onClick={() => setEditing(false)} className="rounded-lg border border-border px-3 py-2 text-[10px] font-bold">Cancel</button>
+                </div>
+              </form>
+            ) : (
+              <button type="button" onClick={() => setEditing(true)} className="rounded-xl border border-[#eadcb1] bg-[#fff8e9] px-3 py-2 text-[10px] font-bold text-[#9a711f]">
+                Edit commercial data
+              </button>
+            )
+          )}
+        </div>
+      </DetailCard>
+
+      <DetailCard title="Budget by phase" eyebrow="Indicative cost line" icon={ReceiptText}>
+        <div className="mt-6 space-y-4">
+          <p className="text-[10px] leading-4 text-muted-foreground">Indicative split of the committed value across the stages.</p>
+          {project.phases.slice(0, 4).map((phase, index) => {
+            const amounts = [0.12, 0.24, 0.31, 0.33];
+            return (
+              <div key={`${phase.name}-${index}`}>
+                <div className="mb-1.5 flex justify-between text-[11px]">
+                  <span className="font-semibold">{phase.name}</span>
+                  <span className="font-mono text-muted-foreground">{formatCrore(project.awarded * amounts[index])}</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-[#e7e7dc]">
+                  <div className={`h-full rounded-full ${index === 2 ? 'bg-[#d19b35]' : 'bg-[#3d9a7e]'}`} style={{ width: `${Math.max(phase.progress, 8)}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </DetailCard>
+    </div>
+  );
 }
 
 function Info({ label, value }: { label: string; value: string }) {
@@ -428,14 +980,15 @@ function activePhaseLabel(project: Project) {
   return project.phases.find((phase) => phase.status === 'active')?.name ?? 'Not started';
 }
 
-/** Converts the three crore-denominated inputs, rejecting blank or negative values. */
-function parseCroreFields(fields: { aop: string; awarded: string; spent: string }): Partial<Project> | null {
+/** Converts the crore-denominated inputs, rejecting blank or negative values. */
+function parseCroreFields(fields: { aop: string; awarded: string; spent: string; projectedCost?: string }): Partial<Project> | null {
   const aop = Number(fields.aop);
   const awarded = Number(fields.awarded);
   const spent = Number(fields.spent);
-  const values = [aop, awarded, spent];
+  const projectedCost = fields.projectedCost !== undefined && fields.projectedCost !== '' ? Number(fields.projectedCost) : aop;
+  const values = [aop, awarded, spent, projectedCost];
   if (values.some((value) => !Number.isFinite(value) || value < 0)) return null;
-  return { aop: aop * CRORE, awarded: awarded * CRORE, spent: spent * CRORE };
+  return { aop: aop * CRORE, awarded: awarded * CRORE, spent: spent * CRORE, projectedCost: projectedCost * CRORE };
 }
 
 function openIssueLabel(project: Project): string {

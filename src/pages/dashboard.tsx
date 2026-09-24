@@ -1,10 +1,11 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { Link } from 'wouter';
 import { Activity, TriangleAlert as AlertTriangle, ArrowUpRight, ChartBar as BarChart3, CalendarDays, CircleCheck as CheckCircle2, CircleDollarSign, Clock3, ListFilter as Filter, MapPin, Search, SlidersHorizontal, Maximize2, Minimize2, Target, TrendingUp, X } from 'lucide-react';
-import { categories, formatCrore, healthOptions, locations, type Category, type Health, type Location, type Project } from '@/data/projects';
+import { categories, formatCrore, healthOptions, locations, projectStatuses, type Category, type Health, type Location, type Project, type ProjectStatus } from '@/data/projects';
 import { useAppState } from '@/state/app-state';
 import { greetingForNow, parseIsoDate, todayLongLabel } from '@/lib/date';
 import { initialsOf, leadName } from '@/data/users';
+import { statusTone } from './workspace';
 
 const healthStyles: Record<Health, { dot: string; text: string; bg: string }> = {
   'On track': { dot: 'bg-[#3d9a7e]', text: 'text-[#2e7c67]', bg: 'bg-[#e4f1ec]' },
@@ -55,16 +56,21 @@ function AttentionItem({ project }: { project: Project }) {
 
 function ProjectRow({ project, index }: { project: Project; index: number }) {
   const Icon = categoryIcons[project.category];
-  return <Link href={`/project/${project.id}`} data-testid={`link-project-${project.id}`} className={`fade-up stagger-${Math.min(index + 1, 5)} group grid grid-cols-[minmax(220px,1.5fr)_110px_130px_110px_120px_120px_30px] items-center gap-4 border-b border-border/70 px-5 py-4 last:border-0 hover:bg-[#fcf5e5]`}>
+  return <Link href={`/project/${project.id}`} data-testid={`link-project-${project.id}`} className={`fade-up stagger-${Math.min(index + 1, 5)} group grid grid-cols-[minmax(200px,1.4fr)_110px_100px_120px_105px_105px_110px_30px] items-center gap-3 border-b border-border/70 px-5 py-4 last:border-0 hover:bg-[#fcf5e5]`}>
     <span className="flex min-w-0 items-center gap-3">
       <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#e8f0ec] text-[#2e7c67]"><Icon size={16} /></span>
       <span className="min-w-0"><span className="block truncate text-[12px] font-bold text-foreground">{project.name}</span><span className="mt-1 flex items-center gap-1.5 truncate font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground"><MapPin size={10} />{project.location} <span className="text-border">/</span> {project.code}</span></span>
+    </span>
+    <span>
+      <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${statusTone[project.status || 'Yet to start']}`}>
+        {project.status || 'Yet to start'}
+      </span>
     </span>
     <span><HealthPill health={project.health} /></span>
     <span><ProgressBar value={project.progress} compact /></span>
     <span className="text-[12px] font-semibold text-foreground">{formatCrore(project.aop)}</span>
     <span className="text-[12px] font-semibold text-foreground">{formatCrore(project.spent)}</span>
-    <span><span className="block text-[11px] font-semibold text-foreground">{project.targetLabel}</span><span className="mt-1 block text-[10px] text-muted-foreground">target</span></span>
+    <span><span className="block text-[11px] font-semibold text-foreground">{project.targetLabel}</span><span className="mt-1 block font-mono text-[9px] text-muted-foreground">{project.paxKeys || 'target'}</span></span>
     <ArrowUpRight size={15} className="text-muted-foreground/45 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
   </Link>;
 }
@@ -73,7 +79,15 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
   const Icon = categoryIcons[project.category];
   return <Link href={`/project/${project.id}`} data-testid={`card-project-${project.id}`} className={`fade-up stagger-${Math.min(index + 1, 5)} block rounded-2xl border border-border bg-card p-4 shadow-sm shadow-[#173e49]/[.03] hover:-translate-y-0.5 hover:border-[#d9c585] hover:shadow-lg hover:shadow-[#173e49]/[.06]`}>
     <span className="flex items-start justify-between gap-3"><span className="flex min-w-0 items-center gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#e8f0ec] text-[#2e7c67]"><Icon size={16} /></span><span className="min-w-0"><span className="block truncate text-[13px] font-bold">{project.name}</span><span className="mt-1 flex items-center gap-1 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground"><MapPin size={10} /> {project.location}</span></span></span><ArrowUpRight size={16} className="text-muted-foreground/50" /></span>
-    <span className="mt-4 flex items-center justify-between"><HealthPill health={project.health} /><span className="font-mono text-[10px] text-muted-foreground">{project.targetLabel}</span></span>
+    <span className="mt-4 flex items-center justify-between">
+      <span className="flex items-center gap-1.5">
+        <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${statusTone[project.status || 'Yet to start']}`}>
+          {project.status || 'Yet to start'}
+        </span>
+        <HealthPill health={project.health} />
+      </span>
+      <span className="font-mono text-[10px] text-muted-foreground">{project.targetLabel}</span>
+    </span>
     <span className="mt-4 block"><ProgressBar value={project.progress} /></span>
     <span className="mt-4 flex items-center justify-between border-t border-border/70 pt-3"><span className="text-[10px] text-muted-foreground">AOP <strong className="ml-1 text-foreground">{formatCrore(project.aop)}</strong></span><span className="text-[10px] text-muted-foreground">Spent <strong className="ml-1 text-foreground">{formatCrore(project.spent)}</strong></span></span>
   </Link>;
@@ -85,6 +99,7 @@ export default function Dashboard() {
   const [location, setLocation] = useState<'All' | Location>('All');
   const [category, setCategory] = useState<'All' | Category>('All');
   const [health, setHealth] = useState<'All' | Health>('All');
+  const [status, setStatus] = useState<'All' | ProjectStatus>('All');
   const [showFilters, setShowFilters] = useState(false);
   const [portfolioExpanded, setPortfolioExpanded] = useState(false);
   const [portfolioHeight, setPortfolioHeight] = useState(380);
@@ -95,8 +110,14 @@ export default function Dashboard() {
     // Search covers name, location, category, code and lead — matching the
     // same fields the portfolio table under "All projects" searches.
     const haystack = `${project.name} ${project.location} ${project.category} ${project.code} ${leadName(project.leadId)}`.toLowerCase();
-    return haystack.includes(query.trim().toLowerCase()) && (location === 'All' || project.location === location) && (category === 'All' || project.category === category) && (health === 'All' || project.health === health);
-  }), [projects, query, location, category, health]);
+    return (
+      haystack.includes(query.trim().toLowerCase()) &&
+      (location === 'All' || project.location === location) &&
+      (category === 'All' || project.category === category) &&
+      (health === 'All' || project.health === health) &&
+      (status === 'All' || (project.status || 'Yet to start') === status)
+    );
+  }), [projects, query, location, category, health, status]);
 
   const stats = useMemo(() => {
     const total = projects.length;
@@ -138,8 +159,8 @@ export default function Dashboard() {
   // The donut used to be a hardcoded gradient that did not track the data.
   const healthGradient = useMemo(() => buildHealthGradient(stats), [stats]);
 
-  const clearFilters = () => { setQuery(''); setLocation('All'); setCategory('All'); setHealth('All'); };
-  const hasFilters = Boolean(query) || location !== 'All' || category !== 'All' || health !== 'All';
+  const clearFilters = () => { setQuery(''); setLocation('All'); setCategory('All'); setHealth('All'); setStatus('All'); };
+  const hasFilters = Boolean(query) || location !== 'All' || category !== 'All' || health !== 'All' || status !== 'All';
   const { onTrackCount, atRiskCount, delayedCount, totalAop, averageProgress } = stats;
 
   return <div className="mx-auto max-w-[1540px] px-5 pb-14 pt-8 md:px-10 md:pt-10">
@@ -184,7 +205,16 @@ export default function Dashboard() {
     <section className="mt-8 grid gap-5 lg:grid-cols-[1.35fr_.65fr]">
       <div className="min-w-0">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><div className="flex items-center gap-2"><p className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Project portfolio</p><span className="rounded-full bg-muted px-2 py-0.5 font-mono text-[9px] text-muted-foreground">{filteredProjects.length} shown</span></div><h2 className="mt-2 text-[22px] font-extrabold tracking-[-.04em]">All work in motion</h2></div><div className="flex items-center gap-2"><label className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3 text-muted-foreground focus-within:border-[#c9a04e] sm:w-56 sm:flex-none"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} data-testid="input-search-projects" placeholder="Search projects" className="min-w-0 bg-transparent text-[11px] text-foreground outline-none placeholder:text-muted-foreground/70" /></label><button type="button" data-testid="button-toggle-filters" onClick={() => setShowFilters((value) => !value)} className={`flex h-10 items-center gap-2 rounded-xl border px-3 text-[11px] font-bold ${showFilters || hasFilters ? 'border-[#c9a04e] bg-[#fbf1d8] text-[#8e681c]' : 'border-border bg-card text-muted-foreground hover:bg-muted'}`}><Filter size={14} /> <span className="hidden sm:inline">Filters</span></button></div></div>
-        {showFilters && <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3 fade-up"><div className="mr-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.1em] text-muted-foreground"><SlidersHorizontal size={13} /> Refine</div><select value={location} onChange={(event) => setLocation(event.target.value as 'All' | Location)} data-testid="select-location-filter" className="h-8 rounded-lg border border-border bg-background px-2 text-[11px] font-semibold outline-none"><option value="All">All locations</option>{locations.map((value) => <option key={value} value={value}>{value}</option>)}</select><select value={category} onChange={(event) => setCategory(event.target.value as 'All' | Category)} data-testid="select-category-filter" className="h-8 rounded-lg border border-border bg-background px-2 text-[11px] font-semibold outline-none"><option value="All">All categories</option>{categories.map((value) => <option key={value} value={value}>{value}</option>)}</select><select value={health} onChange={(event) => setHealth(event.target.value as 'All' | Health)} data-testid="select-health-filter" className="h-8 rounded-lg border border-border bg-background px-2 text-[11px] font-semibold outline-none"><option value="All">All health</option>{healthOptions.map((value) => <option key={value} value={value}>{value}</option>)}</select>{hasFilters && <button type="button" data-testid="button-clear-filters" onClick={clearFilters} className="ml-auto flex items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-bold text-[#b2473d] hover:bg-[#fae5e1]">Clear <X size={12} /></button>}</div>}
+        {showFilters && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3 fade-up">
+            <div className="mr-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.1em] text-muted-foreground"><SlidersHorizontal size={13} /> Refine</div>
+            <select value={location} onChange={(event) => setLocation(event.target.value as 'All' | Location)} data-testid="select-location-filter" className="h-8 rounded-lg border border-border bg-background px-2 text-[11px] font-semibold outline-none"><option value="All">All locations</option>{locations.map((value) => <option key={value} value={value}>{value}</option>)}</select>
+            <select value={category} onChange={(event) => setCategory(event.target.value as 'All' | Category)} data-testid="select-category-filter" className="h-8 rounded-lg border border-border bg-background px-2 text-[11px] font-semibold outline-none"><option value="All">All categories</option>{categories.map((value) => <option key={value} value={value}>{value}</option>)}</select>
+            <select value={status} onChange={(event) => setStatus(event.target.value as 'All' | ProjectStatus)} className="h-8 rounded-lg border border-border bg-background px-2 text-[11px] font-semibold outline-none"><option value="All">All statuses</option>{projectStatuses.map((value) => <option key={value} value={value}>{value}</option>)}</select>
+            <select value={health} onChange={(event) => setHealth(event.target.value as 'All' | Health)} data-testid="select-health-filter" className="h-8 rounded-lg border border-border bg-background px-2 text-[11px] font-semibold outline-none"><option value="All">All health</option>{healthOptions.map((value) => <option key={value} value={value}>{value}</option>)}</select>
+            {hasFilters && <button type="button" data-testid="button-clear-filters" onClick={clearFilters} className="ml-auto flex items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-bold text-[#b2473d] hover:bg-[#fae5e1]">Clear <X size={12} /></button>}
+          </div>
+        )}
         <div className="mt-4 hidden max-h-[560px] overflow-y-auto rounded-2xl border border-[#e1dccf] bg-[#f7f4ec] text-[#173e49] shadow-sm shadow-[#173e49]/[.03] md:block [&>a]:!bg-[#f7f4ec] [&>a]:!text-[#173e49] [&>a:hover]:!bg-[#fcf5e5]" style={{ maxHeight: portfolioExpanded ? undefined : `${portfolioHeight}px`, backgroundColor: '#f7f4ec' } as CSSProperties}>
           <div className="flex items-center justify-between gap-4 border-b border-border bg-[#f7f4ec] px-5 py-2.5">
             <span className="font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">Portfolio register</span>
@@ -199,7 +229,7 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
-          <div className="sticky top-0 z-10 grid grid-cols-[minmax(220px,1.5fr)_110px_130px_110px_120px_120px_30px] gap-4 border-b border-border bg-[#f7f4ec] px-5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground"><span>Project</span><span>Health</span><span>Progress</span><span>AOP</span><span>Spent</span><span>Target date</span><span /></div>{filteredProjects.length ? filteredProjects.map((project, index) => <ProjectRow key={project.id} project={project} index={index} />) : <div className="p-10 text-center text-[12px] text-muted-foreground">No projects match this view. Try a broader search.</div>}
+          <div className="sticky top-0 z-10 grid grid-cols-[minmax(200px,1.4fr)_110px_100px_120px_105px_105px_110px_30px] gap-3 border-b border-border bg-[#f7f4ec] px-5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground"><span>Project</span><span>Status</span><span>Health</span><span>Progress</span><span>AOP</span><span>Spent</span><span>Target date</span><span /></div>{filteredProjects.length ? filteredProjects.map((project, index) => <ProjectRow key={project.id} project={project} index={index} />) : <div className="p-10 text-center text-[12px] text-muted-foreground">No projects match this view. Try a broader search.</div>}
         </div>
         <div className="mt-4 grid gap-3 md:hidden">{filteredProjects.length ? filteredProjects.map((project, index) => <ProjectCard key={project.id} project={project} index={index} />) : <div className="rounded-2xl border border-dashed border-border p-10 text-center text-[12px] text-muted-foreground">No projects match this view.</div>}</div>
       </div>

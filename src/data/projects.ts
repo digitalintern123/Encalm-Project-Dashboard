@@ -3,10 +3,28 @@ import { formatDayMonth } from '@/lib/date';
 export type Location = 'Delhi' | 'Hyderabad' | 'Goa' | 'Bhogapuram';
 export type Category = 'Hotel' | 'Lounge' | 'Kitchen' | 'Encalm Eats' | 'Other';
 export type Health = 'On track' | 'At risk' | 'Delayed' | 'Not started';
+export type ProjectStatus = 'Yet to start' | 'In Design' | 'In Tendering' | 'Under Construction' | 'Operational';
 export type StageStatus = 'complete' | 'active' | 'upcoming' | 'blocked';
-export type IssueCategory = 'Design' | 'Approval' | 'Procurement' | 'Vendor' | 'Site' | 'Commercial' | 'Operations' | 'Safety' | 'Quality' | 'Other';
+export type IssueCategory = 'Design' | 'Procurement' | 'Billing' | 'Construction' | 'Approval' | 'Other';
 export type IssueStatus = 'Open' | 'Under review' | 'Action in progress' | 'Resolved' | 'Closed';
 export type ProjectTemplateId = 'lounge' | 'hotel' | 'kitchen' | 'encalm-eats' | 'custom';
+
+export const projectStatuses: ProjectStatus[] = [
+  'Yet to start',
+  'In Design',
+  'In Tendering',
+  'Under Construction',
+  'Operational',
+];
+
+export const issueCategories: IssueCategory[] = [
+  'Design',
+  'Procurement',
+  'Billing',
+  'Construction',
+  'Approval',
+  'Other',
+];
 
 export type Phase = {
   id?: string;
@@ -45,6 +63,8 @@ export type ProjectIssue = {
   stage?: string;
   dateRaised?: string;
   dueDate?: string;
+  issueAriseDate?: string;
+  targetClosureDate?: string;
   impactCost?: string;
   impactSchedule?: string;
   impactScope?: string;
@@ -79,12 +99,16 @@ export type Project = {
   category: Category;
   code: string;
   health: Health;
+  status?: ProjectStatus;
   progress: number;
   targetDate: string;
   targetLabel: string;
   aop: number;
   awarded: number;
   spent: number;
+  projectedCost?: number;
+  area?: string;
+  paxKeys?: string;
   nextMilestone: string;
   nextMilestoneDate: string;
   leadId: string;

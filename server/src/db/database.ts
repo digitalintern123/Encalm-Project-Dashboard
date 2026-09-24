@@ -38,12 +38,16 @@ export function initDatabase() {
       category TEXT NOT NULL,
       code TEXT NOT NULL,
       health TEXT NOT NULL CHECK(health IN ('On track', 'At risk', 'Delayed', 'Not started')),
+      status TEXT NOT NULL DEFAULT 'Yet to start' CHECK(status IN ('Yet to start', 'In Design', 'In Tendering', 'Under Construction', 'Operational')),
       progress REAL NOT NULL DEFAULT 0,
       target_date TEXT NOT NULL,
       target_label TEXT NOT NULL,
       aop REAL NOT NULL DEFAULT 0,
       awarded REAL NOT NULL DEFAULT 0,
       spent REAL NOT NULL DEFAULT 0,
+      projected_cost REAL NOT NULL DEFAULT 0,
+      area TEXT,
+      pax_keys TEXT,
       next_milestone TEXT NOT NULL,
       next_milestone_date TEXT NOT NULL,
       lead_id TEXT NOT NULL,
@@ -134,4 +138,24 @@ export function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_updates_project ON updates(project_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read, created_at DESC);
   `);
+
+  // Safe migrations for projects table
+  try {
+    const projectColumns = db.prepare("PRAGMA table_info(projects)").all() as { name: string }[];
+    const colNames = new Set(projectColumns.map((c) => c.name));
+    if (!colNames.has('status')) {
+      db.prepare("ALTER TABLE projects ADD COLUMN status TEXT NOT NULL DEFAULT 'Yet to start'").run();
+    }
+    if (!colNames.has('projected_cost')) {
+      db.prepare("ALTER TABLE projects ADD COLUMN projected_cost REAL NOT NULL DEFAULT 0").run();
+    }
+    if (!colNames.has('area')) {
+      db.prepare("ALTER TABLE projects ADD COLUMN area TEXT").run();
+    }
+    if (!colNames.has('pax_keys')) {
+      db.prepare("ALTER TABLE projects ADD COLUMN pax_keys TEXT").run();
+    }
+  } catch (err) {
+    console.warn('Column migration note:', err);
+  }
 }

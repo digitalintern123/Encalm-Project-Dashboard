@@ -20,12 +20,16 @@ export function fetchFullProject(projectId: string) {
     category: row.category,
     code: row.code,
     health: row.health,
+    status: row.status || 'Yet to start',
     progress: row.progress,
     targetDate: row.target_date,
     targetLabel: row.target_label,
     aop: row.aop,
     awarded: row.awarded,
     spent: row.spent,
+    projectedCost: row.projected_cost ?? 0,
+    area: row.area || undefined,
+    paxKeys: row.pax_keys || undefined,
     nextMilestone: row.next_milestone,
     nextMilestoneDate: row.next_milestone_date,
     leadId: row.lead_id,
@@ -69,6 +73,8 @@ export function fetchFullProject(projectId: string) {
       stage: iss.stage,
       dateRaised: iss.date_raised,
       dueDate: iss.due_date,
+      issueAriseDate: iss.date_raised,
+      targetClosureDate: iss.due_date,
       impactCost: iss.impact_cost,
       impactSchedule: iss.impact_schedule,
       impactScope: iss.impact_scope,
@@ -123,12 +129,12 @@ router.post('/', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest,
 
   const insertProject = db.prepare(`
     INSERT INTO projects (
-      id, name, location, category, code, health, progress, target_date, target_label,
-      aop, awarded, spent, next_milestone, next_milestone_date, lead_id, start_date,
+      id, name, location, category, code, health, status, progress, target_date, target_label,
+      aop, awarded, spent, projected_cost, area, pax_keys, next_milestone, next_milestone_date, lead_id, start_date,
       last_updated, specification_json, template_id
     ) VALUES (
-      @id, @name, @location, @category, @code, @health, @progress, @target_date, @target_label,
-      @aop, @awarded, @spent, @next_milestone, @next_milestone_date, @lead_id, @start_date,
+      @id, @name, @location, @category, @code, @health, @status, @progress, @target_date, @target_label,
+      @aop, @awarded, @spent, @projected_cost, @area, @pax_keys, @next_milestone, @next_milestone_date, @lead_id, @start_date,
       @last_updated, @specification_json, @template_id
     )
   `);
@@ -149,12 +155,16 @@ router.post('/', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest,
       category: body.category,
       code,
       health: body.health || 'Not started',
+      status: body.status || 'Yet to start',
       progress: body.progress || 0,
       target_date: body.targetDate || '',
       target_label: body.targetLabel || body.targetDate || '',
       aop: body.aop || 0,
       awarded: body.awarded || 0,
       spent: body.spent || 0,
+      projected_cost: body.projectedCost ?? body.projected_cost ?? body.aop ?? 0,
+      area: body.area || body.specification?.area || null,
+      pax_keys: body.paxKeys || body.pax_keys || body.specification?.capacity || null,
       next_milestone: body.nextMilestone || 'Project brief',
       next_milestone_date: body.nextMilestoneDate || body.startDate || '',
       lead_id: body.leadId || req.user!.id,
@@ -234,8 +244,8 @@ router.post('/', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest,
           category: iss.category || 'Other',
           status: iss.status || 'Open',
           stage: iss.stage || null,
-          date_raised: iss.dateRaised || todayFormatted,
-          due_date: iss.dueDate || null,
+          date_raised: iss.issueAriseDate || iss.dateRaised || todayFormatted,
+          due_date: iss.targetClosureDate || iss.dueDate || null,
           impact_cost: iss.impactCost || null,
           impact_schedule: iss.impactSchedule || null,
           impact_scope: iss.impactScope || null,
@@ -280,13 +290,21 @@ router.patch('/:id', requireAuth, requireRole(['lead']), (req: AuthenticatedRequ
   const values: any[] = [todayFormatted];
 
   if (patch.name !== undefined) { updates.push('name = ?'); values.push(patch.name); }
+  if (patch.location !== undefined) { updates.push('location = ?'); values.push(patch.location); }
+  if (patch.category !== undefined) { updates.push('category = ?'); values.push(patch.category); }
   if (patch.health !== undefined) { updates.push('health = ?'); values.push(patch.health); }
+  if (patch.status !== undefined) { updates.push('status = ?'); values.push(patch.status); }
   if (patch.progress !== undefined) { updates.push('progress = ?'); values.push(patch.progress); }
   if (patch.targetDate !== undefined) { updates.push('target_date = ?'); values.push(patch.targetDate); }
   if (patch.targetLabel !== undefined) { updates.push('target_label = ?'); values.push(patch.targetLabel); }
   if (patch.aop !== undefined) { updates.push('aop = ?'); values.push(patch.aop); }
   if (patch.awarded !== undefined) { updates.push('awarded = ?'); values.push(patch.awarded); }
   if (patch.spent !== undefined) { updates.push('spent = ?'); values.push(patch.spent); }
+  if (patch.projectedCost !== undefined) { updates.push('projected_cost = ?'); values.push(patch.projectedCost); }
+  else if (patch.projected_cost !== undefined) { updates.push('projected_cost = ?'); values.push(patch.projected_cost); }
+  if (patch.area !== undefined) { updates.push('area = ?'); values.push(patch.area); }
+  if (patch.paxKeys !== undefined) { updates.push('pax_keys = ?'); values.push(patch.paxKeys); }
+  else if (patch.pax_keys !== undefined) { updates.push('pax_keys = ?'); values.push(patch.pax_keys); }
   if (patch.nextMilestone !== undefined) { updates.push('next_milestone = ?'); values.push(patch.nextMilestone); }
   if (patch.nextMilestoneDate !== undefined) { updates.push('next_milestone_date = ?'); values.push(patch.nextMilestoneDate); }
   if (patch.leadId !== undefined) { updates.push('lead_id = ?'); values.push(patch.leadId); }

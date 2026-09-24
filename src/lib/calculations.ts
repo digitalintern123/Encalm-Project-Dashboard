@@ -77,13 +77,17 @@ export type CommercialSummary = {
   aop: number;
   awarded: number;
   spent: number;
+  projectedCost: number;
   remaining: number;
+  costVariance: number;
   /** Awarded as a % of AOP. `null` when AOP is 0 (nothing to divide by). */
   awardRatePct: number | null;
   /** Spent as a % of awarded. `null` when nothing has been awarded yet. */
   spentRatePct: number | null;
   /** True when awarded exceeds AOP — flagged, never silently allowed. */
   overAwarded: boolean;
+  /** True when projected cost exceeds AOP budget */
+  overBudget: boolean;
 };
 
 function ratioPct(part: number, whole: number): number | null {
@@ -91,17 +95,21 @@ function ratioPct(part: number, whole: number): number | null {
   return Math.round((part / whole) * 1000) / 10; // one decimal place
 }
 
-/** The one place that turns a project's raw AOP/awarded/spent into display ratios. */
+/** The one place that turns a project's raw AOP/awarded/spent/projected into display ratios. */
 export function getCommercialSummary(project: Project): CommercialSummary {
   const { aop, awarded, spent } = project;
+  const projectedCost = Number.isFinite(project.projectedCost) ? (project.projectedCost as number) : aop;
   return {
     aop,
     awarded,
     spent,
+    projectedCost,
     remaining: awarded - spent,
+    costVariance: projectedCost - aop,
     awardRatePct: ratioPct(awarded, aop),
     spentRatePct: ratioPct(spent, awarded),
     overAwarded: Number.isFinite(aop) && Number.isFinite(awarded) && awarded > aop,
+    overBudget: Number.isFinite(aop) && Number.isFinite(projectedCost) && projectedCost > aop,
   };
 }
 
@@ -109,6 +117,7 @@ export type PortfolioCommercialSummary = {
   totalAop: number;
   totalAwarded: number;
   totalSpent: number;
+  totalProjectedCost: number;
   awardRatePct: number | null;
   spentRatePct: number | null;
 };
@@ -118,10 +127,15 @@ export function getPortfolioCommercialSummary(projects: Project[]): PortfolioCom
   const totalAop = projects.reduce((sum, project) => sum + (Number.isFinite(project.aop) ? project.aop : 0), 0);
   const totalAwarded = projects.reduce((sum, project) => sum + (Number.isFinite(project.awarded) ? project.awarded : 0), 0);
   const totalSpent = projects.reduce((sum, project) => sum + (Number.isFinite(project.spent) ? project.spent : 0), 0);
+  const totalProjectedCost = projects.reduce(
+    (sum, project) => sum + (Number.isFinite(project.projectedCost) ? (project.projectedCost as number) : (Number.isFinite(project.aop) ? project.aop : 0)),
+    0,
+  );
   return {
     totalAop,
     totalAwarded,
     totalSpent,
+    totalProjectedCost,
     awardRatePct: ratioPct(totalAwarded, totalAop),
     spentRatePct: ratioPct(totalSpent, totalAwarded),
   };

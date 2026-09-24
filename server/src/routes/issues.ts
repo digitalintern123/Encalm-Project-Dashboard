@@ -36,8 +36,8 @@ router.post('/', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest,
     category: body.category || 'Other',
     status: body.status || 'Open',
     stage: body.stage || null,
-    date_raised: body.dateRaised || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-    due_date: body.dueDate || null,
+    date_raised: body.issueAriseDate || body.dateRaised || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    due_date: body.targetClosureDate || body.dueDate || null,
     impact_cost: body.impactCost || null,
     impact_schedule: body.impactSchedule || null,
     impact_scope: body.impactScope || null,
@@ -82,6 +82,9 @@ router.patch('/:issueId', requireAuth, requireRole(['lead']), (req: Authenticate
   if (patch.status !== undefined) { updates.push('status = ?'); values.push(patch.status); }
   if (patch.stage !== undefined) { updates.push('stage = ?'); values.push(patch.stage); }
   if (patch.dueDate !== undefined) { updates.push('due_date = ?'); values.push(patch.dueDate); }
+  else if (patch.targetClosureDate !== undefined) { updates.push('due_date = ?'); values.push(patch.targetClosureDate); }
+  if (patch.dateRaised !== undefined) { updates.push('date_raised = ?'); values.push(patch.dateRaised); }
+  else if (patch.issueAriseDate !== undefined) { updates.push('date_raised = ?'); values.push(patch.issueAriseDate); }
   if (patch.impactCost !== undefined) { updates.push('impact_cost = ?'); values.push(patch.impactCost); }
   if (patch.impactSchedule !== undefined) { updates.push('impact_schedule = ?'); values.push(patch.impactSchedule); }
   if (patch.impactScope !== undefined) { updates.push('impact_scope = ?'); values.push(patch.impactScope); }

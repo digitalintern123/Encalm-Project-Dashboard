@@ -22,7 +22,7 @@ import {
   ThumbsUp,
   TrendingUp,
 } from 'lucide-react';
-import { categories, formatCrore, healthOptions, locations, type Category, type Health, type Project } from '@/data/projects';
+import { categories, formatCrore, healthOptions, locations, projectStatuses, type Category, type Health, type Project, type ProjectStatus } from '@/data/projects';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
 import { CRORE } from '@/data/projects';
@@ -34,12 +34,65 @@ export type WorkspaceView = 'projects' | 'my-projects' | 'timeline' | 'milestone
 
 const healthTone: Record<Health, string> = { 'On track': 'bg-[#e4f1ec] text-[#2e7c67]', 'At risk': 'bg-[#f8edcf] text-[#9a711f]', Delayed: 'bg-[#fae5e1] text-[#b2473d]', 'Not started': 'bg-[#eef0ed] text-[#69716b]' };
 
+export const statusTone: Record<ProjectStatus, string> = {
+  'Yet to start': 'bg-[#eef0ed] text-[#69716b]',
+  'In Design': 'bg-[#e8f1f5] text-[#2c6e8a]',
+  'In Tendering': 'bg-[#fef4e6] text-[#b37418]',
+  'Under Construction': 'bg-[#fff0eb] text-[#c2583f]',
+  'Operational': 'bg-[#e4f1ec] text-[#2e7c67]',
+};
+
 function PageHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: ReactNode }) {
   return <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"><div><p className="font-mono text-[10px] uppercase tracking-[.18em] text-[#9a711f]">{eyebrow}</p><h1 className="mt-3 font-serif text-[42px] leading-none tracking-[-.05em] text-[#173e49] md:text-[52px]">{title}</h1><p className="mt-4 max-w-[620px] text-[13px] leading-6 text-muted-foreground">{description}</p></div>{action}</div>;
 }
 
 function ProjectTable({ rows }: { rows: Project[] }) {
-  return <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-[#173e49]/[.03]"><div className="hidden grid-cols-[minmax(220px,1.5fr)_110px_110px_130px_110px_130px_110px] gap-3 border-b border-border bg-[#f7f4ec] px-5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground md:grid"><span>Project</span><span>Location</span><span>Category</span><span>Lead</span><span>Progress</span><span>Target</span><span>Health</span></div>{rows.length === 0 && <p className="px-5 py-10 text-center text-[12px] text-muted-foreground">No projects match this view. Try a broader search.</p>}{rows.map((project) => <Link href={`/project/${project.id}`} key={project.id} className="grid gap-3 border-b border-border/70 px-5 py-4 transition hover:bg-[#fcf5e5] md:grid-cols-[minmax(220px,1.5fr)_110px_110px_130px_110px_130px_110px] md:items-center"><div className="flex items-center justify-between gap-3"><span><span className="block text-[12px] font-bold">{project.name}</span><span className="mt-1 block font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">{project.code}</span></span><ArrowUpRight size={15} className="text-muted-foreground/50 md:hidden" /></div><span className="text-[11px] text-muted-foreground">{project.location}</span><span className="text-[11px] text-muted-foreground">{project.category}</span><span className="text-[11px] font-semibold">{leadName(project.leadId)}</span><span className="flex items-center gap-2 text-[11px] font-bold"><span className="h-1.5 flex-1 rounded-full bg-[#e7e7dc]"><span className="block h-full rounded-full bg-[#3d9a7e]" style={{ width: `${project.progress}%` }} /></span>{project.progress}%</span><span className="text-[11px] font-semibold">{project.targetLabel}</span><span className={`w-fit rounded-full px-2.5 py-1 text-[10px] font-bold ${healthTone[project.health]}`}>{project.health}</span></Link>)}</div>;
+  return (
+    <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-[#173e49]/[.03]">
+      <div className="hidden grid-cols-[minmax(190px,1.3fr)_90px_120px_110px_100px_90px_110px_95px] gap-3 border-b border-border bg-[#f7f4ec] px-5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground md:grid">
+        <span>Project</span>
+        <span>Location</span>
+        <span>Status</span>
+        <span>Lead</span>
+        <span>Progress</span>
+        <span>Pax / Keys</span>
+        <span>Target</span>
+        <span>Health</span>
+      </div>
+      {rows.length === 0 && <p className="px-5 py-10 text-center text-[12px] text-muted-foreground">No projects match this view. Try a broader search.</p>}
+      {rows.map((project) => (
+        <Link
+          href={`/project/${project.id}`}
+          key={project.id}
+          className="grid gap-3 border-b border-border/70 px-5 py-4 transition hover:bg-[#fcf5e5] md:grid-cols-[minmax(190px,1.3fr)_90px_120px_110px_100px_90px_110px_95px] md:items-center"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <span>
+              <span className="block text-[12px] font-bold">{project.name}</span>
+              <span className="mt-1 block font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">{project.code}</span>
+            </span>
+            <ArrowUpRight size={15} className="text-muted-foreground/50 md:hidden" />
+          </div>
+          <span className="text-[11px] text-muted-foreground">{project.location}</span>
+          <span>
+            <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${statusTone[project.status || 'Yet to start']}`}>
+              {project.status || 'Yet to start'}
+            </span>
+          </span>
+          <span className="text-[11px] font-semibold">{leadName(project.leadId)}</span>
+          <span className="flex items-center gap-2 text-[11px] font-bold">
+            <span className="h-1.5 flex-1 rounded-full bg-[#e7e7dc]">
+              <span className="block h-full rounded-full bg-[#3d9a7e]" style={{ width: `${project.progress}%` }} />
+            </span>
+            {project.progress}%
+          </span>
+          <span className="text-[11px] text-muted-foreground">{project.paxKeys || project.specification?.capacity || '—'}</span>
+          <span className="text-[11px] font-semibold">{project.targetLabel}</span>
+          <span className={`w-fit rounded-full px-2.5 py-1 text-[10px] font-bold ${healthTone[project.health]}`}>{project.health}</span>
+        </Link>
+      ))}
+    </div>
+  );
 }
 
 function ProjectsView({ mine = false }: { mine?: boolean }) {
@@ -47,21 +100,49 @@ function ProjectsView({ mine = false }: { mine?: boolean }) {
   const [search, setSearch] = useState('');
   const [health, setHealth] = useState<'All' | Health>('All');
   const [location, setLocation] = useState<'All' | (typeof locations)[number]>('All');
+  const [status, setStatus] = useState<'All' | ProjectStatus>('All');
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
     return projects.filter((project) => {
-      // "My projects" keys off the signed-in user's stable id (leadId), never
-      // a display-name comparison — two people can share a name; ids don't.
       if (mine && project.leadId !== user?.id) return false;
-      // The input promises project, code or lead — search all three.
       const haystack = `${project.name} ${project.code} ${leadName(project.leadId)}`.toLowerCase();
       if (term && !haystack.includes(term)) return false;
       if (health !== 'All' && project.health !== health) return false;
       if (location !== 'All' && project.location !== location) return false;
+      if (status !== 'All' && (project.status || 'Yet to start') !== status) return false;
       return true;
     });
-  }, [projects, mine, user?.id, search, health, location]);
-  return <><PageHeader eyebrow={mine ? 'Project lead workspace' : 'Project register'} title={mine ? 'My projects' : 'All projects'} description={mine ? 'The projects you own, the milestones ahead, and the updates that need to move.' : 'Explore every Encalm project with the context needed for a useful first read.'} action={mine ? <Link href="/new-project" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d6a95d] px-4 py-3 text-[11px] font-extrabold text-[#173e49] hover:bg-[#e2bd73]"><Plus size={15} /> New project</Link> : undefined} /><div className="mt-8 flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 sm:flex-row"><label className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-background px-3 text-muted-foreground"><Search size={15} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search project, code or lead" className="min-w-0 flex-1 bg-transparent text-[11px] outline-none" /></label><select value={location} onChange={(event) => setLocation(event.target.value as typeof location)} className="h-10 rounded-xl border border-border bg-background px-3 text-[11px] font-semibold"><option value="All">All locations</option>{locations.map((item) => <option key={item}>{item}</option>)}</select><select value={health} onChange={(event) => setHealth(event.target.value as typeof health)} className="h-10 rounded-xl border border-border bg-background px-3 text-[11px] font-semibold"><option value="All">All health</option>{healthOptions.map((item) => <option key={item}>{item}</option>)}</select></div><p className="mt-5 font-mono text-[10px] uppercase tracking-[.12em] text-muted-foreground">{rows.length} projects shown</p><ProjectTable rows={rows} /></>;
+  }, [projects, mine, user?.id, search, health, location, status]);
+  return (
+    <>
+      <PageHeader
+        eyebrow={mine ? 'Project lead workspace' : 'Project register'}
+        title={mine ? 'My projects' : 'All projects'}
+        description={mine ? 'The projects you own, the milestones ahead, and the updates that need to move.' : 'Explore every Encalm project with the context needed for a useful first read.'}
+        action={mine ? <Link href="/new-project" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d6a95d] px-4 py-3 text-[11px] font-extrabold text-[#173e49] hover:bg-[#e2bd73]"><Plus size={15} /> New project</Link> : undefined}
+      />
+      <div className="mt-8 flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 sm:flex-row sm:flex-wrap">
+        <label className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-background px-3 text-muted-foreground">
+          <Search size={15} />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search project, code or lead" className="min-w-0 flex-1 bg-transparent text-[11px] outline-none" />
+        </label>
+        <select value={location} onChange={(event) => setLocation(event.target.value as typeof location)} className="h-10 rounded-xl border border-border bg-background px-3 text-[11px] font-semibold">
+          <option value="All">All locations</option>
+          {locations.map((item) => <option key={item}>{item}</option>)}
+        </select>
+        <select value={status} onChange={(event) => setStatus(event.target.value as typeof status)} className="h-10 rounded-xl border border-border bg-background px-3 text-[11px] font-semibold">
+          <option value="All">All statuses</option>
+          {projectStatuses.map((item) => <option key={item} value={item}>{item}</option>)}
+        </select>
+        <select value={health} onChange={(event) => setHealth(event.target.value as typeof health)} className="h-10 rounded-xl border border-border bg-background px-3 text-[11px] font-semibold">
+          <option value="All">All health</option>
+          {healthOptions.map((item) => <option key={item}>{item}</option>)}
+        </select>
+      </div>
+      <p className="mt-5 font-mono text-[10px] uppercase tracking-[.12em] text-muted-foreground">{rows.length} projects shown</p>
+      <ProjectTable rows={rows} />
+    </>
+  );
 }
 
 function TimelineView() {
@@ -661,10 +742,77 @@ function IssuesView() {
 
 function CommercialView() {
   const { projects, role } = useAppState();
-  // Every ratio here comes from the same functions project-detail.tsx uses —
-  // one commercial calculation, not two independently-rounded copies of it.
   const portfolio = getPortfolioCommercialSummary(projects);
-  return <><PageHeader eyebrow="Commercial" title="Budget & AOP" description="Portfolio-level capital position, with a project view of AOP, award, spend, and balance." /><div className="mt-8 grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-border bg-card p-5"><p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Total AOP</p><p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalAop)}</p></div><div className="rounded-2xl border border-border bg-card p-5"><p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Package awarded</p><p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalAwarded)}</p><p className="mt-1 text-[10px] text-[#2e7c67]">{formatRatio(portfolio.awardRatePct)} award rate</p></div><div className="rounded-2xl border border-border bg-card p-5"><p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Spent to date</p><p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalSpent)}</p><p className="mt-1 text-[10px] text-muted-foreground">{formatRatio(portfolio.spentRatePct)} of awarded</p></div></div><div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card"><div className="hidden grid-cols-[minmax(220px,1.5fr)_130px_130px_100px_130px_130px_90px] gap-3 border-b border-border bg-[#f7f4ec] px-5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground md:grid"><span>Project</span><span>AOP</span><span>Awarded</span><span>Award %</span><span>Spent</span><span>Remaining</span><span>Access</span></div>{projects.map((project) => { const commercial = getCommercialSummary(project); return <div key={project.id} className="grid gap-2 border-b border-border/70 px-5 py-4 md:grid-cols-[minmax(220px,1.5fr)_130px_130px_100px_130px_130px_90px] md:items-center"><Link href={`/project/${project.id}`} className="text-[12px] font-bold hover:text-[#2e7c67]">{project.name}</Link><span className="text-[11px]">{formatCrore(commercial.aop)}</span><span className="text-[11px]">{formatCrore(commercial.awarded)}</span><span className={`text-[11px] font-bold ${commercial.overAwarded ? 'text-[#b2473d]' : 'text-[#2e7c67]'}`}>{formatRatio(commercial.awardRatePct, 0)}</span><span className="text-[11px]">{formatCrore(commercial.spent)}</span><span className="text-[11px]">{formatCrore(commercial.remaining)}</span><span className="text-[10px] font-semibold text-muted-foreground">{role === 'lead' ? 'Editable' : 'View only'}</span></div>; })}</div></>;
+  return (
+    <>
+      <PageHeader
+        eyebrow="Commercial"
+        title="Budget & AOP"
+        description="Portfolio-level capital position, with a project view of Approved Budget (AOP), Committed Cost, Projected Cost, and Spent Till Date."
+      />
+      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Approved Budget (AOP)</p>
+          <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalAop)}</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Committed / Awarded</p>
+          <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalAwarded)}</p>
+          <p className="mt-1 text-[10px] text-[#2e7c67]">{formatRatio(portfolio.awardRatePct)} commitment rate</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Projected Cost</p>
+          <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalProjectedCost)}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            Variance: {portfolio.totalProjectedCost >= portfolio.totalAop ? '+' : ''}{formatCrore(portfolio.totalProjectedCost - portfolio.totalAop)}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Spent Till Date</p>
+          <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalSpent)}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">{formatRatio(portfolio.spentRatePct)} of awarded</p>
+        </div>
+      </div>
+
+      <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="hidden grid-cols-[minmax(180px,1.2fr)_110px_110px_110px_110px_110px_90px_80px] gap-3 border-b border-border bg-[#f7f4ec] px-5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground md:grid">
+          <span>Project</span>
+          <span>Approved (AOP)</span>
+          <span>Committed</span>
+          <span>Projected</span>
+          <span>Spent</span>
+          <span>Cost Variance</span>
+          <span>Status</span>
+          <span>Access</span>
+        </div>
+        {projects.length === 0 && (
+          <p className="px-5 py-10 text-center text-[12px] text-muted-foreground">No projects found. Create a project to view commercials.</p>
+        )}
+        {projects.map((project) => {
+          const commercial = getCommercialSummary(project);
+          return (
+            <div
+              key={project.id}
+              className="grid gap-2 border-b border-border/70 px-5 py-4 md:grid-cols-[minmax(180px,1.2fr)_110px_110px_110px_110px_110px_90px_80px] md:items-center"
+            >
+              <Link href={`/project/${project.id}`} className="text-[12px] font-bold hover:text-[#2e7c67]">
+                {project.name}
+              </Link>
+              <span className="text-[11px]">{formatCrore(commercial.aop)}</span>
+              <span className="text-[11px]">{formatCrore(commercial.awarded)}</span>
+              <span className="text-[11px] font-semibold">{formatCrore(commercial.projectedCost)}</span>
+              <span className="text-[11px]">{formatCrore(commercial.spent)}</span>
+              <span className={`text-[11px] font-bold ${commercial.overBudget ? 'text-[#b2473d]' : 'text-[#2e7c67]'}`}>
+                {commercial.costVariance > 0 ? `+${formatCrore(commercial.costVariance)}` : formatCrore(commercial.costVariance)}
+              </span>
+              <span className="text-[10px] text-muted-foreground">{project.status || 'Yet to start'}</span>
+              <span className="text-[10px] font-semibold text-muted-foreground">{role === 'lead' ? 'Editable' : 'View only'}</span>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
 }
 
 function UpdatesView() {
@@ -684,7 +832,6 @@ function ReportsView() {
     const averageProgress = total
       ? Math.round(projects.reduce((sum, project) => sum + project.progress, 0) / total)
       : 0;
-    // Counted from the data rather than the old `projects.length * 2` guess.
     const openMilestones = projects.reduce(
       (sum, project) => sum + project.milestones.filter((milestone) => milestone.status !== 'complete').length,
       0,
@@ -731,21 +878,22 @@ function NewProjectView() {
     name: '',
     location: 'Goa' as Project['location'],
     category: 'Hotel' as Category,
+    status: 'Yet to start' as ProjectStatus,
     projectType: 'Business hotel',
     startDate: todayIso(),
     targetDate: '',
+    progress: '0',
     aop: '50',
     awarded: '0',
+    projectedCost: '50',
     area: '',
-    capacity: '',
+    paxKeys: '',
     scope: '',
   });
 
   const set = (key: keyof typeof form, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
 
-  // Read-only roles used to see the full form and a "Project created" screen,
-  // while the write was silently rejected by the state layer.
   if (!canEdit) {
     return <><PageHeader eyebrow="Project lead workspace" title="Create new project" description="Creating projects is restricted to Project Leads." /><div className="mt-8 flex max-w-[620px] items-start gap-3 rounded-2xl border border-[#eadcb1] bg-[#fbf1d8] p-5"><ShieldAlert size={18} className="mt-0.5 shrink-0 text-[#9a711f]" /><p className="text-[12px] leading-6 text-[#8e681c]">You are signed in with read-only portfolio access. Ask a Project Lead to create the project, or sign in as a Lead to continue.</p></div></>;
   }
@@ -757,16 +905,15 @@ function NewProjectView() {
     const name = form.name.trim();
     const aopCrore = Number(form.aop);
     const awardedCrore = Number(form.awarded);
+    const projectedCrore = Number(form.projectedCost || form.aop);
+    const progressNum = Math.max(0, Math.min(100, Number(form.progress) || 0));
 
     if (!name) found.push('Project name is required.');
     if (!isValidIsoDate(form.startDate)) found.push('Enter a valid start date.');
     if (!isValidIsoDate(form.targetDate)) found.push('Enter a valid target completion date.');
-    // Empty or non-numeric inputs previously became NaN and rendered "₹NaN Cr".
-    if (!Number.isFinite(aopCrore) || aopCrore < 0) found.push('AOP must be a number of 0 or more.');
-    if (!Number.isFinite(awardedCrore) || awardedCrore < 0) found.push('Awarded amount must be a number of 0 or more.');
-    if (Number.isFinite(aopCrore) && Number.isFinite(awardedCrore) && awardedCrore > aopCrore) {
-      found.push('Awarded amount cannot exceed the AOP.');
-    }
+    if (!Number.isFinite(aopCrore) || aopCrore < 0) found.push('Approved Budget (AOP) must be a number of 0 or more.');
+    if (!Number.isFinite(awardedCrore) || awardedCrore < 0) found.push('Committed/Awarded amount must be a number of 0 or more.');
+    if (!Number.isFinite(projectedCrore) || projectedCrore < 0) found.push('Projected Cost must be a number of 0 or more.');
     if (
       isValidIsoDate(form.startDate) &&
       isValidIsoDate(form.targetDate) &&
@@ -791,12 +938,16 @@ function NewProjectView() {
       category: form.category,
       code: `${form.location.slice(0, 3).toUpperCase()}-NEW-${new Date().getFullYear() % 100}`,
       health: 'Not started',
-      progress: 0,
+      status: form.status,
+      progress: progressNum,
       targetDate: form.targetDate,
       targetLabel: formatFullDate(form.targetDate),
       aop: aopCrore * CRORE,
       awarded: awardedCrore * CRORE,
       spent: 0,
+      projectedCost: projectedCrore * CRORE,
+      area: form.area.trim(),
+      paxKeys: form.paxKeys.trim(),
       nextMilestone: 'Project brief',
       nextMilestoneDate: form.startDate,
       leadId: user?.id ?? '',
@@ -804,7 +955,7 @@ function NewProjectView() {
       specification: {
         projectType: form.projectType,
         area: form.area,
-        capacity: form.capacity,
+        capacity: form.paxKeys,
         units: '',
         terminal: form.location,
         floor: '',
@@ -831,16 +982,225 @@ function NewProjectView() {
     toast({ title: 'Project created', description: `${name} is now in the portfolio.` });
   };
 
-  if (createdName) return <div className="mx-auto max-w-[760px] py-16 text-center"><span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#e4f1ec] text-[#2e7c67]"><CheckCircle2 size={25} /></span><p className="mt-6 font-mono text-[10px] uppercase tracking-[.16em] text-[#2e7c67]">Project created</p><h1 className="mt-3 font-serif text-[44px] leading-none tracking-[-.05em] text-[#173e49]">{createdName} is ready for updates.</h1><p className="mx-auto mt-4 max-w-[480px] text-[13px] leading-6 text-muted-foreground">The project is saved in this browser and will still be here after a refresh.</p><Link href="/my-projects" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-3 text-[11px] font-bold text-white">Open my projects <ArrowUpRight size={15} /></Link></div>;
+  if (createdName) return <div className="mx-auto max-w-[760px] py-16 text-center"><span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#e4f1ec] text-[#2e7c67]"><CheckCircle2 size={25} /></span><p className="mt-6 font-mono text-[10px] uppercase tracking-[.16em] text-[#2e7c67]">Project created</p><h1 className="mt-3 font-serif text-[44px] leading-none tracking-[-.05em] text-[#173e49]">{createdName} is ready for updates.</h1><p className="mx-auto mt-4 max-w-[480px] text-[13px] leading-6 text-muted-foreground">The project is saved and synced with the portfolio database.</p><Link href="/my-projects" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-3 text-[11px] font-bold text-white">Open my projects <ArrowUpRight size={15} /></Link></div>;
 
-  return <><PageHeader eyebrow="Project lead workspace" title="Create new project" description="Capture the information needed to bring a new Encalm project into the control system." /><form onSubmit={submit} noValidate className="mt-8 max-w-[1000px] space-y-5">{errors.length > 0 && <div role="alert" className="rounded-2xl border border-[#f0c8c2] bg-[#fff5f2] p-4"><p className="text-[11px] font-extrabold text-[#b2473d]">Fix the following before creating the project</p><ul className="mt-2 list-disc space-y-1 pl-5 text-[11px] text-[#b2473d]">{errors.map((message) => <li key={message}>{message}</li>)}</ul></div>}<section className="rounded-2xl border border-border bg-card p-5 md:p-7"><h2 className="text-[18px] font-extrabold">1. Basic information</h2><div className="mt-5 grid gap-4 md:grid-cols-2"><label className="md:col-span-2"><span className="mb-2 block text-[11px] font-bold">Project name *</span><input required value={form.name} onChange={(event) => set('name', event.target.value)} placeholder="e.g. Goa Business Hotel" className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none focus:border-[#c9a04e]" /></label><label><span className="mb-2 block text-[11px] font-bold">Location *</span><select value={form.location} onChange={(event) => set('location', event.target.value)} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px]">{locations.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label><span className="mb-2 block text-[11px] font-bold">Category *</span><select value={form.category} onChange={(event) => set('category', event.target.value)} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px]">{categories.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label><span className="mb-2 block text-[11px] font-bold">Project type</span><input value={form.projectType} onChange={(event) => set('projectType', event.target.value)} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none" /></label><label><span className="mb-2 block text-[11px] font-bold">Start date *</span><input type="date" required value={form.startDate} onChange={(event) => set('startDate', event.target.value)} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px]" /></label><label><span className="mb-2 block text-[11px] font-bold">Target completion *</span><input type="date" required min={form.startDate} value={form.targetDate} onChange={(event) => set('targetDate', event.target.value)} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px]" /></label></div></section><section className="rounded-2xl border border-border bg-card p-5 md:p-7"><h2 className="text-[18px] font-extrabold">2. Specifications & commercial</h2><div className="mt-5 grid gap-4 md:grid-cols-2"><label><span className="mb-2 block text-[11px] font-bold">Area</span><input value={form.area} onChange={(event) => set('area', event.target.value)} placeholder="e.g. 24,000 sqft" className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none" /></label><label><span className="mb-2 block text-[11px] font-bold">Capacity / PAX</span><input value={form.capacity} onChange={(event) => set('capacity', event.target.value)} placeholder="e.g. 180 guests" className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none" /></label><label><span className="mb-2 block text-[11px] font-bold">AOP (₹ Cr) *</span><input type="number" min="0" step="0.1" required value={form.aop} onChange={(event) => set('aop', event.target.value)} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none" /></label><label><span className="mb-2 block text-[11px] font-bold">Initial awarded amount (₹ Cr)</span><input type="number" min="0" step="0.1" value={form.awarded} onChange={(event) => set('awarded', event.target.value)} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none" /></label><label className="md:col-span-2"><span className="mb-2 block text-[11px] font-bold">Scope</span><textarea value={form.scope} onChange={(event) => set('scope', event.target.value)} rows={4} placeholder="Describe the core project scope..." className="w-full rounded-xl border border-border bg-background px-3 py-3 text-[12px] outline-none" /></label></div></section><div className="flex justify-end"><button type="submit" className="rounded-xl bg-[#d6a95d] px-5 py-3 text-[11px] font-extrabold text-[#173e49] hover:bg-[#e2bd73]">Create project</button></div></form></>;
+  return (
+    <>
+      <PageHeader
+        eyebrow="Project lead workspace"
+        title="Create new project"
+        description="Capture the core project metrics, status lifecycle, commercial budget, and capacity details."
+      />
+      <form onSubmit={submit} noValidate className="mt-8 max-w-[1000px] space-y-5">
+        {errors.length > 0 && (
+          <div role="alert" className="rounded-2xl border border-[#f0c8c2] bg-[#fff5f2] p-4">
+            <p className="text-[11px] font-extrabold text-[#b2473d]">Fix the following before creating the project</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-[11px] text-[#b2473d]">
+              {errors.map((message) => (
+                <li key={message}>{message}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <section className="rounded-2xl border border-border bg-card p-5 md:p-7">
+          <h2 className="text-[18px] font-extrabold">1. Basic Information & Status</h2>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <label className="md:col-span-2">
+              <span className="mb-2 block text-[11px] font-bold">Project Name *</span>
+              <input
+                required
+                value={form.name}
+                onChange={(event) => set('name', event.target.value)}
+                placeholder="e.g. Goa Business Hotel"
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none focus:border-[#c9a04e]"
+              />
+            </label>
+            <label>
+              <span className="mb-2 block text-[11px] font-bold">Location *</span>
+              <select
+                value={form.location}
+                onChange={(event) => set('location', event.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px]"
+              >
+                {locations.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span className="mb-2 block text-[11px] font-bold">Category *</span>
+              <select
+                value={form.category}
+                onChange={(event) => set('category', event.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px]"
+              >
+                {categories.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span className="mb-2 block text-[11px] font-bold">Project Status *</span>
+              <select
+                value={form.status}
+                onChange={(event) => set('status', event.target.value as ProjectStatus)}
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-bold text-[#173e49]"
+              >
+                {projectStatuses.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span className="mb-2 block text-[11px] font-bold">Completion Percentage (%)</span>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={form.progress}
+                onChange={(event) => set('progress', event.target.value)}
+                placeholder="0"
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none"
+              />
+            </label>
+            <label>
+              <span className="mb-2 block text-[11px] font-bold">Start Date *</span>
+              <input
+                type="date"
+                required
+                value={form.startDate}
+                onChange={(event) => set('startDate', event.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px]"
+              />
+            </label>
+            <label>
+              <span className="mb-2 block text-[11px] font-bold">Project Completion Date (Target) *</span>
+              <input
+                type="date"
+                required
+                min={form.startDate}
+                value={form.targetDate}
+                onChange={(event) => set('targetDate', event.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px]"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card p-5 md:p-7">
+          <h2 className="text-[18px] font-extrabold">2. Area, Capacity & Commercials</h2>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <label>
+              <span className="mb-2 block text-[11px] font-bold">Area</span>
+              <input
+                value={form.area}
+                onChange={(event) => set('area', event.target.value)}
+                placeholder="e.g. 24,000 sqft"
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none"
+              />
+            </label>
+            <label>
+              <span className="mb-2 block text-[11px] font-bold">Pax / Keys</span>
+              <input
+                value={form.paxKeys}
+                onChange={(event) => set('paxKeys', event.target.value)}
+                placeholder="e.g. 180 Pax / 45 Keys"
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none"
+              />
+            </label>
+            <label>
+              <span className="mb-2 block text-[11px] font-bold">Approved Budget (AOP in ₹ Cr) *</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                value={form.aop}
+                onChange={(event) => set('aop', event.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none font-bold"
+              />
+            </label>
+            <label>
+              <span className="mb-2 block text-[11px] font-bold">Committed Cost / Awarded (₹ Cr)</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.awarded}
+                onChange={(event) => set('awarded', event.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none font-bold"
+              />
+            </label>
+            <label className="md:col-span-2">
+              <span className="mb-2 block text-[11px] font-bold">Projected Cost (₹ Cr)</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.projectedCost}
+                onChange={(event) => set('projectedCost', event.target.value)}
+                placeholder="Leave blank to match Approved Budget"
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none font-bold text-[#173e49]"
+              />
+            </label>
+            <label className="md:col-span-2">
+              <span className="mb-2 block text-[11px] font-bold">Scope Description</span>
+              <textarea
+                value={form.scope}
+                onChange={(event) => set('scope', event.target.value)}
+                rows={3}
+                placeholder="Describe the core project scope..."
+                className="w-full rounded-xl border border-border bg-background px-3 py-3 text-[12px] outline-none"
+              />
+            </label>
+          </div>
+        </section>
+
+        <div className="flex justify-end">
+          <button type="submit" className="rounded-xl bg-[#d6a95d] px-5 py-3 text-[11px] font-extrabold text-[#173e49] hover:bg-[#e2bd73]">
+            Create project
+          </button>
+        </div>
+      </form>
+    </>
+  );
 }
 
 export default function Workspace({ view }: { view: WorkspaceView }) {
-  return <div className="mx-auto max-w-[1500px] px-5 pb-14 pt-8 md:px-10 md:pt-10">{view === 'projects' && <ProjectsView />}{view === 'my-projects' && <ProjectsView mine />}{view === 'timeline' && <TimelineView />}{view === 'milestones' && <MilestonesView />}{view === 'issues' && <IssuesView />}{view === 'commercial' && <CommercialView />}{view === 'updates' && <UpdatesView />}{view === 'reports' && <ReportsView />}{view === 'new-project' && <NewProjectView />}</div>;
+  return (
+    <div className="mx-auto max-w-[1500px] px-5 pb-14 pt-8 md:px-10 md:pt-10">
+      {view === 'projects' && <ProjectsView />}
+      {view === 'my-projects' && <ProjectsView mine />}
+      {view === 'timeline' && <TimelineView />}
+      {view === 'milestones' && <MilestonesView />}
+      {view === 'issues' && <IssuesView />}
+      {view === 'commercial' && <CommercialView />}
+      {view === 'updates' && <UpdatesView />}
+      {view === 'reports' && <ReportsView />}
+      {view === 'new-project' && <NewProjectView />}
+    </div>
+  );
 }
 
-const CSV_COLUMNS = ['Project', 'Code', 'Location', 'Category', 'Lead', 'Health', 'Progress %', 'AOP (INR)', 'Awarded (INR)', 'Spent (INR)', 'Target date', 'Next milestone'] as const;
+const CSV_COLUMNS = [
+  'Project',
+  'Code',
+  'Location',
+  'Category',
+  'Status',
+  'Lead',
+  'Health',
+  'Progress %',
+  'Area',
+  'Pax / Keys',
+  'Approved Budget AOP (INR)',
+  'Committed Awarded (INR)',
+  'Spent (INR)',
+  'Projected Cost (INR)',
+  'Target Completion Date',
+  'Next milestone',
+] as const;
 
 /**
  * Escapes a CSV cell. The leading-character guard stops spreadsheet apps from
@@ -853,22 +1213,29 @@ function csvCell(value: string | number): string {
 }
 
 function buildPortfolioCsv(projects: Project[]): string {
-  const rows = projects.map((project) => [
-    project.name,
-    project.code,
-    project.location,
-    project.category,
-    leadName(project.leadId),
-    project.health,
-    project.progress,
-    project.aop,
-    project.awarded,
-    project.spent,
-    project.targetDate,
-    project.nextMilestone,
-  ].map(csvCell).join(','));
+  const rows = projects.map((project) =>
+    [
+      project.name,
+      project.code,
+      project.location,
+      project.category,
+      project.status || 'Yet to start',
+      leadName(project.leadId),
+      project.health,
+      project.progress,
+      project.area || '',
+      project.paxKeys || '',
+      project.aop,
+      project.awarded,
+      project.spent,
+      project.projectedCost ?? project.aop,
+      project.targetDate,
+      project.nextMilestone,
+    ]
+      .map(csvCell)
+      .join(','),
+  );
 
-  // BOM so Excel reads the ₹ sign and other UTF-8 characters correctly.
   return `\uFEFF${CSV_COLUMNS.map(csvCell).join(',')}\n${rows.join('\n')}`;
 }
 
