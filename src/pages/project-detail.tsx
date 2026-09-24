@@ -19,7 +19,6 @@ import {
   Pencil,
   Plus,
   ReceiptText,
-  Scale,
   ShieldAlert,
   Target,
   ThumbsDown,
@@ -93,7 +92,7 @@ function StageProgressPanel({ project, editable, onSave }: { project: Project; e
   const weighted = calculateWeightedProgress(project.phases);
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
+    <div className="w-full">
       <DetailCard title="Weighted Project Progress" eyebrow="Formula: Σ(Stage Progress × Weight)" icon={ClipboardCheck}>
         <div className="mt-6 grid gap-7 md:grid-cols-[140px_1fr] md:items-center">
           <div className="flex flex-col items-center gap-3">
@@ -272,41 +271,6 @@ function StageProgressPanel({ project, editable, onSave }: { project: Project; e
             </button>
           </form>
         )}
-      </DetailCard>
-
-      <DetailCard title="Weightage & Timeline Rules" eyebrow="Calculation Engine" icon={Scale} tone="gold">
-        <div className="mt-6 space-y-4 text-[11px] leading-5 text-muted-foreground">
-          <div className="rounded-xl border border-[#eadcb1] bg-white/70 p-4">
-            <p className="font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">Mathematical Formula</p>
-            <p className="mt-1 font-mono text-[11px] font-bold text-foreground">
-              Overall % = Σ ( Stage Progress × Stage Weight % )
-            </p>
-            <p className="mt-2 text-[10px] text-muted-foreground leading-4">
-              Where Stage Weight % is derived from timeline duration (Planned Finish – Planned Start in calendar days), custom weight override, or equal distribution.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <p className="font-bold text-foreground text-[11px]">How weights are assigned:</p>
-            <ul className="list-disc pl-4 space-y-1.5 text-[10px]">
-              <li>
-                <strong className="text-foreground">Custom Stage Weight:</strong> If an explicit weight % is specified in a stage, it is prioritized.
-              </li>
-              <li>
-                <strong className="text-foreground">Timeline Duration Weight:</strong> If planned start and finish dates are set, weight is automatically proportional to stage duration in days.
-              </li>
-              <li>
-                <strong className="text-foreground">Equal Distribution:</strong> Fallback when dates or weights are unspecified, dividing 100% equally among stages.
-              </li>
-            </ul>
-          </div>
-
-          <div className="rounded-xl border border-[#eadcb1] bg-white/60 p-4">
-            <p className="font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">Current Active Stage</p>
-            <p className="mt-2 text-[13px] font-extrabold text-foreground">{activePhase?.name ?? 'No active stage'}</p>
-            <p className="mt-1">{activePhase?.progress ?? 0}% complete · Owner {activePhase?.owner ?? 'Unassigned'}</p>
-          </div>
-        </div>
       </DetailCard>
     </div>
   );
@@ -498,7 +462,7 @@ function StageTimelinePanel({
   const weighted = calculateWeightedProgress(project.phases);
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
+    <div className="w-full">
       <DetailCard
         title="Stage control plan"
         eyebrow={`${project.phases.length} stages · ${project.templateId ? getProjectTemplate(project.templateId).label : 'Project-specific workflow'}`}
@@ -723,32 +687,6 @@ function StageTimelinePanel({
               <Plus size={13} /> Add custom stage
             </button>
           ))}
-      </DetailCard>
-
-      <DetailCard title="Stage review" eyebrow="Control points" icon={Target} tone="gold">
-        <div className="mt-7 space-y-5">
-          <div>
-            <p className="font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">Current stage</p>
-            <p className="mt-2 text-[14px] font-extrabold">{project.phases.find((phase) => phase.status === 'active')?.name ?? 'No active stage'}</p>
-          </div>
-          <div className="space-y-3">
-            {project.phases
-              .filter((phase) => phase.decisionRequired)
-              .map((phase) => (
-                <div key={phase.id ?? phase.name} className="rounded-xl border border-[#f0c8c2] bg-[#fff5f2] p-3">
-                  <p className="font-mono text-[9px] uppercase tracking-[.1em] text-[#b2473d]">Decision required</p>
-                  <p className="mt-1 text-[11px] font-bold">{phase.name}</p>
-                  <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{phase.decisionRequired}</p>
-                </div>
-              ))}
-            {!project.phases.some((phase) => phase.decisionRequired) && (
-              <p className="text-[11px] leading-5 text-muted-foreground">No stage decisions are currently waiting for review.</p>
-            )}
-          </div>
-          <p className="text-[11px] leading-5 text-muted-foreground">
-            Each stage can carry its own dates, owner, progress, completed work, next action, and HOD decision request. Overall progress is calculated from their weighted summation.
-          </p>
-        </div>
       </DetailCard>
     </div>
   );
