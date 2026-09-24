@@ -1,0 +1,110 @@
+import { Router } from 'express';
+import { db } from '../db/database.js';
+import { requireAuth, requireRole, AuthenticatedRequest } from '../middleware/auth.js';
+import { fetchFullProject } from './projects.js';
+
+const router = Router({ mergeParams: true });
+
+// POST add issue (Lead only)
+router.post('/', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+  const projectId = req.params.id as string;
+  const project = fetchFullProject(projectId);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+
+  const body = req.body;
+  const issueId = body.id || `${projectId}-issue-${Date.now()}`;
+  const maxOrder = db.prepare('SELECT MAX(order_index) as max_idx FROM issues WHERE project_id = ?').get(projectId) as { max_idx: number | null };
+  const nextOrder = (maxOrder.max_idx ?? -1) + 1;
+
+  db.prepare(`
+    INSERT INTO issues (
+      id, project_id, title, detail, severity, owner, category, status,
+      stage, date_raised, due_date, impact_cost, impact_schedule, impact_scope,
+      action, resolution, order_index
+    ) VALUES (
+      @id, @project_id, @title, @detail, @severity, @owner, @category, @status,
+      @stage, @date_raised, @due_date, @impact_cost, @impact_schedule, @impact_scope,
+      @action, @resolution, @order_index
+    )
+  `).run({
+    id: issueId,
+    project_id: projectId,
+    title: body.title,
+    detail: body.detail,
+    severity: body.severity || 'Medium',
+    owner: body.owner || 'Project Lead',
+    category: body.category || 'Other',
+    status: body.status || 'Open',
+    stage: body.stage || null,
+    date_raised: body.dateRaised || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    due_date: body.dueDate || null,
+    impact_cost: body.impactCost || null,
+    impact_schedule: body.impactSchedule || null,
+    impact_scope: body.impactScope || null,
+    action: body.action || null,
+    resolution: body.resolution || null,
+    order_index: nextOrder,
+  });
+
+  if (body.severity === 'High') {
+    db.prepare(`
+      INSERT INTO notifications (id, type, title, message, project_id, link, read, created_at)
+      VALUES (?, 'high_issue', ?, ?, ?, ?, 0, datetime('now'))
+    `).run(
+      `notif-iss-${issueId}`,
+      `Critical Issue: ${body.title}`,
+      `High priority issue logged on ${project.name}: ${body.detail}`,
+      projectId,
+      `/project/${projectId}`
+    );
+  }
+
+  const updatedProject = fetchFullProject(projectId);
+  return res.status(201).json({ project: updatedProject });
+});
+
+// PATCH update issue (Lead only)
+router.patch('/:issueId', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+  const projectId = req.params.id as string;
+  const issueId = req.params.issueId as string;
+  const issue = db.prepare('SELECT * FROM issues WHERE id = ? AND project_id = ?').get(issueId, projectId) as any;
+  if (!issue) return res.status(404).json({ error: 'Issue not found' });
+
+  const patch = req.body;
+  const updates: string[] = [];
+  const values: any[] = [];
+
+  if (patch.title !== undefined) { updates.push('title = ?'); values.push(patch.title); }
+  if (patch.detail !== undefined) { updates.push('detail = ?'); values.push(patch.detail); }
+  if (patch.severity !== undefined) { updates.push('severity = ?'); values.push(patch.severity); }
+  if (patch.owner !== undefined) { updates.push('owner = ?'); values.push(patch.owner); }
+  if (patch.category !== undefined) { updates.push('category = ?'); values.push(patch.category); }
+  if (patch.status !== undefined) { updates.push('status = ?'); values.push(patch.status); }
+  if (patch.stage !== undefined) { updates.push('stage = ?'); values.push(patch.stage); }
+  if (patch.dueDate !== undefined) { updates.push('due_date = ?'); values.push(patch.dueDate); }
+  if (patch.impactCost !== undefined) { updates.push('impact_cost = ?'); values.push(patch.impactCost); }
+  if (patch.impactSchedule !== undefined) { updates.push('impact_schedule = ?'); values.push(patch.impactSchedule); }
+  if (patch.impactScope !== undefined) { updates.push('impact_scope = ?'); values.push(patch.impactScope); }
+  if (patch.action !== undefined) { updates.push('action = ?'); values.push(patch.action); }
+  if (patch.resolution !== undefined) { updates.push('resolution = ?'); values.push(patch.resolution); }
+
+  if (updates.length > 0) {
+    values.push(issueId);
+    values.push(projectId);
+    db.prepare(`UPDATE issues SET ${updates.join(', ')} WHERE id = ? AND project_id = ?`).run(...values);
+  }
+
+  const updatedProject = fetchFullProject(projectId);
+  return res.json({ project: updatedProject });
+});
+
+// DELETE issue (Lead only)
+router.delete('/:issueId', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+  const projectId = req.params.id as string;
+  const issueId = req.params.issueId as string;
+  db.prepare('DELETE FROM issues WHERE id = ? AND project_id = ?').run(issueId, projectId);
+  const updatedProject = fetchFullProject(projectId);
+  return res.json({ project: updatedProject });
+});
+
+export default router;

@@ -1,0 +1,135 @@
+import { Router } from 'express';
+import { db } from '../db/database.js';
+import { requireAuth, requireRole, AuthenticatedRequest } from '../middleware/auth.js';
+import { fetchFullProject } from './projects.js';
+
+const router = Router({ mergeParams: true });
+
+// POST add phase
+router.post('/', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+  const projectId = req.params.id as string;
+  const project = fetchFullProject(projectId);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+
+  const body = req.body;
+  const phaseId = body.id || `${projectId}-phase-${Date.now()}`;
+  const maxOrder = db.prepare('SELECT MAX(order_index) as max_idx FROM phases WHERE project_id = ?').get(projectId) as { max_idx: number | null };
+  const nextOrder = (maxOrder.max_idx ?? -1) + 1;
+
+  db.prepare(`
+    INSERT INTO phases (
+      id, project_id, name, status, progress, owner, order_index,
+      planned_start, planned_finish, actual_finish, work_completed, next_action,
+      decision_required, updated_at
+    ) VALUES (
+      @id, @project_id, @name, @status, @progress, @owner, @order_index,
+      @planned_start, @planned_finish, @actual_finish, @work_completed, @next_action,
+      @decision_required, @updated_at
+    )
+  `).run({
+    id: phaseId,
+    project_id: projectId,
+    name: body.name || 'New stage',
+    status: body.status || 'upcoming',
+    progress: body.progress || 0,
+    owner: body.owner || 'PMO',
+    order_index: nextOrder,
+    planned_start: body.plannedStart || null,
+    planned_finish: body.plannedFinish || null,
+    actual_finish: body.actualFinish || null,
+    work_completed: body.workCompleted || null,
+    next_action: body.nextAction || null,
+    decision_required: body.decisionRequired || null,
+    updated_at: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+  });
+
+  const updatedProject = fetchFullProject(projectId);
+  return res.status(201).json({ project: updatedProject });
+});
+
+// PATCH update phase
+router.patch('/:phaseId', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+  const projectId = req.params.id as string;
+  const phaseId = req.params.phaseId as string;
+  const phase = db.prepare('SELECT * FROM phases WHERE id = ? AND project_id = ?').get(phaseId, projectId) as any;
+  if (!phase) return res.status(404).json({ error: 'Stage not found' });
+
+  const patch = req.body;
+  const updates: string[] = ['updated_at = ?'];
+  const values: any[] = [new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })];
+
+  if (patch.name !== undefined) { updates.push('name = ?'); values.push(patch.name); }
+  if (patch.status !== undefined) { updates.push('status = ?'); values.push(patch.status); }
+  if (patch.progress !== undefined) { updates.push('progress = ?'); values.push(patch.progress); }
+  if (patch.owner !== undefined) { updates.push('owner = ?'); values.push(patch.owner); }
+  if (patch.plannedStart !== undefined) { updates.push('planned_start = ?'); values.push(patch.plannedStart); }
+  if (patch.plannedFinish !== undefined) { updates.push('planned_finish = ?'); values.push(patch.plannedFinish); }
+  if (patch.actualFinish !== undefined) { updates.push('actual_finish = ?'); values.push(patch.actualFinish); }
+  if (patch.workCompleted !== undefined) { updates.push('work_completed = ?'); values.push(patch.workCompleted); }
+  if (patch.nextAction !== undefined) { updates.push('next_action = ?'); values.push(patch.nextAction); }
+  if (patch.decisionRequired !== undefined) {
+    updates.push('decision_required = ?');
+    values.push(patch.decisionRequired);
+
+    if (patch.decisionRequired) {
+      db.prepare(`
+        INSERT INTO notifications (id, type, title, message, project_id, link, read, created_at)
+        VALUES (?, 'system', ?, ?, ?, ?, 0, datetime('now'))
+      `).run(
+        `notif-dec-${phaseId}-${Date.now()}`,
+        `Decision Needed: ${phase.name}`,
+        `${req.user!.name} requested a decision on stage "${phase.name}": ${patch.decisionRequired}`,
+        projectId,
+        `/project/${projectId}`
+      );
+    }
+  }
+
+  values.push(phaseId);
+  values.push(projectId);
+
+  db.prepare(`UPDATE phases SET ${updates.join(', ')} WHERE id = ? AND project_id = ?`).run(...values);
+
+  const updatedProject = fetchFullProject(projectId);
+  return res.json({ project: updatedProject });
+});
+
+// DELETE remove phase
+router.delete('/:phaseId', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+  const projectId = req.params.id as string;
+  const phaseId = req.params.phaseId as string;
+  const count = db.prepare('SELECT COUNT(*) as count FROM phases WHERE project_id = ?').get(projectId) as { count: number };
+  if (count.count <= 1) {
+    return res.status(400).json({ error: 'A project must retain at least one stage' });
+  }
+
+  db.prepare('DELETE FROM phases WHERE id = ? AND project_id = ?').run(phaseId, projectId);
+  const updatedProject = fetchFullProject(projectId);
+  return res.json({ project: updatedProject });
+});
+
+// POST move / reorder phase
+router.post('/move', requireAuth, requireRole(['lead']), (req: AuthenticatedRequest, res) => {
+  const projectId = req.params.id as string;
+  const { phaseIndex, direction } = req.body; // direction is -1 or 1
+
+  const phases = db.prepare('SELECT id, order_index FROM phases WHERE project_id = ? ORDER BY order_index ASC').all(projectId) as any[];
+  if (phaseIndex < 0 || phaseIndex >= phases.length) return res.status(400).json({ error: 'Invalid phase index' });
+  
+  const targetIndex = phaseIndex + direction;
+  if (targetIndex < 0 || targetIndex >= phases.length) return res.status(400).json({ error: 'Target index out of bounds' });
+
+  const currentPhase = phases[phaseIndex];
+  const targetPhase = phases[targetIndex];
+
+  const transaction = db.transaction(() => {
+    db.prepare('UPDATE phases SET order_index = ? WHERE id = ?').run(targetIndex, currentPhase.id);
+    db.prepare('UPDATE phases SET order_index = ? WHERE id = ?').run(phaseIndex, targetPhase.id);
+  });
+  transaction();
+
+  const updatedProject = fetchFullProject(projectId);
+  return res.json({ project: updatedProject });
+});
+
+export default router;
