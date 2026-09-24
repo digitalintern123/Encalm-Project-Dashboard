@@ -143,11 +143,30 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     else removeItem(ROLE_KEY);
   }, [role]);
 
-  // Fetch full project list from backend
+  // Fetch full project list from backend with auto-recovery against ephemeral server redeploys
   const refreshProjects = useCallback(async () => {
     try {
       const data = await api.projects.getAll();
       if (Array.isArray(data.projects)) {
+        if (data.projects.length === 0) {
+          // Check if local cache has projects that were wiped by an ephemeral server redeploy
+          const localCached = readJson<unknown>(PROJECTS_KEY);
+          if (Array.isArray(localCached) && localCached.length > 0) {
+            const valid = localCached.filter(isProjectLike).map(normaliseProject);
+            if (valid.length > 0) {
+              console.log('Detected fresh server instance; re-syncing cached projects to backend...');
+              for (const proj of valid) {
+                await api.projects.create(proj).catch(console.warn);
+              }
+              const reloaded = await api.projects.getAll().catch(() => null);
+              if (reloaded?.projects && reloaded.projects.length > 0) {
+                setProjectState(reloaded.projects.map(normaliseProject));
+                setIsConnected(true);
+                return;
+              }
+            }
+          }
+        }
         setProjectState(data.projects.map(normaliseProject));
         setIsConnected(true);
       }

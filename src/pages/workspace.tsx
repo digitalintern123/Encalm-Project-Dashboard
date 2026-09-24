@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useMemo, useState, useRef, type FormEvent, type ReactNode } from 'react';
 import { Link } from 'wouter';
 import {
   AlertTriangle,
@@ -822,8 +822,9 @@ function UpdatesView() {
 }
 
 function ReportsView() {
-  const { projects } = useAppState();
+  const { projects, addProject } = useAppState();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const summary = useMemo(() => {
     const total = projects.length;
@@ -857,6 +858,46 @@ function ReportsView() {
     }
   };
 
+  const exportJsonBackup = () => {
+    if (projects.length === 0) {
+      toast({ title: 'Nothing to backup', description: 'There are no projects to backup.' });
+      return;
+    }
+    const blob = new Blob([JSON.stringify(projects, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `encalm-projects-backup-${todayIso()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Backup downloaded', description: `Full portfolio backup saved as JSON.` });
+  };
+
+  const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result as string;
+        const imported = JSON.parse(text);
+        if (!Array.isArray(imported)) throw new Error('Invalid backup file format');
+        let count = 0;
+        for (const p of imported) {
+          if (p?.name && p?.location) {
+            addProject(p);
+            count++;
+          }
+        }
+        toast({ title: 'Backup restored', description: `Restored ${count} projects successfully.` });
+      } catch (err: any) {
+        toast({ variant: 'destructive', title: 'Restore failed', description: err.message || 'Could not parse JSON file.' });
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  };
+
   const cards: { label: string; value: string; icon: typeof TrendingUp }[] = [
     { label: 'Portfolio summary', value: `${summary.total} active projects`, icon: TrendingUp },
     { label: 'Project health', value: `${summary.atRisk} at risk · ${summary.delayed} delayed`, icon: ShieldAlert },
@@ -866,7 +907,67 @@ function ReportsView() {
     { label: 'Commercial summary', value: `${formatCrore(summary.totalAop)} total AOP`, icon: CircleDollarSign },
   ];
 
-  return <><PageHeader eyebrow="Reports" title="Project reports" description="Reporting views for portfolio reviews. Each figure is computed from the current portfolio and can be exported as CSV." /><div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{cards.map(({ label, value, icon: Icon }) => <div key={label} className="rounded-2xl border border-border bg-card p-5"><div className="flex items-start justify-between"><span className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">{label}</span><Icon size={17} className="text-muted-foreground/60" /></div><p className="mt-5 text-[18px] font-extrabold">{value}</p><button type="button" onClick={exportCsv} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-[#f7f4ec] px-3 py-2.5 text-[10px] font-bold hover:bg-[#fbf1d8]"><FileBarChart size={14} /> Export as CSV</button></div>)}</div><button type="button" onClick={exportCsv} className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-3 text-[11px] font-extrabold text-white hover:bg-[#204f59]"><Download size={15} /> Export full portfolio (CSV)</button></>;
+  return (
+    <>
+      <PageHeader
+        eyebrow="Reports & Backup"
+        title="Project reports & Data Persistence"
+        description="Reporting views for portfolio reviews and full data backup & restore."
+      />
+      <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        {cards.map(({ label, value, icon: Icon }) => (
+          <div key={label} className="rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-start justify-between">
+              <span className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">{label}</span>
+              <Icon size={17} className="text-muted-foreground/60" />
+            </div>
+            <p className="mt-5 text-[18px] font-extrabold">{value}</p>
+            <button
+              type="button"
+              onClick={exportCsv}
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-[#f7f4ec] px-3 py-2.5 text-[10px] font-bold hover:bg-[#fbf1d8]"
+            >
+              <FileBarChart size={14} /> Export as CSV
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={exportCsv}
+          className="inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-3 text-[11px] font-extrabold text-white hover:bg-[#204f59]"
+        >
+          <Download size={15} /> Export full portfolio (CSV)
+        </button>
+
+        <button
+          type="button"
+          onClick={exportJsonBackup}
+          className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-3 text-[11px] font-extrabold text-[#173e49] hover:bg-[#fbf1d8]"
+        >
+          <Download size={15} /> Download Full Backup (JSON)
+        </button>
+
+        <input
+          type="file"
+          accept=".json"
+          ref={fileInputRef}
+          onChange={handleImportFile}
+          className="hidden"
+        />
+
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="inline-flex items-center gap-2 rounded-xl border border-[#cbe4d9] bg-[#edf5f0] px-4 py-3 text-[11px] font-extrabold text-[#2e7c67] hover:bg-[#dff0e7]"
+        >
+          <Plus size={15} /> Restore from Backup (JSON)
+        </button>
+      </div>
+    </>
+  );
 }
 
 function NewProjectView() {
