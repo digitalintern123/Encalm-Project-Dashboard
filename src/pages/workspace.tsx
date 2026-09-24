@@ -32,7 +32,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CRORE } from '@/data/projects';
 import { formatFullDate, isValidIsoDate, todayIso, todayLabel } from '@/lib/date';
 import { initialsOf, leadName } from '@/data/users';
-import { formatRatio, getCommercialSummary, getPortfolioCommercialSummary } from '@/lib/calculations';
+import { formatRatio, getCommercialSummary, getPortfolioCommercialSummary, calculateProjectStatus } from '@/lib/calculations';
 
 export type WorkspaceView = 'projects' | 'my-projects' | 'timeline' | 'milestones' | 'issues' | 'commercial' | 'updates' | 'reports' | 'new-project' | 'team';
 
@@ -1538,7 +1538,6 @@ function NewProjectView() {
     name: '',
     location: 'Goa' as Project['location'],
     category: 'Hotel' as Category,
-    status: 'Yet to start' as ProjectStatus,
     projectType: 'Business hotel',
     leadId: (role === 'lead' ? user?.id : leads[0]?.id) || user?.id || '',
     startDate: todayIso(),
@@ -1551,6 +1550,9 @@ function NewProjectView() {
     paxKeys: '',
     scope: '',
   });
+
+  const progressNum = Math.max(0, Math.min(100, Number(form.progress) || 0));
+  const liveStatus = calculateProjectStatus(progressNum);
 
   const set = (key: keyof typeof form, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -1567,7 +1569,6 @@ function NewProjectView() {
     const aopCrore = Number(form.aop);
     const awardedCrore = Number(form.awarded);
     const projectedCrore = Number(form.projectedCost || form.aop);
-    const progressNum = Math.max(0, Math.min(100, Number(form.progress) || 0));
 
     if (!name) found.push('Project name is required.');
     if (!isValidIsoDate(form.startDate)) found.push('Enter a valid start date.');
@@ -1599,7 +1600,7 @@ function NewProjectView() {
       category: form.category,
       code: `${form.location.slice(0, 3).toUpperCase()}-NEW-${new Date().getFullYear() % 100}`,
       health: 'Not started',
-      status: form.status,
+      status: liveStatus,
       progress: progressNum,
       targetDate: form.targetDate,
       targetLabel: formatFullDate(form.targetDate),
@@ -1719,19 +1720,7 @@ function NewProjectView() {
               </select>
             </label>
             <label>
-              <span className="mb-2 block text-[11px] font-bold">Project Status *</span>
-              <select
-                value={form.status}
-                onChange={(event) => set('status', event.target.value as ProjectStatus)}
-                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-bold text-[#173e49]"
-              >
-                {projectStatuses.map((item) => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span className="mb-2 block text-[11px] font-bold">Completion Percentage (%)</span>
+              <span className="mb-2 block text-[11px] font-bold">Initial Progress (%)</span>
               <input
                 type="number"
                 min="0"
@@ -1739,9 +1728,22 @@ function NewProjectView() {
                 value={form.progress}
                 onChange={(event) => set('progress', event.target.value)}
                 placeholder="0"
-                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none"
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-semibold outline-none"
               />
             </label>
+            <div>
+              <span className="mb-2 block text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                Project Status (Auto-Assigned)
+              </span>
+              <div className="flex h-11 w-full items-center gap-2 rounded-xl border border-border bg-card/60 px-3">
+                <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${statusTone[liveStatus]}`}>
+                  {liveStatus}
+                </span>
+                <span className="truncate text-[10px] text-muted-foreground">
+                  Auto-assigned from progress ({progressNum}%)
+                </span>
+              </div>
+            </div>
             <label>
               <span className="mb-2 block text-[11px] font-bold">Start Date *</span>
               <input

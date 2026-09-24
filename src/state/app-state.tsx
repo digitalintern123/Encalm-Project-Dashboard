@@ -18,7 +18,7 @@ import { readJson, removeItem, writeJson } from '@/lib/storage';
 import { todayLabel } from '@/lib/date';
 import { DEMO_HOD_ID, DEMO_LEAD_ID, DEMO_COORDINATOR_ID, getUserById, type User } from '@/data/users';
 import { api, getStoredToken, setStoredToken, type NotificationItem } from '@/lib/api';
-import { calculateWeightedProgress } from '@/lib/calculations';
+import { calculateWeightedProgress, calculateProjectStatus } from '@/lib/calculations';
 
 export type AppRole = 'hod' | 'lead' | 'coordinator';
 export type DemoUser = User;
@@ -79,10 +79,12 @@ function normaliseProject(project: Project): Project {
     phases.length > 0
       ? calculateWeightedProgress(phases).overallProgress
       : (project.progress ?? 0);
+  const calculatedStatus = calculateProjectStatus(calculatedProgress, phases);
 
   return {
     ...project,
     progress: calculatedProgress,
+    status: calculatedStatus,
     phases,
     milestones: (project.milestones ?? []).map((milestone, index) => ({
       ...milestone,
@@ -361,11 +363,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const updateProject = useCallback(
     (id: string, patch: Partial<Project>): boolean => {
-      const ok = patchById(id, (project) => ({
-        ...project,
-        ...patch,
-        lastUpdated: todayLabel(),
-      }));
+      const ok = patchById(id, (project) => {
+        const newProgress = patch.progress !== undefined ? patch.progress : project.progress;
+        const newPhases = patch.phases !== undefined ? patch.phases : project.phases;
+        const autoStatus =
+          patch.status !== undefined ? patch.status : calculateProjectStatus(newProgress, newPhases);
+        return {
+          ...project,
+          ...patch,
+          status: autoStatus,
+          lastUpdated: todayLabel(),
+        };
+      });
 
       if (ok) {
         api.projects.update(id, patch).catch((err) => {
@@ -389,10 +398,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           index === phaseIndex ? { ...p, ...patch, updatedAt: todayLabel() } : p,
         );
         const { overallProgress } = calculateWeightedProgress(newPhases);
+        const autoStatus = calculateProjectStatus(overallProgress, newPhases);
         return {
           ...project,
           phases: newPhases,
           progress: overallProgress,
+          status: autoStatus,
           lastUpdated: todayLabel(),
         };
       });
@@ -417,10 +428,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const ok = patchById(id, (project) => {
         const newPhases = [...project.phases, newPhase];
         const { overallProgress } = calculateWeightedProgress(newPhases);
+        const autoStatus = calculateProjectStatus(overallProgress, newPhases);
         return {
           ...project,
           phases: newPhases,
           progress: overallProgress,
+          status: autoStatus,
           lastUpdated: todayLabel(),
         };
       });
@@ -448,10 +461,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         if (phaseIndex < 0 || phaseIndex >= project.phases.length) return project;
         const newPhases = project.phases.filter((_, index) => index !== phaseIndex);
         const { overallProgress } = calculateWeightedProgress(newPhases);
+        const autoStatus = calculateProjectStatus(overallProgress, newPhases);
         return {
           ...project,
           phases: newPhases,
           progress: overallProgress,
+          status: autoStatus,
           lastUpdated: todayLabel(),
         };
       });
@@ -477,7 +492,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const phases = [...project.phases];
         [phases[phaseIndex], phases[targetIndex]] = [phases[targetIndex], phases[phaseIndex]];
         const { overallProgress } = calculateWeightedProgress(phases);
-        return { ...project, phases, progress: overallProgress, lastUpdated: todayLabel() };
+        const autoStatus = calculateProjectStatus(overallProgress, phases);
+        return { ...project, phases, progress: overallProgress, status: autoStatus, lastUpdated: todayLabel() };
       });
 
       if (ok) {

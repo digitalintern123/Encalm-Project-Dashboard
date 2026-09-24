@@ -1,4 +1,4 @@
-import type { Project, Phase } from '@/data/projects';
+import type { Project, Phase, ProjectStatus } from '@/data/projects';
 import { parseIsoDate } from '@/lib/date';
 
 /**
@@ -177,6 +177,60 @@ export function calculateWeightedProgress(phases: Phase[]): WeightedProgressResu
     hasTimelineData,
     totalDurationDays,
   };
+}
+
+/**
+ * Real-time automatic project status calculation.
+ *
+ * Rules:
+ * 1. Progress >= 100% -> 'Operational'
+ * 2. Progress <= 0% (and no stages started) -> 'Yet to start'
+ * 3. In-flight (0 < progress < 100):
+ *    - Inspects the active phase (status === 'active' or first incomplete phase)
+ *    - Classifies stage keywords into Design, Tendering, Under Construction, or Operational
+ *    - Falls back to proportional progress tiers if phase name is generic
+ */
+export function calculateProjectStatus(progress: number, phases?: Phase[]): ProjectStatus {
+  const cleanProgress = Math.max(0, Math.min(100, Math.round(Number(progress) || 0)));
+
+  if (cleanProgress >= 100) return 'Operational';
+
+  const hasStartedPhases = Boolean(
+    phases && phases.some((p) => (Number(p.progress) || 0) > 0 || p.status === 'complete' || p.status === 'active'),
+  );
+  if (cleanProgress <= 0 && !hasStartedPhases) {
+    return 'Yet to start';
+  }
+
+  if (phases && phases.length > 0) {
+    const activePhase =
+      phases.find((p) => p.status === 'active') ||
+      phases.find((p) => p.status !== 'complete' && (Number(p.progress) || 0) < 100) ||
+      phases[phases.length - 1];
+
+    if (activePhase) {
+      const name = (activePhase.name || '').toLowerCase();
+      if (/procure|tender|vendor|contract|sourcing|supplier|award/.test(name)) {
+        return 'In Tendering';
+      }
+      if (/build|construct|install|fit-out|civil|interior|mep|delivery|integration/.test(name)) {
+        return 'Under Construction';
+      }
+      if (/handover|launch|opening|operational|readiness|trial|commissioning/.test(name)) {
+        return cleanProgress >= 90 || activePhase.status === 'complete' ? 'Operational' : 'Under Construction';
+      }
+      if (/design|concept|brief|feasibility|planning|scope|journey|clearance|statutory|approval/.test(name)) {
+        return 'In Design';
+      }
+    }
+  }
+
+  // Progress tier fallback
+  if (cleanProgress === 0) return 'Yet to start';
+  if (cleanProgress <= 25) return 'In Design';
+  if (cleanProgress <= 50) return 'In Tendering';
+  if (cleanProgress < 100) return 'Under Construction';
+  return 'Operational';
 }
 
 // ---------------------------------------------------------------------------

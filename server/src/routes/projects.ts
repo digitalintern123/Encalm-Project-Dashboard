@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db/database.js';
 import { requireAuth, requireRole, AuthenticatedRequest, optionalAuth } from '../middleware/auth.js';
+import { calculateProjectStatus } from '../utils/status.js';
 
 const router = Router();
 
@@ -149,6 +150,16 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
   `);
 
   const transaction = db.transaction(() => {
+    const defaultPhases = Array.isArray(body.phases) && body.phases.length > 0 ? body.phases : [
+      { name: 'Brief & scope', status: 'active', progress: 0, owner: 'PMO' },
+      { name: 'Design development', status: 'upcoming', progress: 0, owner: 'Design' },
+      { name: 'Procurement', status: 'upcoming', progress: 0, owner: 'Sourcing' },
+      { name: 'Build & install', status: 'upcoming', progress: 0, owner: 'Projects' },
+      { name: 'Handover', status: 'upcoming', progress: 0, owner: 'Operations' },
+    ];
+    const initialProgress = Number(body.progress) || 0;
+    const resolvedStatus = calculateProjectStatus(initialProgress, defaultPhases);
+
     insertProject.run({
       id,
       name: body.name,
@@ -156,8 +167,8 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
       category: body.category,
       code,
       health: body.health || 'Not started',
-      status: body.status || 'Yet to start',
-      progress: body.progress || 0,
+      status: resolvedStatus,
+      progress: initialProgress,
       target_date: body.targetDate || '',
       target_label: body.targetLabel || body.targetDate || '',
       aop: body.aop || 0,
@@ -174,14 +185,6 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
       specification_json: body.specification ? JSON.stringify(body.specification) : null,
       template_id: body.templateId || null,
     });
-
-    const defaultPhases = Array.isArray(body.phases) && body.phases.length > 0 ? body.phases : [
-      { name: 'Brief & scope', status: 'active', progress: 0, owner: 'PMO' },
-      { name: 'Design development', status: 'upcoming', progress: 0, owner: 'Design' },
-      { name: 'Procurement', status: 'upcoming', progress: 0, owner: 'Sourcing' },
-      { name: 'Build & install', status: 'upcoming', progress: 0, owner: 'Projects' },
-      { name: 'Handover', status: 'upcoming', progress: 0, owner: 'Operations' },
-    ];
 
     defaultPhases.forEach((ph: any, idx: number) => {
       insertPhase.run({
@@ -338,7 +341,16 @@ router.patch('/:id', requireAuth, requireRole(['lead', 'coordinator']), (req: Au
   if (patch.category !== undefined) { updates.push('category = ?'); values.push(patch.category); }
   if (patch.health !== undefined) { updates.push('health = ?'); values.push(patch.health); }
   if (patch.status !== undefined) { updates.push('status = ?'); values.push(patch.status); }
-  if (patch.progress !== undefined) { updates.push('progress = ?'); values.push(patch.progress); }
+  if (patch.progress !== undefined) {
+    const newProgress = Math.max(0, Math.min(100, Number(patch.progress) || 0));
+    updates.push('progress = ?');
+    values.push(newProgress);
+    if (patch.status === undefined) {
+      const computedStatus = calculateProjectStatus(newProgress, project.phases);
+      updates.push('status = ?');
+      values.push(computedStatus);
+    }
+  }
   if (patch.targetDate !== undefined) { updates.push('target_date = ?'); values.push(patch.targetDate); }
   if (patch.targetLabel !== undefined) { updates.push('target_label = ?'); values.push(patch.targetLabel); }
   if (patch.aop !== undefined) { updates.push('aop = ?'); values.push(patch.aop); }

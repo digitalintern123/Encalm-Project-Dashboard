@@ -1357,7 +1357,6 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
   const [name, setName] = useState(project.name);
   const [targetDate, setTargetDate] = useState(project.targetDate);
   const [health, setHealth] = useState(project.health);
-  const [status, setStatus] = useState<ProjectStatus>(project.status || 'Yet to start');
   const [area, setArea] = useState(project.area || project.specification?.area || '');
   const [paxKeys, setPaxKeys] = useState(project.paxKeys || project.specification?.capacity || '');
   const [leadId, setLeadId] = useState(project.leadId);
@@ -1373,7 +1372,6 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
       targetDate,
       targetLabel: formatFullDate(targetDate),
       health,
-      status,
       leadId: role === 'coordinator' ? leadId : project.leadId,
       area: area.trim(),
       paxKeys: paxKeys.trim(),
@@ -1405,12 +1403,19 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
           <span className="mb-2 block text-[10px] font-bold">Project name</span>
           <input value={name} onChange={(event) => setName(event.target.value)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
         </label>
-        <label>
-          <span className="mb-2 block text-[10px] font-bold">Project status</span>
-          <select value={status} onChange={(event) => setStatus(event.target.value as ProjectStatus)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px] font-bold">
-            {projectStatuses.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </label>
+        <div>
+          <span className="mb-2 block text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            Project status (Auto-Updated)
+          </span>
+          <div className="flex h-10 w-full items-center gap-2 rounded-lg border border-border bg-white px-3">
+            <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-extrabold ${statusTone[project.status || 'Yet to start']}`}>
+              {project.status || 'Yet to start'}
+            </span>
+            <span className="truncate text-[10px] text-muted-foreground">
+              Synced with progress ({project.progress}%)
+            </span>
+          </div>
+        </div>
 
         {role === 'coordinator' && leads.length > 0 && (
           <label className="md:col-span-3">

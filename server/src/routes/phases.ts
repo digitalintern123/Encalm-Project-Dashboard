@@ -2,11 +2,12 @@ import { Router } from 'express';
 import { db } from '../db/database.js';
 import { requireAuth, requireRole, AuthenticatedRequest } from '../middleware/auth.js';
 import { fetchFullProject } from './projects.js';
+import { calculateProjectStatus } from '../utils/status.js';
 
 const router = Router({ mergeParams: true });
 
-function recomputeProjectProgress(projectId: string): number {
-  const phases = db.prepare('SELECT progress, weight, planned_start, planned_finish FROM phases WHERE project_id = ? ORDER BY order_index ASC').all(projectId) as any[];
+export function recomputeProjectProgress(projectId: string): number {
+  const phases = db.prepare('SELECT name, status, progress, weight, planned_start, planned_finish FROM phases WHERE project_id = ? ORDER BY order_index ASC').all(projectId) as any[];
   if (!phases || phases.length === 0) return 0;
 
   // Calculate durations
@@ -37,8 +38,10 @@ function recomputeProjectProgress(projectId: string): number {
   });
 
   const computed = Math.max(0, Math.min(100, Math.round(totalWeighted)));
-  db.prepare('UPDATE projects SET progress = ?, last_updated = ? WHERE id = ?').run(
+  const newStatus = calculateProjectStatus(computed, phases);
+  db.prepare('UPDATE projects SET progress = ?, status = ?, last_updated = ? WHERE id = ?').run(
     computed,
+    newStatus,
     new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
     projectId,
   );
