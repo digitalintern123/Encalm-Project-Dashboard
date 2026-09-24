@@ -9,6 +9,7 @@
     "server": "tsx watch server/src/index.ts",
     "seed": "tsx -e \"import { seedDatabase } from './server/src/db/seed.js'; seedDatabase(true);\"",
     "build": "vite build",
+    "start": "tsx server/src/index.ts",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

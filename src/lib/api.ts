@@ -34,7 +34,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(path, {
+  const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+  const url = path.startsWith('http') ? path : `${apiBase}${path}`;
+
+  const response = await fetch(url, {
     ...options,
     headers,
   });
