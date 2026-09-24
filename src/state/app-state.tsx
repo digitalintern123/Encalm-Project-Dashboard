@@ -37,6 +37,7 @@ type AppStateValue = {
   user: DemoUser | null;
   projects: Project[];
   canEdit: boolean;
+  canEditProject: (projectOrId: Project | string) => boolean;
   isConnected: boolean;
   notifications: NotificationItem[];
   unreadNotifCount: number;
@@ -293,6 +294,24 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const canEdit = role !== null && EDITOR_ROLES.includes(role);
 
+  const canEditProject = useCallback(
+    (projectOrId: Project | string): boolean => {
+      if (!role) return false;
+      if (role === 'coordinator') return true;
+      if (role === 'hod') return false;
+      if (role === 'lead') {
+        const target =
+          typeof projectOrId === 'string'
+            ? projectState.find((p) => p.id === projectOrId)
+            : projectOrId;
+        if (!target) return false;
+        return !target.leadId || target.leadId === user?.id;
+      }
+      return false;
+    },
+    [role, user?.id, projectState],
+  );
+
   const login = useCallback(
     async (roleOrEmail: string, password = 'encalm'): Promise<{ success: boolean; error?: string }> => {
       let email = roleOrEmail.trim().toLowerCase();
@@ -368,11 +387,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   );
 
   const patchById = useCallback(
-    (id: string, transform: (project: Project) => Project): boolean =>
-      mutate((projects) =>
+    (id: string, transform: (project: Project) => Project): boolean => {
+      if (!canEditProject(id)) return false;
+      return mutate((projects) =>
         projects.map((project) => (project.id === id ? transform(project) : project)),
-      ),
-    [mutate],
+      );
+    },
+    [canEditProject, mutate],
   );
 
   const updateProject = useCallback(
@@ -576,6 +597,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const approveMilestone = useCallback(
     async (projectId: string, milestoneId: string, status: 'Approved' | 'Rejected'): Promise<boolean> => {
+      // Governance approval is strictly reserved for Coordinator
+      if (role !== 'coordinator') return false;
+
       setProjectState((projects) =>
         projects.map((project) => {
           if (project.id !== projectId) return project;
@@ -598,11 +622,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return false;
       }
     },
-    [refreshNotifications],
+    [role, refreshNotifications],
   );
 
   const completeMilestone = useCallback(
     async (projectId: string, milestoneId: string): Promise<boolean> => {
+      // Only the assigned project lead or coordinator can complete milestones
+      if (!canEditProject(projectId)) return false;
+
       const today = new Date().toISOString().split('T')[0];
       setProjectState((projects) =>
         projects.map((project) => {
@@ -626,7 +653,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return false;
       }
     },
-    [refreshNotifications],
+    [canEditProject, refreshNotifications],
   );
 
   const addIssue = useCallback(
@@ -709,6 +736,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       user,
       projects: projectState,
       canEdit,
+      canEditProject,
       isConnected,
       notifications,
       unreadNotifCount,
@@ -741,6 +769,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       user,
       projectState,
       canEdit,
+      canEditProject,
       isConnected,
       notifications,
       unreadNotifCount,

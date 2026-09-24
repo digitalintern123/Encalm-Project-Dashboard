@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { db } from '../db/database.js';
-import { requireAuth, requireRole, AuthenticatedRequest } from '../middleware/auth.js';
+import { requireAuth, requireRole, requireProjectAccess, AuthenticatedRequest } from '../middleware/auth.js';
 import { fetchFullProject } from './projects.js';
 
 const router = Router({ mergeParams: true });
 
-// POST add issue (Lead and HOD)
-router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
+// POST add issue (Lead and Coordinator)
+router.post('/', requireAuth, requireRole(['lead', 'coordinator']), requireProjectAccess('id'), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const project = fetchFullProject(projectId);
   if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -63,8 +63,8 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
   return res.status(201).json({ project: updatedProject });
 });
 
-// PATCH update issue (Lead and HOD)
-router.patch('/:issueId', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
+// PATCH update issue (Lead and Coordinator)
+router.patch('/:issueId', requireAuth, requireRole(['lead', 'coordinator']), requireProjectAccess('id'), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const issueId = req.params.issueId as string;
   const issue = db.prepare('SELECT * FROM issues WHERE id = ? AND project_id = ?').get(issueId, projectId) as any;
@@ -101,8 +101,8 @@ router.patch('/:issueId', requireAuth, requireRole(['lead', 'coordinator']), (re
   return res.json({ project: updatedProject });
 });
 
-// DELETE issue (Lead and HOD)
-router.delete('/:issueId', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
+// DELETE issue (Lead and Coordinator)
+router.delete('/:issueId', requireAuth, requireRole(['lead', 'coordinator']), requireProjectAccess('id'), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const issueId = req.params.issueId as string;
   db.prepare('DELETE FROM issues WHERE id = ? AND project_id = ?').run(issueId, projectId);

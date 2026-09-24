@@ -74,3 +74,43 @@ export function optionalAuth(req: AuthenticatedRequest, res: Response, next: Nex
   }
   next();
 }
+
+/**
+ * Checks whether an authenticated user has permission to modify a project:
+ * - 'coordinator': Full supervisory permissions across all projects.
+ * - 'lead': Can only edit projects allotted to them or unassigned.
+ * - 'hod': Strictly read-only across all projects.
+ */
+export function canUserEditProject(projectId: string, user: UserPayload): boolean {
+  if (user.role === 'coordinator') return true;
+  if (user.role === 'hod') return false;
+  if (user.role === 'lead') {
+    const project = db.prepare('SELECT lead_id FROM projects WHERE id = ?').get(projectId) as { lead_id: string | null } | undefined;
+    if (!project) return false;
+    return !project.lead_id || project.lead_id === user.id;
+  }
+  return false;
+}
+
+export function requireProjectAccess(projectIdParam: string = 'id') {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized: Authentication required' });
+    }
+
+    const projectId = req.params[projectIdParam] || req.body?.projectId || req.params.projectId || req.params.id;
+    if (!projectId) {
+      return res.status(400).json({ error: 'Project ID is required' });
+    }
+
+    if (!canUserEditProject(projectId, req.user)) {
+      return res.status(403).json({
+        error: req.user.role === 'hod'
+          ? 'Forbidden: HOD role has strict view-only oversight'
+          : 'Forbidden: You can only edit projects allotted to you',
+      });
+    }
+
+    next();
+  };
+}

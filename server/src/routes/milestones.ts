@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { db } from '../db/database.js';
-import { requireAuth, requireRole, AuthenticatedRequest } from '../middleware/auth.js';
+import { requireAuth, requireRole, requireProjectAccess, AuthenticatedRequest } from '../middleware/auth.js';
 import { fetchFullProject } from './projects.js';
 
 const router = Router({ mergeParams: true });
 
 // POST add milestone (Lead and Coordinator)
-router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
+router.post('/', requireAuth, requireRole(['lead', 'coordinator']), requireProjectAccess('id'), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const project = fetchFullProject(projectId);
   if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -57,7 +57,7 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
 });
 
 // PATCH update milestone (Lead and Coordinator)
-router.patch('/:milestoneId', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
+router.patch('/:milestoneId', requireAuth, requireRole(['lead', 'coordinator']), requireProjectAccess('id'), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const milestoneId = req.params.milestoneId as string;
   const milestone = db.prepare('SELECT * FROM milestones WHERE id = ? AND project_id = ?').get(milestoneId, projectId) as any;
@@ -73,7 +73,13 @@ router.patch('/:milestoneId', requireAuth, requireRole(['lead', 'coordinator']),
   if (patch.stage !== undefined) { updates.push('stage = ?'); values.push(patch.stage); }
   if (patch.owner !== undefined) { updates.push('owner = ?'); values.push(patch.owner); }
   if (patch.approvalRequired !== undefined) { updates.push('approval_required = ?'); values.push(patch.approvalRequired ? 1 : 0); }
-  if (patch.approvalStatus !== undefined) { updates.push('approval_status = ?'); values.push(patch.approvalStatus); }
+  if (patch.approvalStatus !== undefined) {
+    if (req.user?.role !== 'coordinator') {
+      return res.status(403).json({ error: 'Only Project Coordinators can approve or reject milestones' });
+    }
+    updates.push('approval_status = ?');
+    values.push(patch.approvalStatus);
+  }
   if (patch.completedDate !== undefined) { updates.push('completed_date = ?'); values.push(patch.completedDate); }
 
   if (updates.length > 0) {
@@ -87,7 +93,7 @@ router.patch('/:milestoneId', requireAuth, requireRole(['lead', 'coordinator']),
 });
 
 // DELETE milestone (Lead and Coordinator)
-router.delete('/:milestoneId', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
+router.delete('/:milestoneId', requireAuth, requireRole(['lead', 'coordinator']), requireProjectAccess('id'), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const milestoneId = req.params.milestoneId as string;
   db.prepare('DELETE FROM milestones WHERE id = ? AND project_id = ?').run(milestoneId, projectId);

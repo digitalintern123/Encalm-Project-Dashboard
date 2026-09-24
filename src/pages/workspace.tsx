@@ -316,7 +316,7 @@ function TimelineView() {
 }
 
 function MilestonesView() {
-  const { projects, role, canEdit, approveMilestone, completeMilestone } = useAppState();
+  const { projects, role, canEdit, canEditProject, approveMilestone, completeMilestone } = useAppState();
   const { toast } = useToast();
   const [filter, setFilter] = useState<'All' | 'Approval' | 'Upcoming' | 'Late' | 'Complete'>('All');
 
@@ -504,7 +504,7 @@ function MilestonesView() {
                   </Link>
 
                   <div className="flex items-center gap-2">
-                    {canEdit && isPendingApproval && (
+                    {role === 'coordinator' && isPendingApproval && (
                       <>
                         <button
                           type="button"
@@ -523,7 +523,7 @@ function MilestonesView() {
                       </>
                     )}
 
-                    {canEdit && !isComplete && (
+                    {canEditProject(item.project) && !isComplete && (
                       <button
                         type="button"
                         onClick={() => handleComplete(item.project.id, item.id)}
@@ -544,7 +544,7 @@ function MilestonesView() {
 }
 
 function IssuesView() {
-  const { projects, canEdit, updateIssue, addIssue } = useAppState();
+  const { projects, canEdit, canEditProject, updateIssue, addIssue } = useAppState();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'All' | 'Critical' | 'Open' | 'Resolved'>('All');
@@ -681,6 +681,14 @@ function IssuesView() {
   };
 
   const handleStatusChange = (projectId: string, issueIndex: number, newStatus: string) => {
+    if (!canEditProject(projectId)) {
+      toast({
+        title: 'Action not allowed',
+        description: 'You can only update issues for projects allotted to you.',
+        variant: 'destructive',
+      });
+      return;
+    }
     updateIssue(projectId, issueIndex, { status: newStatus as any });
     toast({
       title: 'Issue Status Updated',
@@ -689,6 +697,14 @@ function IssuesView() {
   };
 
   const handleOpenAddForm = (project: Project) => {
+    if (!canEditProject(project)) {
+      toast({
+        title: 'Action not allowed',
+        description: 'You can only log issues for projects allotted to you.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setAddingForProjectId(project.id);
     setUserToggled((prev) => ({ ...prev, [project.id]: true }));
     setNewDraft({
@@ -709,6 +725,15 @@ function IssuesView() {
   };
 
   const handleSaveNewIssue = (projectId: string) => {
+    if (!canEditProject(projectId)) {
+      toast({
+        variant: 'destructive',
+        title: 'Action not allowed',
+        description: 'You can only log issues for projects allotted to you.',
+      });
+      return;
+    }
+
     if (!newDraft.title.trim() || !newDraft.detail.trim()) {
       toast({
         variant: 'destructive',
@@ -904,7 +929,7 @@ function IssuesView() {
                       </span>
                     </div>
 
-                    {canEdit && (
+                    {canEditProject(project) && (
                       <button
                         type="button"
                         onClick={() => handleOpenAddForm(project)}
@@ -1069,7 +1094,7 @@ function IssuesView() {
                         <p className="text-[11px] text-muted-foreground">
                           No issues or risks matching "{filter}" for {project.name}.
                         </p>
-                        {canEdit && !isAdding && (
+                        {canEditProject(project) && !isAdding && (
                           <button
                             type="button"
                             onClick={() => handleOpenAddForm(project)}
@@ -1152,7 +1177,7 @@ function IssuesView() {
                                       )}
                                     </div>
 
-                                    {canEdit ? (
+                                    {canEditProject(project) ? (
                                       <select
                                         value={issue.status || 'Open'}
                                         onChange={(e) => handleStatusChange(project.id, issue.issueIndex, e.target.value)}
@@ -1251,7 +1276,7 @@ function IssuesView() {
                                       )}
                                     </div>
 
-                                    {canEdit ? (
+                                    {canEditProject(project) ? (
                                       <select
                                         value={issue.status || 'Open'}
                                         onChange={(e) => handleStatusChange(project.id, issue.issueIndex, e.target.value)}

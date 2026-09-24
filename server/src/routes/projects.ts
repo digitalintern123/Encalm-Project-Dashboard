@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db/database.js';
-import { requireAuth, requireRole, AuthenticatedRequest, optionalAuth } from '../middleware/auth.js';
+import { requireAuth, requireRole, requireProjectAccess, AuthenticatedRequest, optionalAuth } from '../middleware/auth.js';
 import { calculateProjectStatus } from '../utils/status.js';
 
 const router = Router();
@@ -179,7 +179,7 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
       pax_keys: body.paxKeys || body.pax_keys || body.specification?.capacity || null,
       next_milestone: body.nextMilestone || 'Project brief',
       next_milestone_date: body.nextMilestoneDate || body.startDate || '',
-      lead_id: body.leadId || req.user!.id,
+      lead_id: req.user!.role === 'coordinator' ? (body.leadId || req.user!.id) : req.user!.id,
       start_date: body.startDate || null,
       last_updated: todayFormatted,
       specification_json: body.specification ? JSON.stringify(body.specification) : null,
@@ -322,8 +322,8 @@ router.patch('/:id/allot', requireAuth, requireRole(['coordinator']), (req: Auth
   return res.json({ project: updated });
 });
 
-// PATCH update project (Lead and Coordinator)
-router.patch('/:id', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
+// PATCH update project (Lead with ownership, and Coordinator)
+router.patch('/:id', requireAuth, requireRole(['lead', 'coordinator']), requireProjectAccess('id'), (req: AuthenticatedRequest, res) => {
   const id = req.params.id as string;
   const project = fetchFullProject(id);
   if (!project) {
@@ -363,7 +363,7 @@ router.patch('/:id', requireAuth, requireRole(['lead', 'coordinator']), (req: Au
   else if (patch.pax_keys !== undefined) { updates.push('pax_keys = ?'); values.push(patch.pax_keys); }
   if (patch.nextMilestone !== undefined) { updates.push('next_milestone = ?'); values.push(patch.nextMilestone); }
   if (patch.nextMilestoneDate !== undefined) { updates.push('next_milestone_date = ?'); values.push(patch.nextMilestoneDate); }
-  if (patch.leadId !== undefined) { updates.push('lead_id = ?'); values.push(patch.leadId); }
+  if (patch.leadId !== undefined && req.user?.role === 'coordinator') { updates.push('lead_id = ?'); values.push(patch.leadId); }
   if (patch.specification !== undefined) { updates.push('specification_json = ?'); values.push(JSON.stringify(patch.specification)); }
 
   values.push(id);
@@ -373,8 +373,8 @@ router.patch('/:id', requireAuth, requireRole(['lead', 'coordinator']), (req: Au
   return res.json({ project: updated });
 });
 
-// DELETE project (Lead and Coordinator)
-router.delete('/:id', requireAuth, requireRole(['lead', 'coordinator']), (req, res) => {
+// DELETE project (Lead with ownership, and Coordinator)
+router.delete('/:id', requireAuth, requireRole(['lead', 'coordinator']), requireProjectAccess('id'), (req, res) => {
   const id = req.params.id as string;
   const result = db.prepare('DELETE FROM projects WHERE id = ?').run(id);
   if (result.changes === 0) {

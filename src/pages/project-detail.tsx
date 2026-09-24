@@ -1182,9 +1182,20 @@ export default function ProjectDetail() {
   const project = projects.find((item) => item.id === projectId);
   if (!project) return <div className="mx-auto max-w-4xl px-5 py-20 text-center"><p className="font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground">Project not found</p><h1 className="mt-3 font-serif text-4xl text-[#173e49]">That project is not in this portfolio.</h1><Link href="/" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground"><ArrowLeft size={14} /> Return to portfolio</Link></div>;
   const health = healthStyles[project.health];
-  const canEdit = role === 'lead' || role === 'coordinator';
+  const isAllottedToMe = !project.leadId || project.leadId === user?.id;
+  const canEdit = role === 'coordinator' || (role === 'lead' && isAllottedToMe);
   const activePhase = project.phases.find((phase) => phase.status === 'active')?.name ?? 'planning';
   const saveProgress = (progress: number, comment: string, nextMilestone: string) => {
+    if (!canEdit) {
+      toast({
+        variant: 'destructive',
+        title: 'Permission denied',
+        description: role === 'hod'
+          ? 'HOD accounts have strict view-only oversight.'
+          : `You can only update projects allotted to you. This project is assigned to ${leadName(project.leadId)}.`,
+      });
+      return;
+    }
     const saved = updateProject(project.id, { progress: clampPercent(progress), nextMilestone: nextMilestone.trim() || project.nextMilestone });
     if (!saved) {
       toast({ variant: 'destructive', title: 'Not saved', description: 'Project edits require Lead or Coordinator permissions.' });
@@ -1237,11 +1248,14 @@ export default function ProjectDetail() {
         </div>
 
         {canEdit ? (
-          <button type="button" onClick={() => setEditing((value) => !value)} className="flex items-center gap-2 rounded-xl bg-[#d6a95d] px-3.5 py-3 text-[10px] font-extrabold text-[#173e49]">
+          <button type="button" onClick={() => setEditing((value) => !value)} className="flex items-center gap-2 rounded-xl bg-[#d6a95d] px-3.5 py-3 text-[10px] font-extrabold text-[#173e49] hover:bg-[#e2bd73] transition">
             <Pencil size={14} /> Edit project
           </button>
         ) : (
-          <span className="rounded-xl border border-border bg-card px-3 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">View only</span>
+          <span className="flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">
+            <ShieldAlert size={13} className="text-[#9a711f]" />
+            {role === 'hod' ? 'View only · HOD Oversight' : `View only · Allotted to ${leadName(project.leadId)}`}
+          </span>
         )}
       </div>
     </section>
