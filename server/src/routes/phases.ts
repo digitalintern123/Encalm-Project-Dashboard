@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { db } from '../db/database.js';
 import { requireAuth, requireRole, requireProjectAccess, AuthenticatedRequest } from '../middleware/auth.js';
 import { fetchFullProject } from './projects.js';
-import { calculateProjectStatus, getAutoProjectStatus } from '../utils/status.js';
 
 const router = Router({ mergeParams: true });
 
@@ -38,15 +37,9 @@ export function recomputeProjectProgress(projectId: string): number {
   });
 
   const computed = Math.max(0, Math.min(100, Math.round(totalWeighted)));
-  const existingProject = db.prepare('SELECT status FROM projects WHERE id = ?').get(projectId) as { status: string } | undefined;
-  const autoResult = getAutoProjectStatus(computed, phases);
-  const newStatus = autoResult.isAutomatic && autoResult.status
-    ? autoResult.status
-    : (existingProject?.status || 'Yet to start');
 
-  db.prepare('UPDATE projects SET progress = ?, status = ?, last_updated = ? WHERE id = ?').run(
+  db.prepare('UPDATE projects SET progress = ?, last_updated = ? WHERE id = ?').run(
     computed,
-    newStatus,
     new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
     projectId,
   );

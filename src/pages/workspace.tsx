@@ -32,7 +32,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CRORE } from '@/data/projects';
 import { formatFullDate, isValidIsoDate, todayIso, todayLabel } from '@/lib/date';
 import { initialsOf, leadName } from '@/data/users';
-import { formatRatio, getCommercialSummary, getPortfolioCommercialSummary, calculateProjectStatus, getAutoProjectStatus } from '@/lib/calculations';
+import { formatRatio, getCommercialSummary, getPortfolioCommercialSummary } from '@/lib/calculations';
 
 export type WorkspaceView = 'projects' | 'my-projects' | 'timeline' | 'milestones' | 'issues' | 'commercial' | 'updates' | 'reports' | 'new-project' | 'team';
 
@@ -1559,13 +1559,13 @@ function NewProjectView() {
   const { toast } = useToast();
   const [createdName, setCreatedName] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
-  const [manualStatus, setManualStatus] = useState<ProjectStatus | 'auto'>('auto');
   const [form, setForm] = useState({
     name: '',
     location: 'Goa' as Project['location'],
     category: 'Hotel' as Category,
     projectType: 'Business hotel',
     leadId: (role === 'lead' ? user?.id : leads[0]?.id) || user?.id || '',
+    status: 'Yet to start' as ProjectStatus,
     startDate: todayIso(),
     targetDate: '',
     progress: '0',
@@ -1578,10 +1578,6 @@ function NewProjectView() {
   });
 
   const progressNum = Math.max(0, Math.min(100, Number(form.progress) || 0));
-  const autoResult = getAutoProjectStatus(progressNum);
-  const effectiveStatus: ProjectStatus = manualStatus === 'auto'
-    ? (autoResult.isAutomatic && autoResult.status ? autoResult.status : 'Yet to start')
-    : manualStatus;
 
   const set = (key: keyof typeof form, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -1629,7 +1625,7 @@ function NewProjectView() {
       category: form.category,
       code: `${form.location.slice(0, 3).toUpperCase()}-NEW-${new Date().getFullYear() % 100}`,
       health: progressNum > 0 ? 'On track' : 'Not started',
-      status: effectiveStatus,
+      status: form.status,
       progress: progressNum,
       targetDate: form.targetDate,
       targetLabel: formatFullDate(form.targetDate),
@@ -1762,21 +1758,16 @@ function NewProjectView() {
             </label>
             <div>
               <span className="mb-2 block text-[11px] font-bold">
-                Project Status {manualStatus === 'auto' && autoResult.isAutomatic && (
-                  <span className="font-normal text-muted-foreground">(Auto: {autoResult.status})</span>
-                )}
+                Project Status *
               </span>
               <select
-                value={manualStatus}
-                onChange={(event) => setManualStatus(event.target.value as ProjectStatus | 'auto')}
+                value={form.status}
+                onChange={(event) => set('status', event.target.value)}
                 className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-semibold"
               >
-                <option value="auto">
-                  Auto-detect {autoResult.isAutomatic ? `(${autoResult.status})` : '(No keyword match)'}
-                </option>
                 {projectStatuses.map((st) => (
                   <option key={st} value={st}>
-                    Manual: {st}
+                    {st}
                   </option>
                 ))}
               </select>

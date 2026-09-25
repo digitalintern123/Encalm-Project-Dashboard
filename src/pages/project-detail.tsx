@@ -30,7 +30,7 @@ import { CRORE, formatCrore, formatShortDate, getProjectTemplate, issueCategorie
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullDate, isValidIsoDate, parseIsoDate, todayLabel } from '@/lib/date';
-import { getCommercialSummary, getProgressVariance, formatRatio, calculateWeightedProgress, getAutoProjectStatus } from '@/lib/calculations';
+import { getCommercialSummary, getProgressVariance, formatRatio, calculateWeightedProgress } from '@/lib/calculations';
 import { initialsOf, leadName } from '@/data/users';
 import { statusTone } from './workspace';
 
@@ -1186,10 +1186,6 @@ export default function ProjectDetail() {
   const isAllottedToMe = !project.leadId || project.leadId === user?.id;
   const canEdit = role === 'coordinator' || (role === 'lead' && isAllottedToMe);
   const activePhase = project.phases.find((phase) => phase.status === 'active')?.name ?? 'planning';
-  const autoStatusResult = useMemo(
-    () => getAutoProjectStatus(project.progress, project.phases),
-    [project.progress, project.phases]
-  );
   const saveProgress = (progress: number, comment: string, nextMilestone: string) => {
     if (!canEdit) {
       toast({
@@ -1232,16 +1228,38 @@ export default function ProjectDetail() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex shrink-0 items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3">
-          <span className={`size-2.5 rounded-full ${autoStatusResult.isAutomatic ? 'bg-[#3d9a7e]' : 'bg-[#d19b35]'}`} />
-          <span>
+        <div className="flex shrink-0 items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-2.5">
+          <span className="size-2.5 rounded-full bg-[#173e49]" />
+          <div>
             <span className="block font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">
-              Project status {autoStatusResult.isAutomatic ? '· Auto' : '· Manual'}
+              Project status
             </span>
-            <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-extrabold ${statusTone[project.status || 'Yet to start']}`}>
-              {project.status || 'Yet to start'}
-            </span>
-          </span>
+            {canEdit ? (
+              <select
+                aria-label="Change project status"
+                value={project.status || 'Yet to start'}
+                onChange={(e) => {
+                  const newStatus = e.target.value as ProjectStatus;
+                  updateProject(project.id, { status: newStatus });
+                  toast({
+                    title: 'Status updated',
+                    description: `${project.name} is now set to "${newStatus}".`,
+                  });
+                }}
+                className={`mt-1 cursor-pointer rounded-lg border border-border/80 px-2 py-0.5 text-[11px] font-extrabold outline-none transition hover:opacity-90 ${statusTone[project.status || 'Yet to start']}`}
+              >
+                {projectStatuses.map((st) => (
+                  <option key={st} value={st} className="bg-white text-foreground font-semibold">
+                    {st}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-extrabold ${statusTone[project.status || 'Yet to start']}`}>
+                {project.status || 'Yet to start'}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className={`flex shrink-0 items-center gap-3 rounded-2xl border ${health.border} ${health.bg} px-4 py-3`}>
@@ -1267,64 +1285,13 @@ export default function ProjectDetail() {
       </div>
     </section>
 
-    {!autoStatusResult.isAutomatic && (
-      <div className="fade-up mt-6 rounded-2xl border border-[#eadcb1] bg-[#fbf5e6] p-4 text-[#173e49] shadow-sm">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-[#faedd0] text-[#9a711f]">
-              <AlertCircle size={16} />
-            </span>
-            <div>
-              <p className="text-[12px] font-extrabold text-[#173e49]">
-                Manual Project Status Selection Required
-              </p>
-              <p className="mt-0.5 text-[11px] leading-5 text-[#8e681c]">
-                {autoStatusResult.reason === 'no_phases'
-                  ? 'No stages have been defined for this project.'
-                  : `Active delivery stage "${autoStatusResult.matchedStageName}" does not match recognized lifecycle keywords.`}{' '}
-                Please select the project stage/status manually:
-              </p>
-            </div>
-          </div>
-          {canEdit && (
-            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-              {projectStatuses.map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => {
-                    updateProject(project.id, { status: st });
-                    toast({
-                      title: 'Project Status Updated',
-                      description: `Project status set to "${st}" manually.`,
-                    });
-                  }}
-                  className={`rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition ${
-                    project.status === st
-                      ? 'bg-[#173e49] text-white shadow-sm ring-2 ring-[#173e49]/20'
-                      : 'border border-[#eadcb1] bg-white text-[#173e49] hover:bg-[#fff9ed] hover:border-[#c9a04e]'
-                  }`}
-                >
-                  {st}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    )}
-
     {editing && canEdit && <EditProjectForm project={project} onCancel={() => setEditing(false)} onSave={(patch) => { updateProject(project.id, patch); setEditing(false); }} />}
 
     <section className="fade-up mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
       <Metric
         label="Project Status"
         value={project.status || 'Yet to start'}
-        note={
-          autoStatusResult.isAutomatic
-            ? `Auto: ${autoStatusResult.matchedStageName || 'Progress synced'}`
-            : 'Manual Selection'
-        }
+        note="User-defined status"
         icon={Layers3}
       />
       <Metric
@@ -1404,11 +1371,6 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
   const [leadId, setLeadId] = useState(project.leadId);
   const [error, setError] = useState('');
 
-  const autoStatusResult = useMemo(
-    () => getAutoProjectStatus(project.progress, project.phases),
-    [project.progress, project.phases]
-  );
-
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (!name.trim()) { setError('Project name cannot be empty.'); return; }
@@ -1453,7 +1415,7 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
         </label>
         <div>
           <label className="mb-2 block text-[10px] font-bold">
-            Project status {autoStatusResult.isAutomatic && <span className="font-normal text-muted-foreground">(Auto: {autoStatusResult.matchedStageName || `${project.progress}%`})</span>}
+            Project status
           </label>
           <select
             value={status}
@@ -1462,7 +1424,7 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
           >
             {projectStatuses.map((st) => (
               <option key={st} value={st}>
-                {st} {autoStatusResult.isAutomatic && autoStatusResult.status === st ? ' (Auto detected)' : ''}
+                {st}
               </option>
             ))}
           </select>

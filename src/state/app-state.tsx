@@ -13,13 +13,14 @@ import {
   type Phase,
   type Project,
   type ProjectIssue,
+  type ProjectStatus,
   type ProjectUpdate,
 } from '@/data/projects';
 import { readJson, removeItem, writeJson } from '@/lib/storage';
 import { todayLabel } from '@/lib/date';
 import { DEMO_HOD_ID, DEMO_LEAD_ID, DEMO_COORDINATOR_ID, getUserById, type User } from '@/data/users';
 import { api, getStoredToken, setStoredToken, type NotificationItem } from '@/lib/api';
-import { calculateWeightedProgress, calculateProjectStatus } from '@/lib/calculations';
+import { calculateWeightedProgress } from '@/lib/calculations';
 
 export type AppRole = 'hod' | 'lead' | 'coordinator';
 export type DemoUser = User;
@@ -89,7 +90,7 @@ function normaliseProject(project: Project): Project {
     phases.length > 0
       ? calculateWeightedProgress(phases).overallProgress
       : (project.progress ?? 0);
-  const calculatedStatus = calculateProjectStatus(calculatedProgress, phases, project.status);
+  const status: ProjectStatus = project.status || 'Yet to start';
   const normalisedHealth: Health =
     (project.health === 'Not started' || !project.health) && calculatedProgress > 0
       ? 'On track'
@@ -98,7 +99,7 @@ function normaliseProject(project: Project): Project {
   return {
     ...project,
     progress: calculatedProgress,
-    status: calculatedStatus,
+    status,
     health: normalisedHealth,
     phases,
     milestones: (project.milestones ?? []).map((milestone, index) => ({
@@ -400,9 +401,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     (id: string, patch: Partial<Project>): boolean => {
       const ok = patchById(id, (project) => {
         const newProgress = patch.progress !== undefined ? patch.progress : project.progress;
-        const newPhases = patch.phases !== undefined ? patch.phases : project.phases;
-        const autoStatus =
-          patch.status !== undefined ? patch.status : calculateProjectStatus(newProgress, newPhases, project.status);
         const autoHealth =
           patch.health !== undefined
             ? patch.health
@@ -412,7 +410,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return {
           ...project,
           ...patch,
-          status: autoStatus,
+          status: patch.status !== undefined ? patch.status : project.status,
           health: autoHealth,
           lastUpdated: todayLabel(),
         };
@@ -440,7 +438,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           index === phaseIndex ? { ...p, ...patch, updatedAt: todayLabel() } : p,
         );
         const { overallProgress } = calculateWeightedProgress(newPhases);
-        const autoStatus = calculateProjectStatus(overallProgress, newPhases, project.status);
         const autoHealth =
           (project.health === 'Not started' || !project.health) && overallProgress > 0
             ? 'On track'
@@ -449,7 +446,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           ...project,
           phases: newPhases,
           progress: overallProgress,
-          status: autoStatus,
           health: autoHealth,
           lastUpdated: todayLabel(),
         };
@@ -475,12 +471,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const ok = patchById(id, (project) => {
         const newPhases = [...project.phases, newPhase];
         const { overallProgress } = calculateWeightedProgress(newPhases);
-        const autoStatus = calculateProjectStatus(overallProgress, newPhases, project.status);
         return {
           ...project,
           phases: newPhases,
           progress: overallProgress,
-          status: autoStatus,
           lastUpdated: todayLabel(),
         };
       });
@@ -508,12 +502,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         if (phaseIndex < 0 || phaseIndex >= project.phases.length) return project;
         const newPhases = project.phases.filter((_, index) => index !== phaseIndex);
         const { overallProgress } = calculateWeightedProgress(newPhases);
-        const autoStatus = calculateProjectStatus(overallProgress, newPhases, project.status);
         return {
           ...project,
           phases: newPhases,
           progress: overallProgress,
-          status: autoStatus,
           lastUpdated: todayLabel(),
         };
       });
@@ -539,8 +531,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const phases = [...project.phases];
         [phases[phaseIndex], phases[targetIndex]] = [phases[targetIndex], phases[phaseIndex]];
         const { overallProgress } = calculateWeightedProgress(phases);
-        const autoStatus = calculateProjectStatus(overallProgress, phases, project.status);
-        return { ...project, phases, progress: overallProgress, status: autoStatus, lastUpdated: todayLabel() };
+        return { ...project, phases, progress: overallProgress, lastUpdated: todayLabel() };
       });
 
       if (ok) {
