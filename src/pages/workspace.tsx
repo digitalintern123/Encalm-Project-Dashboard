@@ -32,7 +32,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CRORE } from '@/data/projects';
 import { formatFullDate, isValidIsoDate, todayIso, todayLabel } from '@/lib/date';
 import { initialsOf, leadName } from '@/data/users';
-import { formatRatio, getCommercialSummary, getPortfolioCommercialSummary, calculateProjectStatus } from '@/lib/calculations';
+import { formatRatio, getCommercialSummary, getPortfolioCommercialSummary, calculateProjectStatus, getAutoProjectStatus } from '@/lib/calculations';
 
 export type WorkspaceView = 'projects' | 'my-projects' | 'timeline' | 'milestones' | 'issues' | 'commercial' | 'updates' | 'reports' | 'new-project' | 'team';
 
@@ -1559,6 +1559,7 @@ function NewProjectView() {
   const { toast } = useToast();
   const [createdName, setCreatedName] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
+  const [manualStatus, setManualStatus] = useState<ProjectStatus | 'auto'>('auto');
   const [form, setForm] = useState({
     name: '',
     location: 'Goa' as Project['location'],
@@ -1577,7 +1578,10 @@ function NewProjectView() {
   });
 
   const progressNum = Math.max(0, Math.min(100, Number(form.progress) || 0));
-  const liveStatus = calculateProjectStatus(progressNum);
+  const autoResult = getAutoProjectStatus(progressNum);
+  const effectiveStatus: ProjectStatus = manualStatus === 'auto'
+    ? (autoResult.isAutomatic && autoResult.status ? autoResult.status : 'Yet to start')
+    : manualStatus;
 
   const set = (key: keyof typeof form, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -1625,7 +1629,7 @@ function NewProjectView() {
       category: form.category,
       code: `${form.location.slice(0, 3).toUpperCase()}-NEW-${new Date().getFullYear() % 100}`,
       health: progressNum > 0 ? 'On track' : 'Not started',
-      status: liveStatus,
+      status: effectiveStatus,
       progress: progressNum,
       targetDate: form.targetDate,
       targetLabel: formatFullDate(form.targetDate),
@@ -1757,17 +1761,25 @@ function NewProjectView() {
               />
             </label>
             <div>
-              <span className="mb-2 block text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                Project Status (Auto-Assigned)
+              <span className="mb-2 block text-[11px] font-bold">
+                Project Status {manualStatus === 'auto' && autoResult.isAutomatic && (
+                  <span className="font-normal text-muted-foreground">(Auto: {autoResult.status})</span>
+                )}
               </span>
-              <div className="flex h-11 w-full items-center gap-2 rounded-xl border border-border bg-card/60 px-3">
-                <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${statusTone[liveStatus]}`}>
-                  {liveStatus}
-                </span>
-                <span className="truncate text-[10px] text-muted-foreground">
-                  Auto-assigned from progress ({progressNum}%)
-                </span>
-              </div>
+              <select
+                value={manualStatus}
+                onChange={(event) => setManualStatus(event.target.value as ProjectStatus | 'auto')}
+                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-semibold"
+              >
+                <option value="auto">
+                  Auto-detect {autoResult.isAutomatic ? `(${autoResult.status})` : '(No keyword match)'}
+                </option>
+                {projectStatuses.map((st) => (
+                  <option key={st} value={st}>
+                    Manual: {st}
+                  </option>
+                ))}
+              </select>
             </div>
             <label>
               <span className="mb-2 block text-[11px] font-bold">Start Date *</span>

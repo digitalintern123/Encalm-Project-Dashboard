@@ -1,6 +1,7 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useState, useMemo, type FormEvent, type ReactNode } from 'react';
 import { Link, useParams } from 'wouter';
 import {
+  AlertCircle,
   AlertTriangle,
   ArrowLeft,
   CalendarDays,
@@ -29,7 +30,7 @@ import { CRORE, formatCrore, formatShortDate, getProjectTemplate, issueCategorie
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullDate, isValidIsoDate, parseIsoDate, todayLabel } from '@/lib/date';
-import { getCommercialSummary, getProgressVariance, formatRatio, calculateWeightedProgress } from '@/lib/calculations';
+import { getCommercialSummary, getProgressVariance, formatRatio, calculateWeightedProgress, getAutoProjectStatus } from '@/lib/calculations';
 import { initialsOf, leadName } from '@/data/users';
 import { statusTone } from './workspace';
 
@@ -1185,6 +1186,10 @@ export default function ProjectDetail() {
   const isAllottedToMe = !project.leadId || project.leadId === user?.id;
   const canEdit = role === 'coordinator' || (role === 'lead' && isAllottedToMe);
   const activePhase = project.phases.find((phase) => phase.status === 'active')?.name ?? 'planning';
+  const autoStatusResult = useMemo(
+    () => getAutoProjectStatus(project.progress, project.phases),
+    [project.progress, project.phases]
+  );
   const saveProgress = (progress: number, comment: string, nextMilestone: string) => {
     if (!canEdit) {
       toast({
@@ -1228,9 +1233,11 @@ export default function ProjectDetail() {
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex shrink-0 items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3">
-          <span className="size-2.5 rounded-full bg-[#173e49]" />
+          <span className={`size-2.5 rounded-full ${autoStatusResult.isAutomatic ? 'bg-[#3d9a7e]' : 'bg-[#d19b35]'}`} />
           <span>
-            <span className="block font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Project status</span>
+            <span className="block font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">
+              Project status {autoStatusResult.isAutomatic ? '· Auto' : '· Manual'}
+            </span>
             <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-extrabold ${statusTone[project.status || 'Yet to start']}`}>
               {project.status || 'Yet to start'}
             </span>
@@ -1260,10 +1267,66 @@ export default function ProjectDetail() {
       </div>
     </section>
 
+    {!autoStatusResult.isAutomatic && (
+      <div className="fade-up mt-6 rounded-2xl border border-[#eadcb1] bg-[#fbf5e6] p-4 text-[#173e49] shadow-sm">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-[#faedd0] text-[#9a711f]">
+              <AlertCircle size={16} />
+            </span>
+            <div>
+              <p className="text-[12px] font-extrabold text-[#173e49]">
+                Manual Project Status Selection Required
+              </p>
+              <p className="mt-0.5 text-[11px] leading-5 text-[#8e681c]">
+                {autoStatusResult.reason === 'no_phases'
+                  ? 'No stages have been defined for this project.'
+                  : `Active delivery stage "${autoStatusResult.matchedStageName}" does not match recognized lifecycle keywords.`}{' '}
+                Please select the project stage/status manually:
+              </p>
+            </div>
+          </div>
+          {canEdit && (
+            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+              {projectStatuses.map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => {
+                    updateProject(project.id, { status: st });
+                    toast({
+                      title: 'Project Status Updated',
+                      description: `Project status set to "${st}" manually.`,
+                    });
+                  }}
+                  className={`rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition ${
+                    project.status === st
+                      ? 'bg-[#173e49] text-white shadow-sm ring-2 ring-[#173e49]/20'
+                      : 'border border-[#eadcb1] bg-white text-[#173e49] hover:bg-[#fff9ed] hover:border-[#c9a04e]'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
     {editing && canEdit && <EditProjectForm project={project} onCancel={() => setEditing(false)} onSave={(patch) => { updateProject(project.id, patch); setEditing(false); }} />}
 
     <section className="fade-up mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      <Metric label="Project Status" value={project.status || 'Yet to start'} note={`Stage: ${activePhase}`} icon={Layers3} />
+      <Metric
+        label="Project Status"
+        value={project.status || 'Yet to start'}
+        note={
+          autoStatusResult.isAutomatic
+            ? `Auto: ${autoStatusResult.matchedStageName || 'Progress synced'}`
+            : 'Manual Selection'
+        }
+        icon={Layers3}
+      />
       <Metric
         label="Completion %"
         value={`${project.progress}%`}
@@ -1335,10 +1398,16 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
   const [name, setName] = useState(project.name);
   const [targetDate, setTargetDate] = useState(project.targetDate);
   const [health, setHealth] = useState(project.health);
+  const [status, setStatus] = useState<ProjectStatus>(project.status || 'Yet to start');
   const [area, setArea] = useState(project.area || project.specification?.area || '');
   const [paxKeys, setPaxKeys] = useState(project.paxKeys || project.specification?.capacity || '');
   const [leadId, setLeadId] = useState(project.leadId);
   const [error, setError] = useState('');
+
+  const autoStatusResult = useMemo(
+    () => getAutoProjectStatus(project.progress, project.phases),
+    [project.progress, project.phases]
+  );
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -1350,6 +1419,7 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
       targetDate,
       targetLabel: formatFullDate(targetDate),
       health,
+      status,
       leadId: role === 'coordinator' ? leadId : project.leadId,
       area: area.trim(),
       paxKeys: paxKeys.trim(),
@@ -1382,17 +1452,20 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
           <input value={name} onChange={(event) => setName(event.target.value)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
         </label>
         <div>
-          <span className="mb-2 block text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-            Project status (Auto-Updated)
-          </span>
-          <div className="flex h-10 w-full items-center gap-2 rounded-lg border border-border bg-white px-3">
-            <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-extrabold ${statusTone[project.status || 'Yet to start']}`}>
-              {project.status || 'Yet to start'}
-            </span>
-            <span className="truncate text-[10px] text-muted-foreground">
-              Synced with progress ({project.progress}%)
-            </span>
-          </div>
+          <label className="mb-2 block text-[10px] font-bold">
+            Project status {autoStatusResult.isAutomatic && <span className="font-normal text-muted-foreground">(Auto: {autoStatusResult.matchedStageName || `${project.progress}%`})</span>}
+          </label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as ProjectStatus)}
+            className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px] font-bold text-[#173e49]"
+          >
+            {projectStatuses.map((st) => (
+              <option key={st} value={st}>
+                {st} {autoStatusResult.isAutomatic && autoStatusResult.status === st ? ' (Auto detected)' : ''}
+              </option>
+            ))}
+          </select>
         </div>
 
         {role === 'coordinator' && leads.length > 0 && (

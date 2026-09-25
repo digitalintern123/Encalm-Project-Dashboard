@@ -158,7 +158,7 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
       { name: 'Handover', status: 'upcoming', progress: 0, owner: 'Operations' },
     ];
     const initialProgress = Number(body.progress) || 0;
-    const resolvedStatus = calculateProjectStatus(initialProgress, defaultPhases);
+    const resolvedStatus = body.status || calculateProjectStatus(initialProgress, defaultPhases);
 
     insertProject.run({
       id,
@@ -346,7 +346,7 @@ router.patch('/:id', requireAuth, requireRole(['lead', 'coordinator']), requireP
     updates.push('progress = ?');
     values.push(newProgress);
     if (patch.status === undefined) {
-      const computedStatus = calculateProjectStatus(newProgress, project.phases);
+      const computedStatus = calculateProjectStatus(newProgress, project.phases, project.status);
       updates.push('status = ?');
       values.push(computedStatus);
     }
