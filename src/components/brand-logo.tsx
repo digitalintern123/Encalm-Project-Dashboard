@@ -39,9 +39,9 @@ export const BrandLogo: FC<BrandLogoProps> = ({
         title="Encalm Hospitality Projects"
       >
         <img
-          src="/favicon.svg"
+          src="/encalm-emblem.png"
           alt="Encalm Logo Mark"
-          className={`${emblemSizes[size]} rounded-xl object-contain drop-shadow-md`}
+          className={`${emblemSizes[size]} object-contain drop-shadow-md`}
         />
       </div>
     );
