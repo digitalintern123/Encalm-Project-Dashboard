@@ -17,26 +17,21 @@ export const BrandLogo: FC<BrandLogoProps> = ({
 }) => {
   const isDark = theme === 'dark';
 
-  // Sizing definitions
+  // Mark-only sizing definitions (collapsed sidebar)
   const emblemSizes = {
     sm: 'size-7',
     md: 'size-9',
     lg: 'size-11',
   };
 
-  const titleSizes = {
-    sm: 'text-[13px] tracking-[0.08em]',
-    md: 'text-[16px] tracking-[0.07em]',
-    lg: 'text-[20px] tracking-[0.06em]',
+  // Full logo height definitions
+  const logoHeights = {
+    sm: 'h-6',
+    md: 'h-8',
+    lg: 'h-11',
   };
 
-  const subtitleSizes = {
-    sm: 'text-[8px] tracking-[0.2em]',
-    md: 'text-[9px] tracking-[0.22em]',
-    lg: 'text-[10px] tracking-[0.25em]',
-  };
-
-  // If mark-only (e.g. collapsed sidebar or compact icon)
+  // If mark-only (e.g. collapsed sidebar)
   if (variant === 'mark') {
     return (
       <div
@@ -52,40 +47,29 @@ export const BrandLogo: FC<BrandLogoProps> = ({
     );
   }
 
+  const logoSrc = isDark ? '/encalm-logo-white.png' : '/encalm-logo-primary.png';
+
   return (
-    <div className={`flex items-center gap-3 select-none ${className}`}>
-      {/* Official Gold Mandala Emblem inside Teal Squircle */}
-      <div className="relative shrink-0 transition-transform duration-200 group-hover:scale-105">
-        <img
-          src="/favicon.svg"
-          alt="Encalm Logo Mark"
-          className={`${emblemSizes[size]} rounded-xl object-contain shadow-sm ring-1 ring-[#d6a95d]/30`}
-        />
-      </div>
+    <div className={`flex items-center gap-2.5 select-none ${className}`}>
+      {/* Official Encalm Logo (Gold Emblem + Typography) */}
+      <img
+        src={logoSrc}
+        alt="Encalm"
+        className={`${logoHeights[size]} w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]`}
+      />
 
-      {/* Typography Lockup */}
-      <div className="flex flex-col justify-center min-w-0">
-        <div className="flex items-center gap-1.5 leading-none">
-          <span
-            className={`font-serif font-bold uppercase transition-colors ${
-              isDark ? 'text-white' : 'text-[#173e49]'
-            } ${titleSizes[size]}`}
-          >
-            Encalm
-          </span>
-          <span className="size-1 rounded-full bg-[#d6a95d]" />
-        </div>
-
-        {showSubtitle && (
-          <span
-            className={`mt-1 font-mono uppercase font-semibold transition-colors ${
-              isDark ? 'text-white/60' : 'text-[#8b6f30]'
-            } ${subtitleSizes[size]}`}
-          >
-            Projects
-          </span>
-        )}
-      </div>
+      {/* Projects Office Subtitle Badge */}
+      {showSubtitle && (
+        <span
+          className={`shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[8px] font-extrabold uppercase tracking-[0.2em] shadow-sm transition-colors ${
+            isDark
+              ? 'border border-[#d6a95d]/30 bg-[#d6a95d]/10 text-[#e5bd75]'
+              : 'border border-[#c5a880]/40 bg-[#f7f2ea] text-[#8e681c]'
+          }`}
+        >
+          Projects
+        </span>
+      )}
     </div>
   );
 };
