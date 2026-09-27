@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db/database.js';
 import { requireAuth, requireRole, requireProjectAccess, AuthenticatedRequest } from '../middleware/auth.js';
 import { fetchFullProject } from './projects.js';
+import { saveDatabaseSnapshot } from '../utils/backup.js';
 
 export const projectUpdatesRouter = Router({ mergeParams: true });
 export const globalUpdatesRouter = Router();
@@ -60,6 +61,8 @@ projectUpdatesRouter.post('/', requireAuth, requireRole(['lead', 'coordinator'])
 
   // Update project last_updated
   db.prepare('UPDATE projects SET last_updated = ? WHERE id = ?').run(todayFormatted, projectId);
+
+  saveDatabaseSnapshot();
 
   const updatedProject = fetchFullProject(projectId);
   return res.status(201).json({ project: updatedProject });

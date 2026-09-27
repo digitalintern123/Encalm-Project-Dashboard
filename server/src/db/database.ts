@@ -6,12 +6,12 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dataDir = path.resolve(__dirname, '../../data');
+export const dataDir = process.env.DATA_DIR || path.resolve(__dirname, '../../data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const dbPath = path.join(dataDir, 'encalm.db');
+export const dbPath = process.env.DATABASE_PATH || path.join(dataDir, 'encalm.db');
 export const db = new Database(dbPath);
 
 // Performance & data integrity pragmas

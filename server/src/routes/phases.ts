@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db/database.js';
 import { requireAuth, requireRole, requireProjectAccess, AuthenticatedRequest } from '../middleware/auth.js';
 import { fetchFullProject } from './projects.js';
+import { saveDatabaseSnapshot } from '../utils/backup.js';
 
 const router = Router({ mergeParams: true });
 
@@ -43,6 +44,7 @@ export function recomputeProjectProgress(projectId: string): number {
     new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
     projectId,
   );
+  saveDatabaseSnapshot();
   return computed;
 }
 

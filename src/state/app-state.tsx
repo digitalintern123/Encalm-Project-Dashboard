@@ -65,11 +65,14 @@ type AppStateValue = {
   updateIssue: (id: string, issueIndex: number, patch: Partial<ProjectIssue>) => boolean;
   addUpdate: (id: string, update: ProjectUpdate) => boolean;
   resetProjects: () => Promise<void>;
+  exportBackup: () => Promise<void>;
+  importBackup: (fileOrJson: string | object) => Promise<{ success: boolean; count?: number; error?: string }>;
 };
 
 const AppStateContext = createContext<AppStateValue | null>(null);
 
 const PROJECTS_KEY = 'encalm-projects-data-v2';
+const BACKUP_KEY = 'encalm-projects-permanent-backup-v1';
 const ROLE_KEY = 'encalm-projects-role-v1';
 
 function normaliseProject(project: Project): Project {
@@ -143,7 +146,10 @@ function seedState(): Project[] {
 }
 
 function hydrateProjects(): Project[] {
-  const saved = readJson<unknown>(PROJECTS_KEY);
+  let saved = readJson<unknown>(PROJECTS_KEY);
+  if (!Array.isArray(saved) || saved.length === 0) {
+    saved = readJson<unknown>(BACKUP_KEY);
+  }
   if (!Array.isArray(saved)) return [];
   const valid = saved.filter(isProjectLike);
   return valid.map(normaliseProject);
@@ -166,9 +172,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
   const [leads, setLeads] = useState<User[]>([]);
 
-  // Sync with localStorage as cache / fallback
+  // Sync with localStorage as cache / fallback (Anti-Wipe Shield: never wipe cache with empty array)
   useEffect(() => {
-    writeJson(PROJECTS_KEY, projectState);
+    if (projectState.length > 0) {
+      writeJson(PROJECTS_KEY, projectState);
+      writeJson(BACKUP_KEY, projectState);
+    }
   }, [projectState]);
 
   useEffect(() => {
@@ -176,30 +185,40 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     else removeItem(ROLE_KEY);
   }, [role]);
 
-  // Fetch full project list from backend with auto-recovery against ephemeral server redeploys
+  // Fetch full project list from backend with Anti-Wipe Shield & auto-recovery
   const refreshProjects = useCallback(async () => {
     try {
       const data = await api.projects.getAll();
       if (Array.isArray(data.projects)) {
         if (data.projects.length === 0) {
-          // Check if local cache has projects that were wiped by an ephemeral server redeploy
-          const localCached = readJson<unknown>(PROJECTS_KEY);
-          if (Array.isArray(localCached) && localCached.length > 0) {
-            const valid = localCached.filter(isProjectLike).map(normaliseProject);
-            if (valid.length > 0) {
-              console.log('Detected fresh server instance; re-syncing cached projects to backend...');
-              for (const proj of valid) {
-                await api.projects.create(proj).catch(console.warn);
-              }
-              const reloaded = await api.projects.getAll().catch(() => null);
-              if (reloaded?.projects && reloaded.projects.length > 0) {
-                setProjectState(reloaded.projects.map(normaliseProject));
-                setIsConnected(true);
-                return;
-              }
+          // Check if local cache has projects that were wiped by an ephemeral server restart / git push
+          let localCached = readJson<unknown>(PROJECTS_KEY);
+          if (!Array.isArray(localCached) || localCached.length === 0) {
+            localCached = readJson<unknown>(BACKUP_KEY);
+          }
+          const valid = Array.isArray(localCached)
+            ? localCached.filter(isProjectLike).map(normaliseProject)
+            : [];
+
+          if (valid.length > 0) {
+            console.warn(`[Anti-Wipe Shield] Server returned 0 projects, but browser holds ${valid.length} projects. Preserving and syncing to backend...`);
+            // Synchronize local projects to the server
+            await api.projects.sync(valid).catch(console.warn);
+
+            const reloaded = await api.projects.getAll().catch(() => null);
+            if (reloaded?.projects && reloaded.projects.length > 0) {
+              setProjectState(reloaded.projects.map(normaliseProject));
+              setIsConnected(true);
+              return;
             }
+
+            // Keep local projects displayed rather than showing blank/wiping localStorage
+            setProjectState(valid);
+            setIsConnected(true);
+            return;
           }
         }
+
         setProjectState(data.projects.map(normaliseProject));
         setIsConnected(true);
       }
@@ -707,16 +726,87 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [patchById],
   );
 
+  const exportBackup = useCallback(async () => {
+    try {
+      let exportData: any = null;
+      try {
+        exportData = await api.system.exportBackup();
+      } catch {
+        // Fallback to local state if server unreachable
+        exportData = {
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          projectCount: projectState.length,
+          projects: projectState,
+          notifications,
+        };
+      }
+
+      const jsonStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `encalm-portfolio-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export backup failed:', err);
+    }
+  }, [projectState, notifications]);
+
+  const importBackup = useCallback(
+    async (fileOrJson: string | object): Promise<{ success: boolean; count?: number; error?: string }> => {
+      try {
+        const payload = typeof fileOrJson === 'string' ? JSON.parse(fileOrJson) : fileOrJson;
+        const rawProjects = Array.isArray(payload.projects) ? payload.projects : (Array.isArray(payload) ? payload : null);
+        if (!rawProjects || rawProjects.length === 0) {
+          return { success: false, error: 'No valid projects array found in backup data' };
+        }
+
+        const validProjects = rawProjects.filter(isProjectLike).map(normaliseProject);
+        if (validProjects.length === 0) {
+          return { success: false, error: 'File contains no recognisable project structures' };
+        }
+
+        // Try backend import first
+        try {
+          await api.system.importBackup({ projects: validProjects, notifications: payload.notifications || [] });
+        } catch {
+          // Fallback to bulk sync endpoint
+          await api.projects.sync(validProjects).catch(console.warn);
+        }
+
+        // Immediately update state and persistent browser cache
+        setProjectState(validProjects);
+        writeJson(PROJECTS_KEY, validProjects);
+        writeJson(BACKUP_KEY, validProjects);
+
+        await refreshProjects();
+        await refreshNotifications();
+
+        return { success: true, count: validProjects.length };
+      } catch (err: any) {
+        return { success: false, error: err.message || 'Failed to import backup file' };
+      }
+    },
+    [refreshProjects, refreshNotifications],
+  );
+
   const resetProjects = useCallback(async () => {
     try {
       await api.system.reset();
       removeItem(PROJECTS_KEY);
+      removeItem(BACKUP_KEY);
       setProjectState([]);
       await refreshProjects();
       await refreshNotifications();
     } catch {
       // Local fallback reset
       removeItem(PROJECTS_KEY);
+      removeItem(BACKUP_KEY);
       setProjectState([]);
     }
   }, [refreshProjects, refreshNotifications]);
@@ -754,6 +844,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateIssue,
       addUpdate,
       resetProjects,
+      exportBackup,
+      importBackup,
     }),
     [
       role,
@@ -787,6 +879,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateIssue,
       addUpdate,
       resetProjects,
+      exportBackup,
+      importBackup,
     ],
   );
 

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db/database.js';
 import { requireAuth, requireRole, requireProjectAccess, AuthenticatedRequest } from '../middleware/auth.js';
 import { fetchFullProject } from './projects.js';
+import { saveDatabaseSnapshot } from '../utils/backup.js';
 
 const router = Router({ mergeParams: true });
 
@@ -52,6 +53,8 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), requireProje
     );
   }
 
+  saveDatabaseSnapshot();
+
   const updatedProject = fetchFullProject(projectId);
   return res.status(201).json({ project: updatedProject });
 });
@@ -88,6 +91,8 @@ router.patch('/:milestoneId', requireAuth, requireRole(['lead', 'coordinator']),
     db.prepare(`UPDATE milestones SET ${updates.join(', ')} WHERE id = ? AND project_id = ?`).run(...values);
   }
 
+  saveDatabaseSnapshot();
+
   const updatedProject = fetchFullProject(projectId);
   return res.json({ project: updatedProject });
 });
@@ -97,6 +102,7 @@ router.delete('/:milestoneId', requireAuth, requireRole(['lead', 'coordinator'])
   const projectId = req.params.id as string;
   const milestoneId = req.params.milestoneId as string;
   db.prepare('DELETE FROM milestones WHERE id = ? AND project_id = ?').run(milestoneId, projectId);
+  saveDatabaseSnapshot();
   const updatedProject = fetchFullProject(projectId);
   return res.json({ project: updatedProject });
 });

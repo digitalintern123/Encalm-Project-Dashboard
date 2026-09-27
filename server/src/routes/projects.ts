@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db/database.js';
 import { requireAuth, requireRole, requireProjectAccess, AuthenticatedRequest, optionalAuth } from '../middleware/auth.js';
 import { calculateProjectStatus } from '../utils/status.js';
+import { saveDatabaseSnapshot, restoreDatabaseFromJSON } from '../utils/backup.js';
 
 const router = Router();
 
@@ -110,6 +111,17 @@ router.get('/:id', optionalAuth, (req, res) => {
     return res.status(404).json({ error: 'Project not found' });
   }
   return res.json({ project });
+});
+
+// POST bulk sync projects from client cache or external source
+router.post('/sync', optionalAuth, (req: AuthenticatedRequest, res) => {
+  const { projects } = req.body;
+  if (!Array.isArray(projects)) {
+    return res.status(400).json({ error: 'Invalid payload: projects array is required' });
+  }
+
+  const result = restoreDatabaseFromJSON({ projects });
+  return res.json({ success: true, count: result.count, message: `Synced ${result.count} projects successfully` });
 });
 
 // POST create project (Lead and Coordinator)
@@ -275,6 +287,7 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
   });
 
   transaction();
+  saveDatabaseSnapshot();
 
   const created = fetchFullProject(id);
   return res.status(201).json({ project: created });
@@ -317,6 +330,8 @@ router.patch('/:id/allot', requireAuth, requireRole(['coordinator']), (req: Auth
     id,
     `/project/${id}`
   );
+
+  saveDatabaseSnapshot();
 
   const updated = fetchFullProject(id);
   return res.json({ project: updated });
@@ -369,6 +384,8 @@ router.patch('/:id', requireAuth, requireRole(['lead', 'coordinator']), requireP
   values.push(id);
   db.prepare(`UPDATE projects SET ${updates.join(', ')} WHERE id = ?`).run(...values);
 
+  saveDatabaseSnapshot();
+
   const updated = fetchFullProject(id);
   return res.json({ project: updated });
 });
@@ -380,6 +397,7 @@ router.delete('/:id', requireAuth, requireRole(['lead', 'coordinator']), require
   if (result.changes === 0) {
     return res.status(404).json({ error: 'Project not found' });
   }
+  saveDatabaseSnapshot();
   return res.json({ message: 'Project deleted successfully' });
 });
 

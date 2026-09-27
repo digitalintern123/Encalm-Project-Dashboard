@@ -103,6 +103,11 @@ export const api = {
       request<{ message: string }>(`/api/projects/${id}`, {
         method: 'DELETE',
       }),
+    sync: (projects: Project[]) =>
+      request<{ count: number; success: boolean }>('/api/projects/sync', {
+        method: 'POST',
+        body: JSON.stringify({ projects }),
+      }),
   },
 
   phases: {
@@ -182,5 +187,11 @@ export const api = {
   system: {
     health: () => request<{ status: string; database: string; counts: Record<string, number> }>('/api/system/health'),
     reset: () => request<{ message: string }>('/api/system/reset', { method: 'POST' }),
+    exportBackup: () => request<any>('/api/system/export'),
+    importBackup: (data: any) =>
+      request<{ message: string; count: number }>('/api/system/import', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
   },
 };

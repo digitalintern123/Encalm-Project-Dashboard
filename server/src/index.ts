@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { initDatabase } from './db/database.js';
 import { seedDatabase } from './db/seed.js';
+import { autoRestoreSnapshotIfEmpty } from './utils/backup.js';
 
 import authRouter from './routes/auth.js';
 import projectsRouter from './routes/projects.js';
@@ -85,6 +86,7 @@ async function startServer() {
   try {
     initDatabase();
     seedDatabase(false);
+    autoRestoreSnapshotIfEmpty();
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`===============================================`);

@@ -10,6 +10,8 @@ import {
   ChevronRight,
   CircleDollarSign,
   ChartBar as FileBarChart,
+  Download,
+  Upload,
   LayoutDashboard,
   ListChecks,
   LogOut,
@@ -94,6 +96,8 @@ export function AppShell({ children }: AppShellProps) {
     user,
     logout,
     resetProjects,
+    exportBackup,
+    importBackup,
     isConnected,
     notifications,
     unreadNotifCount,
@@ -106,8 +110,55 @@ export function AppShell({ children }: AppShellProps) {
   const settingsTriggerRef = useRef<HTMLButtonElement | null>(null);
   const settingsCloseRef = useRef<HTMLButtonElement | null>(null);
   const notifCloseRef = useRef<HTMLButtonElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isDetail = location.startsWith('/project/');
   const isLead = role === 'lead';
+
+  const handleExportBackup = async () => {
+    try {
+      await exportBackup();
+      toast({
+        title: 'Database Backup Exported',
+        description: 'Portfolio snapshot downloaded to your device as JSON.',
+      });
+    } catch {
+      toast({
+        title: 'Export Failed',
+        description: 'Could not generate backup file.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const res = await importBackup(text);
+      if (res.success) {
+        toast({
+          title: 'Database Restored',
+          description: `Successfully restored ${res.count || 0} projects.`,
+        });
+      } else {
+        toast({
+          title: 'Restore Failed',
+          description: res.error || 'Invalid backup structure.',
+          variant: 'destructive',
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Import Error',
+        description: err.message || 'Failed to read file.',
+        variant: 'destructive',
+      });
+    } finally {
+      if (e.target) e.target.value = '';
+    }
+  };
 
   useEffect(() => {
     writeItem('encalm-compact-nav', collapsed ? 'on' : 'off');
@@ -682,7 +733,46 @@ export function AppShell({ children }: AppShellProps) {
             </div>
 
             <div className="mt-6 border-t border-border pt-5">
-              <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Database management</p>
+              <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Database management & Backup</p>
+              
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImportFile}
+                accept=".json,application/json"
+                className="hidden"
+              />
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={handleExportBackup}
+                  className="flex items-center gap-2 rounded-xl border border-border bg-white/70 p-3 text-left hover:bg-white hover:border-[#1e5141]"
+                >
+                  <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#edf5f0] text-[#1e5141]">
+                    <Download size={14} />
+                  </span>
+                  <div className="min-w-0">
+                    <strong className="block text-[11px] truncate">Export Backup</strong>
+                    <span className="block text-[9px] text-muted-foreground truncate">Save JSON file</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 rounded-xl border border-border bg-white/70 p-3 text-left hover:bg-white hover:border-[#1e5141]"
+                >
+                  <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#edf5f0] text-[#1e5141]">
+                    <Upload size={14} />
+                  </span>
+                  <div className="min-w-0">
+                    <strong className="block text-[11px] truncate">Import Backup</strong>
+                    <span className="block text-[9px] text-muted-foreground truncate">Restore JSON</span>
+                  </div>
+                </button>
+              </div>
+
               {resetConfirm ? (
                 <div className="mt-3 rounded-xl border border-[#f0c8c2] bg-[#fff5f2] p-3.5">
                   <p className="text-[11px] font-bold text-[#b2473d]">Clear all project data?</p>

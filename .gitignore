@@ -83,3 +83,4 @@ server/data/*.db-shm
 *.sqlite
 *.sqlite3
 !server/data/.gitkeep
+!server/data/portfolio-database.json
