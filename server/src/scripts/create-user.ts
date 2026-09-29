@@ -1,0 +1,94 @@
+import bcrypt from 'bcryptjs';
+import { db } from '../db/database.js';
+
+// CLI script to create or update users with role and password
+// Usage:
+//   npm run create-user -- "Name" "email@encalm.com" "password" "role" "title"
+// Example:
+//   npm run create-user -- "Amit Sharma" "amit@encalm.com" "secret123" "lead" "Senior Project Lead"
+
+const args = process.argv.slice(2);
+
+if (args.length < 3) {
+  console.log(`
+=====================================================
+  Encalm Project Dashboard — User & Password Tool
+=====================================================
+
+Usage:
+  npm run create-user -- "<Name>" "<Email>" "<Password>" [role] [title]
+
+Arguments:
+  Name      : Full name of the user (e.g. "Amit Sharma")
+  Email     : Corporate email (e.g. "amit@encalm.com")
+  Password  : Password for sign in
+  Role      : One of 'lead', 'coordinator', 'hod' (Default: 'lead')
+  Title     : Job title (Default: 'Project Lead', 'Project Coordinator', or 'Project HOD')
+
+Examples:
+  npm run create-user -- "Amit Sharma" "amit@encalm.com" "encalm123" "lead" "Project Lead"
+  npm run create-user -- "Priya Verma" "priya@encalm.com" "encalm123" "coordinator" "Project Coordinator"
+  npm run create-user -- "Executive User" "director@encalm.com" "encalm123" "hod" "Director - PMO"
+=====================================================
+`);
+  process.exit(1);
+}
+
+const name = args[0].trim();
+const email = args[1].trim().toLowerCase();
+const password = args[2].trim();
+const roleInput = (args[3] || 'lead').trim().toLowerCase();
+const role = roleInput === 'coordinator' ? 'coordinator' : roleInput === 'hod' ? 'hod' : 'lead';
+
+const defaultTitles: Record<string, string> = {
+  hod: 'Project HOD',
+  coordinator: 'Project Coordinator',
+  lead: 'Project Lead',
+};
+const title = (args[4] && args[4].trim()) || defaultTitles[role] || 'Project Lead';
+
+// Calculate initials
+const parts = name.split(/\s+/).filter(Boolean);
+let initials = 'PL';
+if (parts.length >= 2) {
+  initials = `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+} else if (parts.length === 1 && parts[0].length >= 2) {
+  initials = parts[0].substring(0, 2).toUpperCase();
+}
+
+const id = `user-${role}-${Date.now()}`;
+const passwordHash = bcrypt.hashSync(password, 10);
+
+try {
+  // Check if user exists
+  const existing = db.prepare('SELECT id, email, role FROM users WHERE LOWER(email) = ?').get(email) as any;
+
+  if (existing) {
+    db.prepare(`
+      UPDATE users
+      SET name = ?, role = ?, title = ?, initials = ?, password_hash = ?
+      WHERE LOWER(email) = ?
+    `).run(name, role, title, initials, passwordHash, email);
+
+    console.log(`\n✅ User "${email}" updated successfully!`);
+    console.log(`   Name:     ${name}`);
+    console.log(`   Role:     ${role}`);
+    console.log(`   Title:    ${title}`);
+    console.log(`   Password: (updated)\n`);
+  } else {
+    db.prepare(`
+      INSERT INTO users (id, name, email, role, title, initials, password_hash)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(id, name, email, role, title, initials, passwordHash);
+
+    console.log(`\n✅ User "${email}" created successfully!`);
+    console.log(`   ID:       ${id}`);
+    console.log(`   Name:     ${name}`);
+    console.log(`   Role:     ${role}`);
+    console.log(`   Title:    ${title}`);
+    console.log(`   Initials: ${initials}\n`);
+  }
+} catch (err: any) {
+  console.error('❌ Failed to create/update user:', err.message);
+  process.exit(1);
+}
