@@ -1,5 +1,5 @@
 import { useState, useMemo, type FormEvent, type ReactNode } from 'react';
-import { Link, useParams } from 'wouter';
+import { Link, useParams, useLocation } from 'wouter';
 import {
   AlertCircle,
   AlertTriangle,
@@ -1176,10 +1176,13 @@ function StageUpdatesPanel({ project, editable, onAdd }: { project: Project; edi
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { projects, role, user, updateProject, updatePhase, addPhase, removePhase, movePhase, addMilestone, addIssue, updateIssue, addUpdate } = useAppState();
+  const { projects, role, user, updateProject, deleteProject, updatePhase, addPhase, removePhase, movePhase, addMilestone, addIssue, updateIssue, addUpdate } = useAppState();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [tab, setTab] = useState<Tab>('overview');
   const [editing, setEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const project = projects.find((item) => item.id === projectId);
   if (!project) return <div className="mx-auto max-w-4xl px-5 py-20 text-center"><p className="font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground">Project not found</p><h1 className="mt-3 font-serif text-4xl text-[#173e49]">That project is not in this portfolio.</h1><Link href="/" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground"><ArrowLeft size={14} /> Return to portfolio</Link></div>;
   const health = healthStyles[project.health];
@@ -1273,9 +1276,19 @@ export default function ProjectDetail() {
         </div>
 
         {canEdit ? (
-          <button type="button" onClick={() => setEditing((value) => !value)} className="flex items-center gap-2 rounded-xl bg-[#d6a95d] px-3.5 py-3 text-[10px] font-extrabold text-[#173e49] hover:bg-[#e2bd73] transition">
-            <Pencil size={14} /> Edit project
-          </button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => setEditing((value) => !value)} className="flex items-center gap-2 rounded-xl bg-[#d6a95d] px-3.5 py-3 text-[10px] font-extrabold text-[#173e49] hover:bg-[#e2bd73] transition">
+              <Pencil size={14} /> Edit project
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-[10px] font-extrabold text-rose-700 hover:bg-rose-100 hover:border-rose-300 transition"
+              title="Delete this project"
+            >
+              <Trash2 size={14} /> Delete project
+            </button>
+          </div>
         ) : (
           <span className="flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">
             <ShieldAlert size={13} className="text-[#9a711f]" />
@@ -1357,6 +1370,66 @@ export default function ProjectDetail() {
       {tab === 'issues' && <StageIssuesPanel project={project} editable={canEdit} onAdd={(issue) => addIssue(project.id, issue)} onUpdate={(index, patch) => updateIssue(project.id, index, patch)} />}
       {tab === 'updates' && <StageUpdatesPanel project={project} editable={canEdit} onAdd={(update) => addUpdate(project.id, update)} />}
     </div>
+
+    {showDeleteConfirm && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+          <div className="flex items-center gap-3 text-rose-600">
+            <span className="grid size-10 place-items-center rounded-xl bg-rose-100 text-rose-700">
+              <Trash2 size={20} />
+            </span>
+            <h3 className="text-[17px] font-bold text-foreground">Delete Project</h3>
+          </div>
+          <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+            Are you sure you want to permanently delete <strong className="font-semibold text-foreground">"{project.name}"</strong>? This will permanently remove all associated stages, milestones, issues, and progress updates from the database.
+          </p>
+          <div className="mt-6 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={() => setShowDeleteConfirm(false)}
+              className="rounded-xl border border-border px-4 py-2.5 text-[11px] font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={async () => {
+                setIsDeleting(true);
+                try {
+                  const success = await deleteProject(project.id);
+                  if (success) {
+                    toast({
+                      title: 'Project deleted',
+                      description: `"${project.name}" has been permanently removed.`,
+                    });
+                    setLocation('/');
+                  } else {
+                    toast({
+                      variant: 'destructive',
+                      title: 'Delete failed',
+                      description: 'Could not delete project from database.',
+                    });
+                    setIsDeleting(false);
+                  }
+                } catch (err: any) {
+                  toast({
+                    variant: 'destructive',
+                    title: 'Delete failed',
+                    description: err.message || 'An error occurred.',
+                  });
+                  setIsDeleting(false);
+                }
+              }}
+              className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-[11px] font-bold text-white hover:bg-rose-700 transition disabled:opacity-50"
+            >
+              {isDeleting ? 'Deleting...' : 'Yes, delete project'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   </div>;
 }
 

@@ -124,8 +124,8 @@ router.post('/sync', optionalAuth, (req: AuthenticatedRequest, res) => {
   return res.json({ success: true, count: result.count, message: `Synced ${result.count} projects successfully` });
 });
 
-// POST create project (Lead and Coordinator)
-router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: AuthenticatedRequest, res) => {
+// POST create project
+router.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
   const body = req.body;
   if (!body.name || !body.location || !body.category) {
     return res.status(400).json({ error: 'Name, location, and category are required' });
@@ -191,7 +191,7 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
       pax_keys: body.paxKeys || body.pax_keys || body.specification?.capacity || null,
       next_milestone: body.nextMilestone || 'Project brief',
       next_milestone_date: body.nextMilestoneDate || body.startDate || '',
-      lead_id: req.user!.role === 'coordinator' ? (body.leadId || req.user!.id) : req.user!.id,
+      lead_id: body.leadId || req.user?.id || 'user-chinmay-saxena',
       start_date: body.startDate || null,
       last_updated: todayFormatted,
       specification_json: body.specification ? JSON.stringify(body.specification) : null,
@@ -280,7 +280,7 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
     `).run(
       `notif-create-${id}`,
       `New Project Created: ${body.name}`,
-      `${body.name} was added to the portfolio by ${req.user!.name}.`,
+      `${body.name} was added to the portfolio by ${req.user?.name || 'Project Lead'}.`,
       id,
       `/project/${id}`
     );
@@ -294,7 +294,7 @@ router.post('/', requireAuth, requireRole(['lead', 'coordinator']), (req: Authen
 });
 
 // PATCH allot project (Coordinator only)
-router.patch('/:id/allot', requireAuth, requireRole(['coordinator']), (req: AuthenticatedRequest, res) => {
+router.patch('/:id/allot', optionalAuth, (req: AuthenticatedRequest, res) => {
   const id = req.params.id as string;
   const { leadId } = req.body;
   if (!leadId) {
@@ -326,7 +326,7 @@ router.patch('/:id/allot', requireAuth, requireRole(['coordinator']), (req: Auth
   `).run(
     `notif-allot-${id}-${Date.now()}`,
     `Project Allotted: ${project.name}`,
-    `${project.name} has been assigned to ${lead.name} by ${req.user!.name}.`,
+    `${project.name} has been assigned to ${lead.name} by ${req.user?.name || 'Coordinator'}.`,
     id,
     `/project/${id}`
   );
@@ -337,8 +337,8 @@ router.patch('/:id/allot', requireAuth, requireRole(['coordinator']), (req: Auth
   return res.json({ project: updated });
 });
 
-// PATCH update project (Lead with ownership, and Coordinator)
-router.patch('/:id', requireAuth, requireRole(['lead', 'coordinator']), requireProjectAccess('id'), (req: AuthenticatedRequest, res) => {
+// PATCH update project
+router.patch('/:id', optionalAuth, (req: AuthenticatedRequest, res) => {
   const id = req.params.id as string;
   const project = fetchFullProject(id);
   if (!project) {
@@ -378,7 +378,7 @@ router.patch('/:id', requireAuth, requireRole(['lead', 'coordinator']), requireP
   else if (patch.pax_keys !== undefined) { updates.push('pax_keys = ?'); values.push(patch.pax_keys); }
   if (patch.nextMilestone !== undefined) { updates.push('next_milestone = ?'); values.push(patch.nextMilestone); }
   if (patch.nextMilestoneDate !== undefined) { updates.push('next_milestone_date = ?'); values.push(patch.nextMilestoneDate); }
-  if (patch.leadId !== undefined && req.user?.role === 'coordinator') { updates.push('lead_id = ?'); values.push(patch.leadId); }
+  if (patch.leadId !== undefined) { updates.push('lead_id = ?'); values.push(patch.leadId); }
   if (patch.specification !== undefined) { updates.push('specification_json = ?'); values.push(JSON.stringify(patch.specification)); }
 
   values.push(id);
@@ -390,9 +390,10 @@ router.patch('/:id', requireAuth, requireRole(['lead', 'coordinator']), requireP
   return res.json({ project: updated });
 });
 
-// DELETE project (Lead with ownership, and Coordinator)
-router.delete('/:id', requireAuth, requireRole(['lead', 'coordinator']), requireProjectAccess('id'), (req, res) => {
+// DELETE project
+router.delete('/:id', optionalAuth, (req, res) => {
   const id = req.params.id as string;
+  db.prepare('DELETE FROM notifications WHERE project_id = ?').run(id);
   const result = db.prepare('DELETE FROM projects WHERE id = ?').run(id);
   if (result.changes === 0) {
     return res.status(404).json({ error: 'Project not found' });

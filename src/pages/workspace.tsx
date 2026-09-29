@@ -1469,7 +1469,7 @@ function ReportsView() {
         let count = 0;
         for (const p of imported) {
           if (p?.name && p?.location) {
-            addProject(p);
+            await addProject(p);
             count++;
           }
         }
@@ -1586,7 +1586,7 @@ function NewProjectView() {
     return <><PageHeader eyebrow="Project workspace" title="Create new project" description="Creating projects is restricted to Project Leads and Coordinators." /><div className="mt-8 flex max-w-[620px] items-start gap-3 rounded-2xl border border-[#eadcb1] bg-[#fbf1d8] p-5"><ShieldAlert size={18} className="mt-0.5 shrink-0 text-[#9a711f]" /><p className="text-[12px] leading-6 text-[#8e681c]">You are signed in with read-only portfolio access. Project creation is managed by the Project Coordinator or Leads.</p></div></>;
   }
 
-  const submit = (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault();
 
     const found: string[] = [];
@@ -1618,7 +1618,7 @@ function NewProjectView() {
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const id = `${form.location.toLowerCase()}-${slug || 'project'}-${Date.now()}`;
 
-    const created = addProject({
+    const created = await addProject({
       id,
       name,
       location: form.location,

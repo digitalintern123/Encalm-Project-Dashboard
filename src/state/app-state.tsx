@@ -60,7 +60,8 @@ type AppStateValue = {
   addPhase: (id: string, phase: Phase) => boolean;
   removePhase: (id: string, phaseIndex: number) => boolean;
   movePhase: (id: string, phaseIndex: number, direction: -1 | 1) => boolean;
-  addProject: (project: Project) => boolean;
+  addProject: (project: Project) => Promise<boolean>;
+  deleteProject: (id: string) => Promise<boolean>;
   addMilestone: (id: string, milestone: Milestone) => boolean;
   addIssue: (id: string, issue: ProjectIssue) => boolean;
   updateIssue: (id: string, issueIndex: number, patch: Partial<ProjectIssue>) => boolean;
@@ -72,9 +73,22 @@ type AppStateValue = {
 
 const AppStateContext = createContext<AppStateValue | null>(null);
 
-const PROJECTS_KEY = 'encalm-projects-data-v2';
-const BACKUP_KEY = 'encalm-projects-permanent-backup-v1';
 const ROLE_KEY = 'encalm-projects-role-v1';
+
+// Actively purge all legacy browser-side project caches so SQLite database is the sole authority
+if (typeof window !== 'undefined') {
+  [
+    'encalm-projects-data-v1',
+    'encalm-projects-data-v2',
+    'encalm-projects-storage-v2',
+    'encalm-projects-backup-v2',
+    'encalm-projects-permanent-backup-v1',
+  ].forEach((key) => {
+    try {
+      localStorage.removeItem(key);
+    } catch {}
+  });
+}
 
 function normaliseProject(project: Project): Project {
   const phases = (project.phases ?? []).map((phase, index) => {
@@ -147,13 +161,7 @@ function seedState(): Project[] {
 }
 
 function hydrateProjects(): Project[] {
-  let saved = readJson<unknown>(PROJECTS_KEY);
-  if (!Array.isArray(saved) || saved.length === 0) {
-    saved = readJson<unknown>(BACKUP_KEY);
-  }
-  if (!Array.isArray(saved)) return [];
-  const valid = saved.filter(isProjectLike);
-  return valid.map(normaliseProject);
+  return [];
 }
 
 function hydrateRole(): AppRole | null {
@@ -173,53 +181,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
   const [leads, setLeads] = useState<User[]>([]);
 
-  // Sync with localStorage as cache / fallback (Anti-Wipe Shield: never wipe cache with empty array)
-  useEffect(() => {
-    if (projectState.length > 0) {
-      writeJson(PROJECTS_KEY, projectState);
-      writeJson(BACKUP_KEY, projectState);
-    }
-  }, [projectState]);
-
   useEffect(() => {
     if (role) writeJson(ROLE_KEY, role);
     else removeItem(ROLE_KEY);
   }, [role]);
 
-  // Fetch full project list from backend with Anti-Wipe Shield & auto-recovery
+  // Fetch full project list from backend database (server is the sole source of truth)
   const refreshProjects = useCallback(async () => {
     try {
       const data = await api.projects.getAll();
       if (Array.isArray(data.projects)) {
-        if (data.projects.length === 0) {
-          // Check if local cache has projects that were wiped by an ephemeral server restart / git push
-          let localCached = readJson<unknown>(PROJECTS_KEY);
-          if (!Array.isArray(localCached) || localCached.length === 0) {
-            localCached = readJson<unknown>(BACKUP_KEY);
-          }
-          const valid = Array.isArray(localCached)
-            ? localCached.filter(isProjectLike).map(normaliseProject)
-            : [];
-
-          if (valid.length > 0) {
-            console.warn(`[Anti-Wipe Shield] Server returned 0 projects, but browser holds ${valid.length} projects. Preserving and syncing to backend...`);
-            // Synchronize local projects to the server
-            await api.projects.sync(valid).catch(console.warn);
-
-            const reloaded = await api.projects.getAll().catch(() => null);
-            if (reloaded?.projects && reloaded.projects.length > 0) {
-              setProjectState(reloaded.projects.map(normaliseProject));
-              setIsConnected(true);
-              return;
-            }
-
-            // Keep local projects displayed rather than showing blank/wiping localStorage
-            setProjectState(valid);
-            setIsConnected(true);
-            return;
-          }
-        }
-
         setProjectState(data.projects.map(normaliseProject));
         setIsConnected(true);
       }
@@ -567,23 +538,46 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   );
 
   const addProject = useCallback(
-    (project: Project): boolean => {
+    async (project: Project): Promise<boolean> => {
       const normalised = normaliseProject(project);
-      const ok = mutate((projects) => {
+      setProjectState((projects) => {
         if (projects.some((existing) => existing.id === project.id)) return projects;
         return [normalised, ...projects];
       });
 
-      if (ok) {
-        api.projects.create(normalised).then((res) => {
-          if (res?.project) {
-            patchById(project.id, () => normaliseProject(res.project));
-          }
-        }).catch(console.warn);
+      try {
+        const res = await api.projects.create(normalised);
+        if (res?.project) {
+          const saved = normaliseProject(res.project);
+          setProjectState((projects) =>
+            projects.map((p) => (p.id === project.id || p.id === saved.id ? saved : p)),
+          );
+        }
+        await refreshNotifications();
+        return true;
+      } catch (err) {
+        console.error('Backend project create failed:', err);
+        await refreshProjects();
+        return false;
       }
-      return ok;
     },
-    [mutate, patchById],
+    [refreshProjects, refreshNotifications],
+  );
+
+  const deleteProject = useCallback(
+    async (id: string): Promise<boolean> => {
+      setProjectState((prev) => prev.filter((p) => p.id !== id));
+      try {
+        await api.projects.delete(id);
+        await refreshNotifications();
+        return true;
+      } catch (err) {
+        console.error('Backend project delete failed:', err);
+        await refreshProjects();
+        return false;
+      }
+    },
+    [refreshProjects, refreshNotifications],
   );
 
   const addMilestone = useCallback(
@@ -780,10 +774,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           await api.projects.sync(validProjects).catch(console.warn);
         }
 
-        // Immediately update state and persistent browser cache
+        // Immediately update state from server
         setProjectState(validProjects);
-        writeJson(PROJECTS_KEY, validProjects);
-        writeJson(BACKUP_KEY, validProjects);
 
         await refreshProjects();
         await refreshNotifications();
@@ -799,15 +791,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const resetProjects = useCallback(async () => {
     try {
       await api.system.reset();
-      removeItem(PROJECTS_KEY);
-      removeItem(BACKUP_KEY);
       setProjectState([]);
       await refreshProjects();
       await refreshNotifications();
     } catch {
       // Local fallback reset
-      removeItem(PROJECTS_KEY);
-      removeItem(BACKUP_KEY);
       setProjectState([]);
     }
   }, [refreshProjects, refreshNotifications]);
@@ -840,6 +828,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       removePhase,
       movePhase,
       addProject,
+      deleteProject,
       addMilestone,
       addIssue,
       updateIssue,
@@ -875,6 +864,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       removePhase,
       movePhase,
       addProject,
+      deleteProject,
       addMilestone,
       addIssue,
       updateIssue,
