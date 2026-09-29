@@ -22,6 +22,7 @@ import {
   Target,
   ThumbsDown,
   ThumbsUp,
+  Trash2,
   TrendingUp,
   UserPlus,
   Users,
@@ -51,51 +52,132 @@ function PageHeader({ eyebrow, title, description, action }: { eyebrow: string; 
 }
 
 function ProjectTable({ rows }: { rows: Project[] }) {
+  const { deleteProject, canEditProject } = useAppState();
+  const { toast } = useToast();
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   return (
-    <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-[#173e49]/[.03]">
-      <div className="hidden grid-cols-[minmax(190px,1.3fr)_90px_120px_110px_100px_90px_110px_95px] gap-3 border-b border-border bg-[#f7f4ec] px-5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground md:grid">
-        <span>Project</span>
-        <span>Location</span>
-        <span>Status</span>
-        <span>Lead</span>
-        <span>Progress</span>
-        <span>Pax / Keys</span>
-        <span>Target</span>
-        <span>Health</span>
-      </div>
-      {rows.length === 0 && <p className="px-5 py-10 text-center text-[12px] text-muted-foreground">No projects match this view. Try a broader search.</p>}
-      {rows.map((project) => (
-        <Link
-          href={`/project/${project.id}`}
-          key={project.id}
-          className="grid gap-3 border-b border-border/70 px-5 py-4 transition hover:bg-[#fcf5e5] md:grid-cols-[minmax(190px,1.3fr)_90px_120px_110px_100px_90px_110px_95px] md:items-center"
-        >
-          <div className="flex items-center justify-between gap-3">
+    <>
+      <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-[#173e49]/[.03]">
+        <div className="hidden grid-cols-[minmax(190px,1.3fr)_90px_120px_110px_100px_90px_110px_95px_40px] gap-3 border-b border-border bg-[#f7f4ec] px-5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground md:grid">
+          <span>Project</span>
+          <span>Location</span>
+          <span>Status</span>
+          <span>Lead</span>
+          <span>Progress</span>
+          <span>Pax / Keys</span>
+          <span>Target</span>
+          <span>Health</span>
+          <span className="text-right">Action</span>
+        </div>
+        {rows.length === 0 && <p className="px-5 py-10 text-center text-[12px] text-muted-foreground">No projects match this view. Try a broader search.</p>}
+        {rows.map((project) => (
+          <div
+            key={project.id}
+            className="grid gap-3 border-b border-border/70 px-5 py-4 transition hover:bg-[#fcf5e5] md:grid-cols-[minmax(190px,1.3fr)_90px_120px_110px_100px_90px_110px_95px_40px] md:items-center"
+          >
+            <Link href={`/project/${project.id}`} className="flex items-center justify-between gap-3 group">
+              <span>
+                <span className="block text-[12px] font-bold group-hover:text-[#9a711f] transition">{project.name}</span>
+                <span className="mt-1 block font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">{project.code}</span>
+              </span>
+              <ArrowUpRight size={15} className="text-muted-foreground/50 md:hidden" />
+            </Link>
+            <span className="text-[11px] text-muted-foreground">{project.location}</span>
             <span>
-              <span className="block text-[12px] font-bold">{project.name}</span>
-              <span className="mt-1 block font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">{project.code}</span>
+              <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${statusTone[project.status || 'Yet to start']}`}>
+                {project.status || 'Yet to start'}
+              </span>
             </span>
-            <ArrowUpRight size={15} className="text-muted-foreground/50 md:hidden" />
+            <span className="text-[11px] font-semibold">{leadName(project.leadId)}</span>
+            <span className="flex items-center gap-2 text-[11px] font-bold">
+              <span className="h-1.5 flex-1 rounded-full bg-[#e7e7dc]">
+                <span className="block h-full rounded-full bg-[#3d9a7e]" style={{ width: `${project.progress}%` }} />
+              </span>
+              {project.progress}%
+            </span>
+            <span className="text-[11px] text-muted-foreground">{project.paxKeys || project.specification?.capacity || '—'}</span>
+            <span className="text-[11px] font-semibold">{project.targetLabel}</span>
+            <span className={`w-fit rounded-full px-2.5 py-1 text-[10px] font-bold ${healthTone[project.health]}`}>{project.health}</span>
+            <div className="flex justify-end">
+              {canEditProject(project) ? (
+                <button
+                  type="button"
+                  title={`Delete ${project.name}`}
+                  onClick={() => setProjectToDelete(project)}
+                  className="grid size-7 place-items-center rounded-lg text-muted-foreground/60 hover:bg-rose-50 hover:text-rose-600 transition"
+                >
+                  <Trash2 size={13} />
+                </button>
+              ) : (
+                <span className="size-7" />
+              )}
+            </div>
           </div>
-          <span className="text-[11px] text-muted-foreground">{project.location}</span>
-          <span>
-            <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${statusTone[project.status || 'Yet to start']}`}>
-              {project.status || 'Yet to start'}
-            </span>
-          </span>
-          <span className="text-[11px] font-semibold">{leadName(project.leadId)}</span>
-          <span className="flex items-center gap-2 text-[11px] font-bold">
-            <span className="h-1.5 flex-1 rounded-full bg-[#e7e7dc]">
-              <span className="block h-full rounded-full bg-[#3d9a7e]" style={{ width: `${project.progress}%` }} />
-            </span>
-            {project.progress}%
-          </span>
-          <span className="text-[11px] text-muted-foreground">{project.paxKeys || project.specification?.capacity || '—'}</span>
-          <span className="text-[11px] font-semibold">{project.targetLabel}</span>
-          <span className={`w-fit rounded-full px-2.5 py-1 text-[10px] font-bold ${healthTone[project.health]}`}>{project.health}</span>
-        </Link>
-      ))}
-    </div>
+        ))}
+      </div>
+
+      {projectToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+            <div className="flex items-center gap-3 text-rose-600">
+              <span className="grid size-10 place-items-center rounded-xl bg-rose-100 text-rose-700">
+                <Trash2 size={20} />
+              </span>
+              <h3 className="text-[17px] font-bold text-foreground">Delete Project</h3>
+            </div>
+            <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+              Are you sure you want to permanently delete <strong className="font-semibold text-foreground">"{projectToDelete.name}"</strong>? This will remove all associated stages, milestones, and issues from the database.
+            </p>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setProjectToDelete(null)}
+                className="rounded-xl border border-border px-4 py-2.5 text-[11px] font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={async () => {
+                  setIsDeleting(true);
+                  try {
+                    const success = await deleteProject(projectToDelete.id);
+                    if (success) {
+                      toast({
+                        title: 'Project deleted',
+                        description: `"${projectToDelete.name}" was permanently removed.`,
+                      });
+                      setProjectToDelete(null);
+                    } else {
+                      toast({
+                        variant: 'destructive',
+                        title: 'Delete failed',
+                        description: 'Could not delete project from database.',
+                      });
+                    }
+                  } catch (err: any) {
+                    toast({
+                      variant: 'destructive',
+                      title: 'Delete failed',
+                      description: err.message || 'An error occurred.',
+                    });
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-[11px] font-bold text-white hover:bg-rose-700 transition disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Yes, delete project'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -1561,9 +1643,9 @@ function NewProjectView() {
   const [errors, setErrors] = useState<string[]>([]);
   const [form, setForm] = useState({
     name: '',
-    location: 'Goa' as Project['location'],
-    category: 'Hotel' as Category,
-    projectType: 'Business hotel',
+    location: 'Delhi' as Project['location'],
+    category: 'Airport Lounge' as Category,
+    projectType: 'Premium Lounge',
     leadId: (role === 'lead' ? user?.id : leads[0]?.id) || user?.id || '',
     status: 'Yet to start' as ProjectStatus,
     startDate: todayIso(),
@@ -1699,7 +1781,7 @@ function NewProjectView() {
                 required
                 value={form.name}
                 onChange={(event) => set('name', event.target.value)}
-                placeholder="e.g. Goa Business Hotel"
+                placeholder="e.g. Terminal 3 Premium Lounge"
                 className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none focus:border-[#c9a04e]"
               />
             </label>

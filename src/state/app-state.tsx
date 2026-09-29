@@ -75,8 +75,22 @@ const AppStateContext = createContext<AppStateValue | null>(null);
 
 const ROLE_KEY = 'encalm-projects-role-v1';
 
-// Actively purge all legacy browser-side project caches so SQLite database is the sole authority
+// Nuclear purge of all legacy browser-side project caches so SQLite database is the sole authority
 if (typeof window !== 'undefined') {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('encalm-projects') || k.includes('project'))) {
+        const val = localStorage.getItem(k) || '';
+        if (val.includes('Goa Business Hotel') || k.includes('data') || k.includes('backup') || k.includes('storage')) {
+          keysToRemove.push(k);
+        }
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+  } catch {}
+
   [
     'encalm-projects-data-v1',
     'encalm-projects-data-v2',
@@ -86,6 +100,7 @@ if (typeof window !== 'undefined') {
   ].forEach((key) => {
     try {
       localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
     } catch {}
   });
 }

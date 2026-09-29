@@ -115,7 +115,15 @@ router.get('/:id', optionalAuth, (req, res) => {
 
 // POST bulk sync projects from client cache or external source
 router.post('/sync', optionalAuth, (req: AuthenticatedRequest, res) => {
-  const { projects } = req.body;
+  const { projects, explicit } = req.body;
+
+  // Protect clean database state from being contaminated by stale browser local caches
+  const currentCount = db.prepare('SELECT COUNT(*) as count FROM projects').get() as { count: number };
+  if (currentCount.count === 0 && !explicit) {
+    console.warn('[Sync Guard] Blocked automatic client sync from resurrecting projects into empty database.');
+    return res.json({ success: true, count: 0, message: 'Database is empty; automatic sync bypassed to protect clean state.' });
+  }
+
   if (!Array.isArray(projects)) {
     return res.status(400).json({ error: 'Invalid payload: projects array is required' });
   }
