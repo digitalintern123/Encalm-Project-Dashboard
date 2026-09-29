@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db/database.js';
-import { clearAllProjectData, seedDemoProjects } from '../db/seed.js';
+import { clearAllProjectData } from '../db/seed.js';
 import { getFullProjectRecord, restoreDatabaseFromJSON, saveDatabaseSnapshot } from '../utils/backup.js';
 
 const router = Router();
@@ -46,13 +46,6 @@ router.post('/import', (req, res) => {
 // POST reset/clear database
 router.post('/reset', (req, res) => {
   try {
-    const shouldSeed = req.query.seed === 'demo' || req.body?.seed === 'demo';
-    if (shouldSeed) {
-      seedDemoProjects();
-      saveDatabaseSnapshot();
-      return res.json({ message: 'Database reset and seeded with demo projects successfully' });
-    }
-
     clearAllProjectData();
     saveDatabaseSnapshot();
     return res.json({ message: 'Database wiped clean. Ready for fresh project data entry.' });

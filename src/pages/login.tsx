@@ -5,8 +5,8 @@ import { BrandLogo } from '@/components/brand-logo';
 
 export default function Login() {
   const { login } = useAppState();
-  const [email, setEmail] = useState('hod@encalm.com');
-  const [password, setPassword] = useState('encalm');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,12 +29,6 @@ export default function Login() {
   const submit = (event: FormEvent) => {
     event.preventDefault();
     handleLogin(email, password);
-  };
-
-  const selectDemoAccount = (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword('encalm');
-    handleLogin(demoEmail, 'encalm');
   };
 
   return (
@@ -63,14 +57,14 @@ export default function Login() {
           <p className="font-mono text-[9px] uppercase tracking-[.14em] text-white/35">Encalm Hospitality Pvt. Ltd.</p>
         </section>
 
-        <section className="p-7 sm:p-12">
+        <section className="p-7 sm:p-12 flex flex-col justify-center">
           <div className="mb-10 lg:hidden">
             <BrandLogo variant="full" theme="light" size="md" />
             <p className="mt-2 font-mono text-[9px] uppercase tracking-[.24em] text-muted-foreground">
               Projects · internal control office
             </p>
           </div>
-          <div className="max-w-[380px]">
+          <div className="max-w-[380px] w-full mx-auto">
             <p className="font-mono text-[10px] uppercase tracking-[.2em] text-[#9a711f]">Welcome back</p>
             <h2 className="mt-3 font-serif text-[42px] leading-none tracking-[-.05em] text-[#173e49]">
               Sign in to
@@ -78,7 +72,7 @@ export default function Login() {
               Encalm Projects.
             </h2>
             <p className="mt-4 text-[13px] leading-6 text-muted-foreground">
-              Choose your demo role to preview the right level of portfolio access.
+              Sign in with your Encalm credentials to access project management controls.
             </p>
             <form onSubmit={submit} className="mt-8 space-y-4">
               <label className="block">
@@ -88,6 +82,7 @@ export default function Login() {
                   <input
                     type="email"
                     required
+                    placeholder="name@encalm.com"
                     autoComplete="username"
                     aria-label="Email"
                     value={email}
@@ -103,6 +98,7 @@ export default function Login() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
+                    placeholder="••••••••"
                     autoComplete="current-password"
                     aria-label="Password"
                     value={password}
@@ -143,54 +139,10 @@ export default function Login() {
               </button>
             </form>
 
-            <div className="mt-8 border-t border-border pt-5">
-              <p className="font-mono text-[9px] uppercase tracking-[.15em] text-muted-foreground">
-                One-click demo sign in
+            <div className="mt-8 border-t border-border pt-4 text-center">
+              <p className="text-[11px] text-muted-foreground">
+                Internal portal for authorized Encalm hospitality personnel only.
               </p>
-              <div className="mt-3 grid gap-2">
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => selectDemoAccount('hod@encalm.com')}
-                  className="rounded-xl border border-border bg-white p-3 text-left transition hover:border-[#c9a04e] hover:bg-[#fffdf9]"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="block text-[11px] font-bold text-[#173e49]">Ruchika Chauhan</span>
-                    <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[9px] font-semibold text-sky-800">HOD</span>
-                  </div>
-                  <span className="mt-1 block font-mono text-[9px] uppercase tracking-[.08em] text-muted-foreground">
-                    Project HOD · Strict View-Only Portfolio
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => selectDemoAccount('coordinator@encalm.com')}
-                  className="rounded-xl border border-[#d6a95d]/60 bg-[#fffcf5] p-3 text-left transition hover:border-[#c9a04e] hover:bg-[#fff9eb]"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="block text-[11px] font-bold text-[#173e49]">Rajesh Sharma</span>
-                    <span className="rounded bg-[#ebdcb9] px-1.5 py-0.5 text-[9px] font-semibold text-[#664b14]">Coordinator</span>
-                  </div>
-                  <span className="mt-1 block font-mono text-[9px] uppercase tracking-[.08em] text-[#9a711f]">
-                    Project Coordinator · Create Leads & Allot Projects
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => selectDemoAccount('lead@encalm.com')}
-                  className="rounded-xl border border-border bg-white p-3 text-left transition hover:border-[#c9a04e] hover:bg-[#fffdf9]"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="block text-[11px] font-bold text-[#173e49]">Chinmay Saxena</span>
-                    <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-800">Lead</span>
-                  </div>
-                  <span className="mt-1 block font-mono text-[9px] uppercase tracking-[.08em] text-muted-foreground">
-                    Project Lead · Manage Stages, Milestones & Issues
-                  </span>
-                </button>
-              </div>
             </div>
           </div>
         </section>

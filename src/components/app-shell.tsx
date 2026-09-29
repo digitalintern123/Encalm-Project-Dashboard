@@ -198,7 +198,7 @@ export function AppShell({ children }: AppShellProps) {
     };
   }, [settingsOpen, notificationsOpen, mobileOpen, closeSettings, closeNotifications]);
 
-  const resetDemoData = async () => {
+  const handleClearAllData = async () => {
     await resetProjects();
     setResetConfirm(false);
     closeSettings();
@@ -782,7 +782,7 @@ export function AppShell({ children }: AppShellProps) {
                   <div className="mt-3 flex gap-2">
                     <button
                       type="button"
-                      onClick={resetDemoData}
+                      onClick={handleClearAllData}
                       className="rounded-lg bg-[#b2473d] px-3 py-2 text-[10px] font-bold text-white hover:bg-[#9a3b32]"
                     >
                       Clear everything

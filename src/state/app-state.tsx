@@ -18,24 +18,25 @@ import {
 } from '@/data/projects';
 import { readJson, removeItem, writeJson } from '@/lib/storage';
 import { todayLabel } from '@/lib/date';
-import { DEMO_HOD_ID, DEMO_LEAD_ID, DEMO_COORDINATOR_ID, getUserById, type User } from '@/data/users';
+import { DEFAULT_HOD_ID, DEFAULT_LEAD_ID, DEFAULT_COORDINATOR_ID, getUserById, type User } from '@/data/users';
 import { api, getStoredToken, setStoredToken, type NotificationItem } from '@/lib/api';
 import { calculateWeightedProgress } from '@/lib/calculations';
 
 export type AppRole = 'hod' | 'lead' | 'coordinator';
-export type DemoUser = User;
+export type AuthUser = User;
+export type DemoUser = AuthUser;
 
-const demoUserIds: Record<AppRole, string> = {
-  hod: DEMO_HOD_ID,
-  lead: DEMO_LEAD_ID,
-  coordinator: DEMO_COORDINATOR_ID,
+const defaultUserIds: Record<AppRole, string> = {
+  hod: DEFAULT_HOD_ID,
+  lead: DEFAULT_LEAD_ID,
+  coordinator: DEFAULT_COORDINATOR_ID,
 };
 
 const EDITOR_ROLES: readonly AppRole[] = ['lead', 'coordinator'];
 
 type AppStateValue = {
   role: AppRole | null;
-  user: DemoUser | null;
+  user: AuthUser | null;
   projects: Project[];
   canEdit: boolean;
   canEditProject: (projectOrId: Project | string) => boolean;
@@ -162,9 +163,9 @@ function hydrateRole(): AppRole | null {
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(hydrateRole);
-  const [user, setUser] = useState<DemoUser | null>(() => {
+  const [user, setUser] = useState<AuthUser | null>(() => {
     const saved = hydrateRole();
-    return saved ? getUserById(demoUserIds[saved]) ?? null : null;
+    return saved ? getUserById(defaultUserIds[saved]) ?? null : null;
   });
   const [projectState, setProjectState] = useState<Project[]>(hydrateProjects);
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -350,7 +351,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         refreshLeads();
         return { success: true };
       } catch (err: any) {
-        // Fallback for offline demo mode
+        // Fallback for offline mode
         const targetRole: AppRole | null =
           email === 'hod@encalm.com' ? 'hod'
           : email === 'lead@encalm.com' ? 'lead'
@@ -358,7 +359,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           : null;
         if (targetRole) {
           setRole(targetRole);
-          setUser(getUserById(demoUserIds[targetRole]) ?? null);
+          setUser(getUserById(defaultUserIds[targetRole]) ?? null);
           return { success: true };
         }
         return { success: false, error: err.message || 'Login failed' };
