@@ -27,7 +27,6 @@ import {
   type FOHAreaItem,
   type FloorBuaItem,
   type RoomConfigItem,
-  vizagHotelAreaProgram,
 } from '@/data/projects';
 import { useToast } from '@/hooks/use-toast';
 
@@ -850,7 +849,6 @@ export function AreaProgramEditorModal({
     JSON.parse(JSON.stringify(initialProgram))
   );
   const [activeTab, setActiveTab] = useState<'summary' | 'foh' | 'bua' | 'rooms'>('summary');
-  const [presetNotice, setPresetNotice] = useState<string | null>(null);
 
   // Live Calculations
   const gfSqm = draft.fohAreas.groundFloor.reduce((acc, it) => acc + (Number(it.areaSqm) || 0), 0);
@@ -897,93 +895,6 @@ export function AreaProgramEditorModal({
       }
       return { ...prev, summary };
     });
-  };
-
-  const loadFohPreset = () => {
-    setDraft((prev) => ({
-      ...prev,
-      fohAreas: {
-        groundFloor: [
-          { sNo: 1, floor: 'Ground Floor', description: 'Banquet Hall', areaSqm: 610, areaSqft: 6566, capacityPax: '350', remarks: 'Large pillarless hall with pre-function access' },
-          { sNo: 2, floor: 'Ground Floor', description: 'Banquet Pre-Function Area', areaSqm: 230, areaSqft: 2476, capacityPax: '120', remarks: 'Pre-event gathering & registration foyer' },
-          { sNo: 3, floor: 'Ground Floor', description: 'All Day Dining (ADD)', areaSqm: 340, areaSqft: 3660, capacityPax: '150', remarks: 'Interactive live buffet counters & indoor seating' },
-          { sNo: 4, floor: 'Ground Floor', description: 'Lounge Bar', areaSqm: 145, areaSqft: 1561, capacityPax: '37', remarks: 'Beverage bar with intimate lounge configuration' },
-          { sNo: 5, floor: 'Ground Floor', description: 'Main Commercial Kitchen', areaSqm: 280, areaSqft: 3014, remarks: 'Equipped for ADD and full banquet catering' },
-          { sNo: 6, floor: 'Ground Floor', description: 'Reception & Entrance Lobby', areaSqm: 210, areaSqft: 2260, capacityPax: '50', remarks: 'Double-height grand entrance with concierge' },
-          { sNo: 7, floor: 'Ground Floor', description: 'Public Restrooms (M/F/Accessible)', areaSqm: 85, areaSqft: 915, remarks: 'Executive guest washrooms' },
-          { sNo: 8, floor: 'Ground Floor', description: 'Landscaped Courtyard & Waterbody', areaSqm: 190, areaSqft: 2045, remarks: 'Open-air courtyard feature' },
-          { sNo: 9, floor: 'Ground Floor', description: 'Meeting Rooms & Business Center', areaSqm: 120, areaSqft: 1292, capacityPax: '30', remarks: '2 boardrooms + secretarial support' },
-          { sNo: 10, floor: 'Ground Floor', description: 'Lift Lobby & Vertical Core', areaSqm: 110, areaSqft: 1184, remarks: 'Guest & service lift access' },
-        ],
-        groundFloorSubtotal: { areaSqm: 2320, areaSqft: 24972 },
-        secondFloor: [
-          { sNo: 1, floor: '2nd Floor', description: 'Gymnasium & Fitness Studio', areaSqm: 180, areaSqft: 1938, capacityPax: '25', remarks: 'Modern strength & cardio equipment' },
-          { sNo: 2, floor: '2nd Floor', description: 'Outdoor Pool Deck & Cabanas', areaSqm: 320, areaSqft: 3444, capacityPax: '45', remarks: 'Deck chairs, umbrellas & service bar' },
-          { sNo: 3, floor: '2nd Floor', description: 'Swimming Pool (Infinity Edge)', areaSqm: 250, areaSqft: 2691, capacityPax: '40', remarks: 'Temperature controlled pool facility' },
-        ],
-        secondFloorSubtotal: { areaSqm: 750, areaSqft: 8073 },
-        grandSubtotal: { areaSqm: 3070, areaSqft: 33045 },
-      },
-    }));
-    setPresetNotice('Standard FOH Public Areas loaded (13 areas across Ground & 2nd Floor). You can modify any row.');
-    setTimeout(() => setPresetNotice(null), 4000);
-  };
-
-  const loadFloorPreset = () => {
-    const floors: FloorBuaItem[] = [
-      { sNo: 1, floor: 'Basement Floor', areaSqm: 2150, areaSqft: 23142, remarks: 'Parking (75 ECS), STP, WTP, DG Yard & Substation' },
-      { sNo: 2, floor: 'Ground Floor', areaSqm: 2320, areaSqft: 24972, remarks: 'Grand Lobby, Banquet, ADD, Lounge Bar, Commercial Kitchen' },
-      { sNo: 3, floor: 'First Floor', areaSqm: 1840, areaSqft: 19806, remarks: 'Banqueting Mezzanine, Administration Offices, Staff Dining' },
-      { sNo: 4, floor: 'Service Floor', areaSqm: 1210, areaSqft: 13024, remarks: 'MEP Services, AHU rooms, Chillers, Electrical Rooms' },
-      { sNo: 5, floor: '2nd Guest Floor', areaSqm: 1490, areaSqft: 16038, remarks: '30 Keys (28 Deluxe + 2 Suites), Gym, Pool Deck' },
-      { sNo: 6, floor: '3rd Guest Floor', areaSqm: 1490, areaSqft: 16038, remarks: '32 Keys (30 Deluxe + 2 Junior Suites)' },
-      { sNo: 7, floor: '4th Guest Floor', areaSqm: 1490, areaSqft: 16038, remarks: '32 Keys (30 Deluxe + 2 Junior Suites)' },
-      { sNo: 8, floor: '5th Guest Floor', areaSqm: 1490, areaSqft: 16038, remarks: '32 Keys (30 Deluxe + 2 Suites)' },
-      { sNo: 9, floor: '6th Guest Floor', areaSqm: 1480, areaSqft: 15931, remarks: '30 Keys (26 Deluxe + 4 Presidential Suites)' },
-      { sNo: 10, floor: 'Terrace & Service', areaSqm: 0, areaSqft: 0, remarks: 'Cooling Towers, Solar PV Array, Lift Machine Rooms' },
-    ];
-    const totalSqm = floors.reduce((a, b) => a + b.areaSqm, 0);
-    setDraft((prev) => ({
-      ...prev,
-      summary: {
-        ...prev.summary,
-        builtUpAreaSqm: totalSqm,
-        builtUpAreaSqft: Math.round(totalSqm * 10.7639),
-        numberOfFloorsDescription: 'B + G + 1 + Service + 2nd to 6th Floor + Terrace',
-      },
-      floorWiseBua: {
-        items: floors,
-        subtotal: { areaSqm: totalSqm, areaSqft: Math.round(totalSqm * 10.7639) },
-      },
-    }));
-    setPresetNotice('Standard 10-Floor Stacking loaded (Total 14,970 SQ.M. BUA). You can modify any row.');
-    setTimeout(() => setPresetNotice(null), 4000);
-  };
-
-  const loadRoomPreset = () => {
-    const rooms: RoomConfigItem[] = [
-      { sNo: 1, floor: '2nd Guest Floor', keys: 30, bays: 32, remarks: '28 Deluxe Rooms (28 Bays) + 2 Suites (4 Bays)' },
-      { sNo: 2, floor: '3rd Guest Floor', keys: 32, bays: 34, remarks: '30 Deluxe Rooms (30 Bays) + 2 Junior Suites (4 Bays)' },
-      { sNo: 3, floor: '4th Guest Floor', keys: 32, bays: 34, remarks: '30 Deluxe Rooms (30 Bays) + 2 Junior Suites (4 Bays)' },
-      { sNo: 4, floor: '5th Guest Floor', keys: 32, bays: 34, remarks: '30 Deluxe Rooms (30 Bays) + 2 Suites (4 Bays)' },
-      { sNo: 5, floor: '6th Guest Floor', keys: 30, bays: 34, remarks: '26 Deluxe Rooms (26 Bays) + 4 Presidential Suites (8 Bays)' },
-    ];
-    setDraft((prev) => ({
-      ...prev,
-      summary: {
-        ...prev.summary,
-        totalRoomKeys: 156,
-        totalBays: 168,
-        standardRoomSizeSqm: 27,
-      },
-      roomConfiguration: {
-        items: rooms,
-        totalKeys: 156,
-        totalBays: 168,
-      },
-    }));
-    setPresetNotice('Standard Guest Floors loaded (156 Keys / 168 Bays across 5 floors). You can modify any row.');
-    setTimeout(() => setPresetNotice(null), 4000);
   };
 
   const handleSave = () => {
@@ -1126,23 +1037,6 @@ export function AreaProgramEditorModal({
             );
           })}
         </div>
-
-        {/* Preset Notification Banner */}
-        {presetNotice && (
-          <div className="flex items-center justify-between bg-[#e4f1ec] px-6 py-2.5 text-[12px] text-[#2e7c67] border-b border-[#c2e4d8] animate-in fade-in">
-            <span className="flex items-center gap-2 font-medium">
-              <CheckCircle2 size={16} className="text-[#2e7c67]" />
-              {presetNotice}
-            </span>
-            <button
-              type="button"
-              onClick={() => setPresetNotice(null)}
-              className="text-[#2e7c67] hover:text-[#1c5546] font-bold text-[11px]"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -1445,13 +1339,6 @@ export function AreaProgramEditorModal({
                       <Plus size={13} /> Add Area
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={loadFohPreset}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#eadcb1] bg-[#fffbf2] px-3 py-1.5 text-[11px] font-bold text-[#9a711f] hover:bg-[#fbf1d8] transition"
-                    >
-                      <Sparkles size={13} /> Preset: Load Standard FOH
-                    </button>
                   </div>
                 </div>
 
@@ -1473,7 +1360,7 @@ export function AreaProgramEditorModal({
                       {draft.fohAreas.groundFloor.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="py-8 text-center text-muted-foreground text-[12px]">
-                            No Ground Floor public areas entered yet. Click <strong>+ Add Area</strong> or load the preset.
+                            No Ground Floor public areas entered yet. Click <strong>+ Add Area</strong> to add a public facility.
                           </td>
                         </tr>
                       ) : (
@@ -1860,13 +1747,6 @@ export function AreaProgramEditorModal({
                       <Plus size={13} /> Add Floor Level
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={loadFloorPreset}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#eadcb1] bg-[#fffbf2] px-3 py-1.5 text-[11px] font-bold text-[#9a711f] hover:bg-[#fbf1d8] transition"
-                    >
-                      <Layers size={13} /> Preset: Load 10-Floor Stacking
-                    </button>
                   </div>
                 </div>
 
@@ -1887,7 +1767,7 @@ export function AreaProgramEditorModal({
                       {draft.floorWiseBua.items.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="py-8 text-center text-muted-foreground text-[12px]">
-                            No floor levels configured yet. Click <strong>+ Add Floor Level</strong> or load the standard 10-floor stacking preset.
+                            No floor levels configured yet. Click <strong>+ Add Floor Level</strong> to configure a floor level.
                           </td>
                         </tr>
                       ) : (
@@ -2043,13 +1923,6 @@ export function AreaProgramEditorModal({
                       <Plus size={13} /> Add Guest Floor
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={loadRoomPreset}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#eadcb1] bg-[#fffbf2] px-3 py-1.5 text-[11px] font-bold text-[#9a711f] hover:bg-[#fbf1d8] transition"
-                    >
-                      <DoorClosed size={13} /> Preset: Load 2nd-6th Guest Floors
-                    </button>
                   </div>
                 </div>
 
@@ -2070,7 +1943,7 @@ export function AreaProgramEditorModal({
                       {draft.roomConfiguration.items.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="py-8 text-center text-muted-foreground text-[12px]">
-                            No guest floors configured yet. Click <strong>+ Add Guest Floor</strong> or load the standard 5-floor preset.
+                            No guest floors configured yet. Click <strong>+ Add Guest Floor</strong> to add room inventory.
                           </td>
                         </tr>
                       ) : (
