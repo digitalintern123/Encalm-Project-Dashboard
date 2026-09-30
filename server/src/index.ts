@@ -17,6 +17,8 @@ import issuesRouter from './routes/issues.js';
 import { projectUpdatesRouter, globalUpdatesRouter } from './routes/updates.js';
 import notificationsRouter from './routes/notifications.js';
 import systemRouter from './routes/system.js';
+import { projectPhotosRouter, globalPhotosRouter } from './routes/photos.js';
+import { uploadsDir } from './db/database.js';
 
 dotenv.config();
 
@@ -25,7 +27,10 @@ const PORT = Number(process.env.PORT || process.env.API_PORT || process.env.BACK
 
 // Middleware
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+
+// Serve static uploads
+app.use('/uploads', express.static(uploadsDir));
 
 // Request logger for API development
 app.use((req, res, next) => {
@@ -46,7 +51,9 @@ app.use('/api/projects/:id/phases', phasesRouter);
 app.use('/api/projects/:id/milestones', milestonesRouter);
 app.use('/api/projects/:id/issues', issuesRouter);
 app.use('/api/projects/:id/updates', projectUpdatesRouter);
+app.use('/api/projects/:id/photos', projectPhotosRouter);
 app.use('/api/updates', globalUpdatesRouter);
+app.use('/api/photos', globalPhotosRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/system', systemRouter);
 

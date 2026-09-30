@@ -1,4 +1,4 @@
-import type { Phase, Milestone, Project, ProjectIssue, ProjectUpdate } from '@/data/projects';
+import type { Phase, Milestone, Project, ProjectIssue, ProjectUpdate, SitePhoto, PhotoCategory } from '@/data/projects';
 import type { User } from '@/data/users';
 
 const TOKEN_KEY = 'encalm-auth-token';
@@ -175,6 +175,39 @@ export const api = {
       request<{ project: Project }>(`/api/projects/${projectId}/updates`, {
         method: 'POST',
         body: JSON.stringify(update),
+      }),
+  },
+
+  photos: {
+    getAll: () =>
+      request<{
+        photos: (SitePhoto & {
+          projectName: string;
+          projectCode: string;
+          projectLocation: string;
+          projectCategory: string;
+        })[];
+      }>('/api/photos'),
+    getByProject: (projectId: string) => request<{ photos: SitePhoto[] }>(`/api/projects/${projectId}/photos`),
+    upload: (
+      projectId: string,
+      data: {
+        fileData?: string;
+        fileName?: string;
+        url?: string;
+        caption: string;
+        stage?: string;
+        category?: PhotoCategory;
+        takenDate?: string;
+      }
+    ) =>
+      request<{ message: string; photo: SitePhoto; project: Project }>(`/api/projects/${projectId}/photos`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    delete: (projectId: string, photoId: string) =>
+      request<{ message: string; project: Project }>(`/api/projects/${projectId}/photos/${photoId}`, {
+        method: 'DELETE',
       }),
   },
 

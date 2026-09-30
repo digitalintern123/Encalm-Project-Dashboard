@@ -15,6 +15,7 @@ export function getFullProjectRecord(projectId: string) {
   const milestones = db.prepare('SELECT * FROM milestones WHERE project_id = ? ORDER BY order_index ASC, date ASC').all(projectId) as any[];
   const issues = db.prepare('SELECT * FROM issues WHERE project_id = ? ORDER BY order_index ASC, id DESC').all(projectId) as any[];
   const updates = db.prepare('SELECT * FROM updates WHERE project_id = ? ORDER BY created_at DESC').all(projectId) as any[];
+  const photos = db.prepare('SELECT * FROM photos WHERE project_id = ? ORDER BY taken_date DESC, created_at DESC').all(projectId) as any[];
 
   return {
     id: row.id,
@@ -91,6 +92,19 @@ export function getFullProjectRecord(projectId: string) {
       text: u.text,
       stage: u.stage,
       kind: u.kind,
+    })),
+    photos: photos.map((p) => ({
+      id: p.id,
+      projectId: p.project_id,
+      url: p.url,
+      caption: p.caption,
+      stage: p.stage,
+      category: p.category,
+      takenDate: p.taken_date,
+      uploadedBy: p.uploaded_by,
+      role: p.role,
+      fileSize: p.file_size,
+      createdAt: p.created_at,
     })),
   };
 }
@@ -181,6 +195,14 @@ export function restoreDatabaseFromJSON(data: { projects?: any[]; notifications?
     )
   `);
 
+  const insertPhoto = db.prepare(`
+    INSERT OR REPLACE INTO photos (
+      id, project_id, url, caption, stage, category, taken_date, uploaded_by, role, file_size, created_at
+    ) VALUES (
+      @id, @project_id, @url, @caption, @stage, @category, @taken_date, @uploaded_by, @role, @file_size, @created_at
+    )
+  `);
+
   const tx = db.transaction(() => {
     for (const p of projects) {
       insertProject.run({
@@ -214,6 +236,7 @@ export function restoreDatabaseFromJSON(data: { projects?: any[]; notifications?
       db.prepare('DELETE FROM milestones WHERE project_id = ?').run(p.id);
       db.prepare('DELETE FROM issues WHERE project_id = ?').run(p.id);
       db.prepare('DELETE FROM updates WHERE project_id = ?').run(p.id);
+      db.prepare('DELETE FROM photos WHERE project_id = ?').run(p.id);
 
       if (Array.isArray(p.phases)) {
         p.phases.forEach((ph: any, idx: number) => {
@@ -290,6 +313,24 @@ export function restoreDatabaseFromJSON(data: { projects?: any[]; notifications?
             text: u.text,
             stage: u.stage || null,
             kind: u.kind || 'General',
+          });
+        });
+      }
+
+      if (Array.isArray(p.photos)) {
+        p.photos.forEach((ph: any, idx: number) => {
+          insertPhoto.run({
+            id: ph.id || `${p.id}-photo-${idx}`,
+            project_id: p.id,
+            url: ph.url,
+            caption: ph.caption || '',
+            stage: ph.stage || null,
+            category: ph.category || 'Progress',
+            taken_date: ph.takenDate || ph.taken_date || null,
+            uploaded_by: ph.uploadedBy || ph.uploaded_by || 'PMO',
+            role: ph.role || 'Lead',
+            file_size: ph.fileSize || ph.file_size || null,
+            created_at: ph.createdAt || ph.created_at || new Date().toISOString(),
           });
         });
       }

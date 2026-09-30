@@ -1,5 +1,7 @@
 import { Router } from 'express';
-import { db } from '../db/database.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { db, uploadsDir } from '../db/database.js';
 import { requireAuth, requireRole, requireProjectAccess, AuthenticatedRequest, optionalAuth } from '../middleware/auth.js';
 import { calculateProjectStatus } from '../utils/status.js';
 import { saveDatabaseSnapshot, restoreDatabaseFromJSON } from '../utils/backup.js';
@@ -14,6 +16,7 @@ export function fetchFullProject(projectId: string) {
   const milestones = db.prepare('SELECT * FROM milestones WHERE project_id = ? ORDER BY order_index ASC, date ASC').all(projectId) as any[];
   const issues = db.prepare('SELECT * FROM issues WHERE project_id = ? ORDER BY order_index ASC, id DESC').all(projectId) as any[];
   const updates = db.prepare('SELECT * FROM updates WHERE project_id = ? ORDER BY created_at DESC').all(projectId) as any[];
+  const photos = db.prepare('SELECT * FROM photos WHERE project_id = ? ORDER BY taken_date DESC, created_at DESC').all(projectId) as any[];
 
   return {
     id: row.id,
@@ -92,6 +95,19 @@ export function fetchFullProject(projectId: string) {
       text: u.text,
       stage: u.stage,
       kind: u.kind,
+    })),
+    photos: photos.map((p) => ({
+      id: p.id,
+      projectId: p.project_id,
+      url: p.url,
+      caption: p.caption,
+      stage: p.stage,
+      category: p.category,
+      takenDate: p.taken_date,
+      uploadedBy: p.uploaded_by,
+      role: p.role,
+      fileSize: p.file_size,
+      createdAt: p.created_at,
     })),
   };
 }
@@ -401,6 +417,25 @@ router.patch('/:id', optionalAuth, (req: AuthenticatedRequest, res) => {
 // DELETE project
 router.delete('/:id', optionalAuth, (req, res) => {
   const id = req.params.id as string;
+
+  // Unlink physical photo files from disk
+  try {
+    const projectPhotos = db.prepare('SELECT url FROM photos WHERE project_id = ?').all(id) as { url: string }[];
+    for (const p of projectPhotos) {
+      if (p.url && typeof p.url === 'string' && p.url.startsWith('/uploads/')) {
+        const fileName = path.basename(p.url);
+        const filePath = path.join(uploadsDir, fileName);
+        if (fs.existsSync(filePath)) {
+          try {
+            fs.unlinkSync(filePath);
+            console.log(`[Project Delete] Removed photo file: ${fileName}`);
+          } catch {}
+        }
+      }
+    }
+  } catch {}
+
+  db.prepare('DELETE FROM photos WHERE project_id = ?').run(id);
   db.prepare('DELETE FROM notifications WHERE project_id = ?').run(id);
   const result = db.prepare('DELETE FROM projects WHERE id = ?').run(id);
   if (result.changes === 0) {

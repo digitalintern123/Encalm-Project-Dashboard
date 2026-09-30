@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   CalendarDays,
+  Camera,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -25,14 +26,17 @@ import {
   ThumbsUp,
   Trash2,
   TrendingUp,
+  Upload,
 } from 'lucide-react';
-import { CRORE, formatCrore, formatShortDate, getProjectTemplate, issueCategories, projectStatuses, type Health, type IssueCategory, type IssueStatus, type Phase, type Project, type ProjectIssue, type ProjectStatus } from '@/data/projects';
+import { CRORE, formatCrore, formatShortDate, getProjectTemplate, issueCategories, projectStatuses, type Health, type IssueCategory, type IssueStatus, type Phase, type Project, type ProjectIssue, type ProjectStatus, type SitePhoto, type PhotoCategory, photoCategories } from '@/data/projects';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullDate, isValidIsoDate, parseIsoDate, todayLabel } from '@/lib/date';
 import { getCommercialSummary, getProgressVariance, formatRatio, calculateWeightedProgress } from '@/lib/calculations';
 import { initialsOf, leadName } from '@/data/users';
 import { statusTone } from './workspace';
+import { PhotoLightbox } from '@/components/photo-lightbox';
+import { PhotoUploadDialog } from '@/components/photo-upload-dialog';
 
 const healthStyles: Record<Health, { dot: string; text: string; bg: string; border: string }> = {
   'On track': { dot: 'bg-[#3d9a7e]', text: 'text-[#2e7c67]', bg: 'bg-[#e4f1ec]', border: 'border-[#cbe4d9]' },
@@ -41,7 +45,7 @@ const healthStyles: Record<Health, { dot: string; text: string; bg: string; bord
   'Not started': { dot: 'bg-[#8c938d]', text: 'text-[#69716b]', bg: 'bg-[#eef0ed]', border: 'border-[#d9ded8]' },
 };
 
-type Tab = 'overview' | 'progress' | 'timeline' | 'milestones' | 'commercial' | 'issues' | 'updates';
+type Tab = 'overview' | 'progress' | 'timeline' | 'milestones' | 'photos' | 'commercial' | 'issues' | 'updates';
 
 function Metric({ label, value, note, icon: Icon }: { label: string; value: string; note: ReactNode; icon: typeof Target }) {
   return (
@@ -1174,15 +1178,181 @@ function StageUpdatesPanel({ project, editable, onAdd }: { project: Project; edi
   return <DetailCard title="Stage updates" eyebrow="Field notes & decisions" icon={MessageSquareText}><div className="mt-7 space-y-6">{project.updates.map((update, index) => <div key={`${update.date}-${update.author}-${index}`} className="relative flex gap-4">{index < project.updates.length - 1 && <span className="absolute left-[15px] top-9 h-[calc(100%+12px)] w-px bg-border" />}<span className="relative grid size-8 shrink-0 place-items-center rounded-full border border-border bg-[#f7f4ec] text-[9px] font-bold text-[#2e7c67]">{initialsOf(update.author)}</span><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="text-[12px] font-bold">{update.author}</span><span className="font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">{update.role}</span><span className="font-mono text-[9px] text-muted-foreground/70">{update.date}</span><span className="rounded-full bg-[#e4f1ec] px-2 py-1 font-mono text-[8px] uppercase tracking-[.08em] text-[#2e7c67]">{update.kind ?? 'General'}</span></div><p className="mt-2 text-[10px] text-muted-foreground">{update.stage ?? 'General project update'}</p><p className="mt-1 max-w-2xl text-[12px] leading-5 text-muted-foreground">{update.text}</p></div></div>)}</div>{editable && (adding ? <form onSubmit={(event) => { event.preventDefault(); if (!text) return; onAdd({ text: text.trim(), date: todayLabel(), author: user?.name ?? 'Project Lead', role: user?.title ?? 'Project Lead', stage, kind }); setText(''); setAdding(false); }} className="mt-6 space-y-3 rounded-xl border border-[#cbe4d9] bg-[#edf5f0] p-3"><div className="grid gap-2 md:grid-cols-2"><select value={stage} onChange={(event) => setStage(event.target.value)} className="h-9 rounded-lg border border-border bg-white px-2 text-[10px]">{project.phases.map((phase, index) => <option key={`${phase.name}-${index}`}>{phase.name}</option>)}</select><select value={kind} onChange={(event) => setKind(event.target.value as typeof kind)} className="h-9 rounded-lg border border-border bg-white px-2 text-[10px]"><option>Progress</option><option>Decision</option><option>Risk</option><option>General</option></select></div><div className="flex gap-2"><textarea required value={text} onChange={(event) => setText(event.target.value)} rows={3} placeholder="What changed in this stage?" className="min-w-0 flex-1 rounded-lg border border-border bg-white px-3 py-2 text-[11px]" /><button type="submit" className="self-end rounded-lg bg-[#173e49] px-3 py-2 text-[10px] font-bold text-white">Post update</button></div></form> : <button type="button" onClick={() => setAdding(true)} className="mt-6 rounded-xl border border-[#cbe4d9] bg-[#edf5f0] px-3 py-2 text-[10px] font-bold text-[#2e7c67]"><Plus size={13} className="mr-1 inline" /> Add stage update</button>)}</DetailCard>;
 }
 
+function StagePhotosPanel({
+  project,
+  editable,
+  onUpload,
+  onDelete,
+  onInspect,
+}: {
+  project: Project;
+  editable: boolean;
+  onUpload: () => void;
+  onDelete: (photoId: string) => void;
+  onInspect: (photo: SitePhoto) => void;
+}) {
+  const currentPhoto = project.photos && project.photos.length > 0 ? project.photos[0] : null;
+
+  return (
+    <div className="w-full space-y-6">
+      <DetailCard
+        title="Current Site Photograph"
+        eyebrow="Physical Progress Verification"
+        icon={Camera}
+      >
+        <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-5">
+          <div>
+            <p className="text-[12px] text-muted-foreground max-w-xl">
+              Verified physical site photograph for <strong>{project.name}</strong>. Only the latest verified photograph is retained on the server; uploading a new photograph automatically replaces and deletes previous image files.
+            </p>
+          </div>
+          {editable && (
+            <button
+              type="button"
+              onClick={onUpload}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-2.5 text-[11px] font-bold text-white hover:bg-[#205160] transition shadow-sm shrink-0"
+            >
+              <Upload size={14} />
+              {currentPhoto ? 'Update / Replace Photograph' : 'Upload Site Photograph'}
+            </button>
+          )}
+        </div>
+
+        {currentPhoto ? (
+          <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr] items-start">
+            {/* Clickable Image Card */}
+            <div
+              onClick={() => onInspect(currentPhoto)}
+              className="group relative aspect-video w-full overflow-hidden rounded-2xl border border-border bg-black/5 cursor-pointer shadow-md"
+            >
+              <img
+                src={currentPhoto.url}
+                alt={currentPhoto.caption}
+                className="size-full object-cover transition duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                <span className="rounded-xl bg-black/75 px-4 py-2 text-[11px] font-bold text-white backdrop-blur-sm shadow-lg flex items-center gap-2">
+                  <Camera size={14} /> Click to inspect high-resolution
+                </span>
+              </div>
+            </div>
+
+            {/* Photo Metadata Card */}
+            <div className="rounded-2xl border border-border bg-[#fbf9f4] p-5 space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                {currentPhoto.category && (
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#e4f1ec] text-[#2e7c67] border border-[#cbe4d9]">
+                    {currentPhoto.category}
+                  </span>
+                )}
+                {currentPhoto.stage && (
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white text-foreground border border-border">
+                    Stage: {currentPhoto.stage}
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <h4 className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                  Progress Caption
+                </h4>
+                <p className="mt-1 text-[13px] font-semibold leading-relaxed text-foreground">
+                  "{currentPhoto.caption}"
+                </p>
+              </div>
+
+              <div className="border-t border-border/70 pt-4 space-y-2 text-[11px] text-muted-foreground">
+                <div className="flex items-center justify-between">
+                  <span>Date Captured</span>
+                  <strong className="text-foreground font-mono">
+                    {currentPhoto.takenDate ? formatFullDate(currentPhoto.takenDate) : '—'}
+                  </strong>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Uploaded By</span>
+                  <strong className="text-foreground">
+                    {currentPhoto.uploadedBy} ({currentPhoto.role || 'Team'})
+                  </strong>
+                </div>
+                {currentPhoto.fileSize ? (
+                  <div className="flex items-center justify-between">
+                    <span>File Size</span>
+                    <span className="font-mono">{Math.round(currentPhoto.fileSize / 1024)} KB</span>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="border-t border-border/70 pt-4 flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => onInspect(currentPhoto)}
+                  className="rounded-xl border border-border bg-white px-3.5 py-2 text-[11px] font-bold text-foreground hover:bg-muted transition"
+                >
+                  View High-Res
+                </button>
+                {editable && (
+                  <button
+                    type="button"
+                    onClick={() => onDelete(currentPhoto.id)}
+                    className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition"
+                  >
+                    Delete Photograph
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-8 rounded-2xl border-2 border-dashed border-border p-12 text-center">
+            <Camera size={38} className="mx-auto text-muted-foreground/50 mb-3" />
+            <h3 className="text-[16px] font-bold text-foreground">No Site Photograph Uploaded Yet</h3>
+            <p className="mt-2 text-[12px] text-muted-foreground max-w-md mx-auto leading-relaxed">
+              Upload physical progress photos, snag shots, or milestone completions directly from the site to keep stakeholders visually aligned.
+            </p>
+            {editable && (
+              <button
+                type="button"
+                onClick={onUpload}
+                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-5 py-2.5 text-[11px] font-bold text-white hover:bg-[#205160] transition shadow-sm"
+              >
+                <Upload size={14} />
+                Upload First Site Photograph
+              </button>
+            )}
+          </div>
+        )}
+      </DetailCard>
+    </div>
+  );
+}
+
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { projects, role, user, updateProject, deleteProject, updatePhase, addPhase, removePhase, movePhase, addMilestone, addIssue, updateIssue, addUpdate } = useAppState();
+  const {
+    projects,
+    role,
+    user,
+    updateProject,
+    deleteProject,
+    updatePhase,
+    addPhase,
+    removePhase,
+    movePhase,
+    addMilestone,
+    addIssue,
+    updateIssue,
+    addUpdate,
+    addPhoto,
+    deletePhoto,
+  } = useAppState();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [tab, setTab] = useState<Tab>('overview');
   const [editing, setEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [lightboxPhoto, setLightboxPhoto] = useState<SitePhoto | null>(null);
   const project = projects.find((item) => item.id === projectId);
   if (!project) return <div className="mx-auto max-w-4xl px-5 py-20 text-center"><p className="font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground">Project not found</p><h1 className="mt-3 font-serif text-4xl text-[#173e49]">That project is not in this portfolio.</h1><Link href="/" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground"><ArrowLeft size={14} /> Return to portfolio</Link></div>;
   const health = healthStyles[project.health];
@@ -1210,7 +1380,17 @@ export default function ProjectDetail() {
     }
     toast({ title: 'Progress updated', description: `${project.name} is now at ${clampPercent(progress)}%.` });
   };
-  const tabs: [Tab, string, typeof Target][] = [['overview', 'Overview', Layers3], ['progress', 'Progress', TrendingUp], ['timeline', 'Timeline', Clock3], ['milestones', 'Milestones', CalendarDays], ['commercial', 'Commercial', CircleDollarSign], ['issues', 'Issues & risks', ShieldAlert], ['updates', 'Updates', MessageSquareText]];
+  const photoCountBadge = project.photos && project.photos.length > 0 ? ` (${project.photos.length})` : '';
+  const tabs: [Tab, string, typeof Target][] = [
+    ['overview', 'Overview', Layers3],
+    ['progress', 'Progress', TrendingUp],
+    ['timeline', 'Timeline', Clock3],
+    ['milestones', 'Milestones', CalendarDays],
+    ['photos', `Site Photograph${photoCountBadge}`, Camera],
+    ['commercial', 'Commercial', CircleDollarSign],
+    ['issues', 'Issues & risks', ShieldAlert],
+    ['updates', 'Updates', MessageSquareText],
+  ];
   const commercial = getCommercialSummary(project);
   const progressVariance = getProgressVariance(project);
   return <div className="mx-auto max-w-[1400px] px-5 pb-14 pt-7 md:px-10 md:pt-9">
@@ -1362,10 +1542,34 @@ export default function ProjectDetail() {
 
     <div className="mt-9 flex gap-1 overflow-x-auto border-b border-border">{tabs.map(([value, label, Icon]) => <button type="button" key={value} onClick={() => setTab(value)} className={`relative flex shrink-0 items-center gap-2 px-3 py-3 text-[11px] font-bold ${tab === value ? 'text-[#173e49]' : 'text-muted-foreground hover:text-foreground'}`}><Icon size={14} />{label}{tab === value && <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-[#d19b35]" />}</button>)}</div>
     <div className="fade-up mt-6">
-      {tab === 'overview' && <OverviewPanel project={project} />}
+      {tab === 'overview' && (
+        <OverviewPanel
+          project={project}
+          canEdit={canEdit}
+          onSelectTab={setTab}
+          onUpload={() => setUploadOpen(true)}
+          onInspect={(photo) => setLightboxPhoto(photo)}
+        />
+      )}
       {tab === 'progress' && <StageProgressPanel project={project} editable={canEdit} onSave={saveProgress} />}
       {tab === 'timeline' && <StageTimelinePanel project={project} editable={canEdit} onSave={(index, patch) => updatePhase(project.id, index, patch)} onAdd={(phase) => addPhase(project.id, phase)} onRemove={(index) => removePhase(project.id, index)} onMove={(index, direction) => movePhase(project.id, index, direction)} />}
       {tab === 'milestones' && <StageMilestonesPanel project={project} editable={canEdit} onAdd={(milestone) => addMilestone(project.id, milestone)} />}
+      {tab === 'photos' && (
+        <StagePhotosPanel
+          project={project}
+          editable={canEdit}
+          onUpload={() => setUploadOpen(true)}
+          onDelete={async (photoId) => {
+            const ok = await deletePhoto(project.id, photoId);
+            if (ok) {
+              toast({ title: 'Photograph deleted', description: 'The site photograph was permanently removed from the server.' });
+            } else {
+              toast({ variant: 'destructive', title: 'Delete failed', description: 'Could not delete photograph.' });
+            }
+          }}
+          onInspect={(photo) => setLightboxPhoto(photo)}
+        />
+      )}
       {tab === 'commercial' && <CommercialPanel project={project} editable={canEdit} onSave={(patch) => updateProject(project.id, patch)} />}
       {tab === 'issues' && <StageIssuesPanel project={project} editable={canEdit} onAdd={(issue) => addIssue(project.id, issue)} onUpdate={(index, patch) => updateIssue(project.id, index, patch)} />}
       {tab === 'updates' && <StageUpdatesPanel project={project} editable={canEdit} onAdd={(update) => addUpdate(project.id, update)} />}
@@ -1429,6 +1633,48 @@ export default function ProjectDetail() {
           </div>
         </div>
       </div>
+    )}
+
+    {uploadOpen && (
+      <PhotoUploadDialog
+        projectId={project.id}
+        projectName={project.name}
+        stages={project.phases}
+        existingPhotoUrl={project.photos?.[0]?.url}
+        onClose={() => setUploadOpen(false)}
+        onUpload={async (data) => {
+          try {
+            await addPhoto(project.id, data);
+            toast({
+              title: 'Site photograph updated',
+              description: 'New photograph uploaded and previous photo purged from server.',
+            });
+          } catch (err: any) {
+            toast({
+              variant: 'destructive',
+              title: 'Upload failed',
+              description: err?.message || 'Failed to upload photograph.',
+            });
+            throw err;
+          }
+        }}
+      />
+    )}
+
+    {lightboxPhoto && (
+      <PhotoLightbox
+        photo={lightboxPhoto}
+        projectName={project.name}
+        projectCode={project.code}
+        canDelete={canEdit}
+        onClose={() => setLightboxPhoto(null)}
+        onDelete={async (photoId) => {
+          const ok = await deletePhoto(project.id, photoId);
+          if (ok) {
+            toast({ title: 'Photograph deleted', description: 'The site photograph was permanently removed.' });
+          }
+        }}
+      />
     )}
   </div>;
 }
@@ -1545,7 +1791,19 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
   );
 }
 
-function OverviewPanel({ project }: { project: Project }) {
+function OverviewPanel({
+  project,
+  canEdit = false,
+  onSelectTab,
+  onUpload,
+  onInspect,
+}: {
+  project: Project;
+  canEdit?: boolean;
+  onSelectTab?: (tab: Tab) => void;
+  onUpload?: () => void;
+  onInspect?: (photo: SitePhoto) => void;
+}) {
   const health = healthStyles[project.health];
   const spec = project.specification;
   return (
@@ -1597,6 +1855,79 @@ function OverviewPanel({ project }: { project: Project }) {
             <HealthRow label="Budget" value={budgetLabel(project)} tone={budgetTone(project)} />
           </div>
         </DetailCard>
+
+        {/* Current Site Photograph Widget */}
+        <DetailCard title="Current Site Photograph" eyebrow="Visual Verification" icon={Camera}>
+          {(() => {
+            const currentPhoto = project.photos && project.photos.length > 0 ? project.photos[0] : null;
+            if (currentPhoto) {
+              return (
+                <div className="mt-5 space-y-3">
+                  <div
+                    onClick={() => onInspect?.(currentPhoto)}
+                    className="group relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-black/5 cursor-pointer shadow-sm"
+                  >
+                    <img
+                      src={currentPhoto.url}
+                      alt={currentPhoto.caption}
+                      className="size-full object-cover transition duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent opacity-85 group-hover:opacity-100 transition" />
+                    <div className="absolute bottom-3 left-3 right-3 text-white">
+                      <div className="flex items-center gap-2 mb-1">
+                        {currentPhoto.category && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#3d9a7e] text-white">
+                            {currentPhoto.category}
+                          </span>
+                        )}
+                        {currentPhoto.stage && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-white/20 text-white backdrop-blur-sm">
+                            {currentPhoto.stage}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[12px] font-medium leading-snug line-clamp-2">
+                        {currentPhoto.caption}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
+                    <span>Captured: <strong className="text-foreground">{currentPhoto.takenDate ? formatFullDate(currentPhoto.takenDate) : 'Recently'}</strong></span>
+                    {onSelectTab && (
+                      <button
+                        type="button"
+                        onClick={() => onSelectTab('photos')}
+                        className="font-bold text-[#9a711f] hover:underline"
+                      >
+                        View full photo →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <div className="mt-5 rounded-xl border border-dashed border-border p-6 text-center">
+                <Camera size={24} className="mx-auto text-muted-foreground/60 mb-2" />
+                <p className="text-[12px] font-bold text-foreground">No site photograph uploaded</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Upload a physical progress photograph to provide visual verification for stakeholders.
+                </p>
+                {canEdit && onUpload && (
+                  <button
+                    type="button"
+                    onClick={onUpload}
+                    className="mt-4 rounded-xl bg-[#173e49] px-3.5 py-2 text-[10px] font-extrabold text-white hover:bg-[#205160] transition inline-flex items-center gap-1.5 shadow-sm"
+                  >
+                    <Upload size={12} />
+                    Upload site photograph
+                  </button>
+                )}
+              </div>
+            );
+          })()}
+        </DetailCard>
+
         <DetailCard title="Key issue" eyebrow="Decision radar" icon={AlertTriangle} tone="gold">
           {project.issues[0] ? (
             <div className="mt-6">

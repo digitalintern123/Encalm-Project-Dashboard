@@ -11,6 +11,11 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
+export const uploadsDir = path.join(dataDir, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 export const dbPath = process.env.DATABASE_PATH || path.join(dataDir, 'encalm.db');
 export const db = new Database(dbPath);
 
@@ -132,11 +137,26 @@ export function initDatabase() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS photos (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      url TEXT NOT NULL,
+      caption TEXT NOT NULL,
+      stage TEXT,
+      category TEXT DEFAULT 'Progress',
+      taken_date TEXT,
+      uploaded_by TEXT NOT NULL,
+      role TEXT,
+      file_size INTEGER,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_phases_project ON phases(project_id, order_index);
     CREATE INDEX IF NOT EXISTS idx_milestones_project ON milestones(project_id, date);
     CREATE INDEX IF NOT EXISTS idx_issues_project ON issues(project_id, severity);
     CREATE INDEX IF NOT EXISTS idx_updates_project ON updates(project_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_photos_project ON photos(project_id, created_at DESC);
   `);
 
   // Safe migrations for projects table

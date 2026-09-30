@@ -93,6 +93,24 @@ export type ProjectSpecification = {
   customFields?: { label: string; value: string }[];
 };
 
+export type PhotoCategory = 'Progress' | 'Snag / Issue' | 'Milestone' | 'Before / After' | 'Inspection' | 'General';
+export const photoCategories: PhotoCategory[] = ['Progress', 'Snag / Issue', 'Milestone', 'Before / After', 'Inspection', 'General'];
+
+export type SitePhoto = {
+  id: string;
+  projectId: string;
+  url: string;
+  caption: string;
+  stage?: string;
+  category?: PhotoCategory;
+  takenDate?: string;
+  uploadedAt?: string;
+  uploadedBy: string;
+  role?: string;
+  fileSize?: number;
+  createdAt?: string;
+};
+
 export type Project = {
   id: string;
   name: string;
@@ -117,6 +135,7 @@ export type Project = {
   milestones: Milestone[];
   issues: ProjectIssue[];
   updates: ProjectUpdate[];
+  photos?: SitePhoto[];
   startDate?: string;
   lastUpdated?: string;
   specification?: ProjectSpecification;

@@ -15,6 +15,8 @@ import {
   type ProjectIssue,
   type ProjectStatus,
   type ProjectUpdate,
+  type SitePhoto,
+  type PhotoCategory,
 } from '@/data/projects';
 import { readJson, removeItem, writeJson } from '@/lib/storage';
 import { todayLabel } from '@/lib/date';
@@ -66,6 +68,19 @@ type AppStateValue = {
   addIssue: (id: string, issue: ProjectIssue) => boolean;
   updateIssue: (id: string, issueIndex: number, patch: Partial<ProjectIssue>) => boolean;
   addUpdate: (id: string, update: ProjectUpdate) => boolean;
+  addPhoto: (
+    projectId: string,
+    photo: {
+      fileData?: string;
+      fileName?: string;
+      url?: string;
+      caption: string;
+      stage?: string;
+      category?: PhotoCategory;
+      takenDate?: string;
+    }
+  ) => Promise<SitePhoto | null>;
+  deletePhoto: (projectId: string, photoId: string) => Promise<boolean>;
   resetProjects: () => Promise<void>;
   exportBackup: () => Promise<void>;
   importBackup: (fileOrJson: string | object) => Promise<{ success: boolean; count?: number; error?: string }>;
@@ -155,6 +170,7 @@ function normaliseProject(project: Project): Project {
       ...update,
       kind: update.kind ?? 'General',
     })),
+    photos: project.photos ?? [],
   };
 }
 
@@ -736,6 +752,57 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [patchById],
   );
 
+  const addPhoto = useCallback(
+    async (
+      projectId: string,
+      photoData: {
+        fileData?: string;
+        fileName?: string;
+        url?: string;
+        caption: string;
+        stage?: string;
+        category?: PhotoCategory;
+        takenDate?: string;
+      }
+    ): Promise<SitePhoto | null> => {
+      try {
+        const res = await api.photos.upload(projectId, photoData);
+        if (res && res.photo) {
+          // Replace previous photos with the new photo on client state
+          patchById(projectId, (p) => ({
+            ...p,
+            photos: [res.photo],
+            lastUpdated: todayLabel(),
+          }));
+          refreshNotifications();
+          return res.photo;
+        }
+        return null;
+      } catch (err) {
+        console.error('Failed to upload photo:', err);
+        throw err;
+      }
+    },
+    [patchById, refreshNotifications],
+  );
+
+  const deletePhoto = useCallback(
+    async (projectId: string, photoId: string): Promise<boolean> => {
+      try {
+        await api.photos.delete(projectId, photoId);
+        patchById(projectId, (p) => ({
+          ...p,
+          photos: (p.photos || []).filter((ph) => ph.id !== photoId),
+        }));
+        return true;
+      } catch (err) {
+        console.error('Failed to delete photo:', err);
+        return false;
+      }
+    },
+    [patchById],
+  );
+
   const exportBackup = useCallback(async () => {
     try {
       let exportData: any = null;
@@ -848,6 +915,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       addIssue,
       updateIssue,
       addUpdate,
+      addPhoto,
+      deletePhoto,
       resetProjects,
       exportBackup,
       importBackup,
@@ -884,6 +953,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       addIssue,
       updateIssue,
       addUpdate,
+      addPhoto,
+      deletePhoto,
       resetProjects,
       exportBackup,
       importBackup,

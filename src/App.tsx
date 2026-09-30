@@ -37,6 +37,7 @@ function Router() {
           <Route path="/issues">{() => <Workspace view="issues" />}</Route>
           <Route path="/commercial">{() => <Workspace view="commercial" />}</Route>
           <Route path="/updates">{() => <Workspace view="updates" />}</Route>
+          <Route path="/photos">{() => <Workspace view="photos" />}</Route>
           <Route path="/reports">{() => <Workspace view="reports" />}</Route>
           <Route path="/team">{() => <Workspace view="team" />}</Route>
           <Route path="/new-project">{() => <Workspace view="new-project" />}</Route>

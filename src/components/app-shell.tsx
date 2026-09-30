@@ -29,6 +29,7 @@ import {
   Activity,
   Server,
   Users,
+  Camera,
 } from 'lucide-react';
 import { useAppState, type AppRole } from '@/state/app-state';
 import { BrandLogo } from './brand-logo';
@@ -70,6 +71,7 @@ const groups: NavGroup[] = [
       { label: 'Milestones', href: '/milestones', icon: CalendarDays },
       { label: 'Issues & risks', href: '/issues', icon: AlertTriangle },
       { label: 'Update feed', href: '/updates', icon: MessageSquareText },
+      { label: 'Site photographs', href: '/photos', icon: Camera },
     ],
   },
   {
