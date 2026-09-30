@@ -4,6 +4,7 @@ import {
   AlertCircle,
   AlertTriangle,
   ArrowLeft,
+  Building2,
   CalendarDays,
   Camera,
   Check,
@@ -37,6 +38,7 @@ import { initialsOf, leadName } from '@/data/users';
 import { statusTone } from './workspace';
 import { PhotoLightbox } from '@/components/photo-lightbox';
 import { PhotoUploadDialog } from '@/components/photo-upload-dialog';
+import { ProjectAreaProgram } from '@/components/project-area-program';
 
 const healthStyles: Record<Health, { dot: string; text: string; bg: string; border: string }> = {
   'On track': { dot: 'bg-[#3d9a7e]', text: 'text-[#2e7c67]', bg: 'bg-[#e4f1ec]', border: 'border-[#cbe4d9]' },
@@ -45,7 +47,7 @@ const healthStyles: Record<Health, { dot: string; text: string; bg: string; bord
   'Not started': { dot: 'bg-[#8c938d]', text: 'text-[#69716b]', bg: 'bg-[#eef0ed]', border: 'border-[#d9ded8]' },
 };
 
-type Tab = 'overview' | 'progress' | 'timeline' | 'milestones' | 'photos' | 'commercial' | 'issues' | 'updates';
+type Tab = 'overview' | 'program' | 'progress' | 'timeline' | 'milestones' | 'photos' | 'commercial' | 'issues' | 'updates';
 
 function Metric({ label, value, note, icon: Icon }: { label: string; value: string; note: ReactNode; icon: typeof Target }) {
   return (
@@ -1381,8 +1383,10 @@ export default function ProjectDetail() {
     toast({ title: 'Progress updated', description: `${project.name} is now at ${clampPercent(progress)}%.` });
   };
   const photoCountBadge = project.photos && project.photos.length > 0 ? ` (${project.photos.length})` : '';
+  const hasAreaProgram = Boolean(project.specification?.areaProgram) || project.category === 'Hotel';
   const tabs: [Tab, string, typeof Target][] = [
     ['overview', 'Overview', Layers3],
+    ...(hasAreaProgram ? ([['program', 'Area Program', Building2]] as [Tab, string, typeof Target][]) : []),
     ['progress', 'Progress', TrendingUp],
     ['timeline', 'Timeline', Clock3],
     ['milestones', 'Milestones', CalendarDays],
@@ -1549,6 +1553,13 @@ export default function ProjectDetail() {
           onSelectTab={setTab}
           onUpload={() => setUploadOpen(true)}
           onInspect={(photo) => setLightboxPhoto(photo)}
+        />
+      )}
+      {tab === 'program' && (
+        <ProjectAreaProgram
+          project={project}
+          editable={canEdit}
+          onSave={(patch) => updateProject(project.id, patch)}
         />
       )}
       {tab === 'progress' && <StageProgressPanel project={project} editable={canEdit} onSave={saveProgress} />}
@@ -1834,6 +1845,64 @@ function OverviewPanel({
             <p className="mt-5 rounded-xl bg-[#f7f4ec] p-4 text-[11px] leading-5 text-muted-foreground">{spec.scope}</p>
           )}
         </DetailCard>
+        {(spec?.areaProgram || project.category === 'Hotel') && (
+          <DetailCard title="Architectural Area Program" eyebrow="Space Allocation" icon={Building2}>
+            <div className="mt-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-xl border border-border bg-[#f8f6f0] p-3 text-center">
+                  <span className="block font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Plot Area</span>
+                  <span className="mt-1 block text-[15px] font-extrabold text-[#173e49]">
+                    {spec?.areaProgram?.summary.plotAreaSqm?.toLocaleString() ?? '8,160'} SQ.M.
+                  </span>
+                  <span className="font-mono text-[10px] text-[#2e7c67]">
+                    {spec?.areaProgram?.summary.plotAreaAcres ?? 2} Acres
+                  </span>
+                </div>
+                <div className="rounded-xl border border-[#eadcb1] bg-[#fff8e9] p-3 text-center">
+                  <span className="block font-mono text-[9px] uppercase tracking-wider text-[#9a711f]">Total BUA</span>
+                  <span className="mt-1 block text-[15px] font-extrabold text-[#173e49]">
+                    {spec?.areaProgram?.summary.builtUpAreaSqm?.toLocaleString() ?? '14,970'} SQ.M.
+                  </span>
+                  <span className="font-mono text-[10px] text-[#9a711f]">
+                    {spec?.areaProgram?.summary.builtUpAreaSqft?.toLocaleString() ?? '161,137'} SQ.FT.
+                  </span>
+                </div>
+                <div className="rounded-xl border border-border bg-[#f8f6f0] p-3 text-center">
+                  <span className="block font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Inventory</span>
+                  <span className="mt-1 block text-[15px] font-extrabold text-[#173e49]">
+                    {spec?.areaProgram?.summary.totalRoomKeys ?? 156} Keys
+                  </span>
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    {spec?.areaProgram?.summary.totalBays ?? 168} Bays
+                  </span>
+                </div>
+                <div className="rounded-xl border border-border bg-[#f8f6f0] p-3 text-center">
+                  <span className="block font-mono text-[9px] uppercase tracking-wider text-muted-foreground">FOH Total</span>
+                  <span className="mt-1 block text-[15px] font-extrabold text-[#173e49]">
+                    {spec?.areaProgram?.fohAreas?.grandSubtotal?.areaSqm?.toLocaleString() ?? '2,557'} SQ.M.
+                  </span>
+                  <span className="font-mono text-[10px] text-[#2e7c67]">
+                    Ground + 2nd Flr
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between border-t border-border/70 pt-3">
+                <span className="text-[11px] text-muted-foreground">
+                  Stack: {spec?.areaProgram?.summary.numberOfFloorsDescription ?? 'B + G + 1 + Service + 2nd to 6th Floor'}
+                </span>
+                {onSelectTab && (
+                  <button
+                    type="button"
+                    onClick={() => onSelectTab('program')}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#173e49] hover:text-[#2e7c67] transition"
+                  >
+                    View Full Space Breakdown &rarr;
+                  </button>
+                )}
+              </div>
+            </div>
+          </DetailCard>
+        )}
         <DetailCard title="Phase progress" eyebrow="Delivery path" icon={ClipboardCheck}>
           <div className="mt-5 grid gap-6 md:grid-cols-[140px_1fr] md:items-center">
             <div className="flex flex-col items-center gap-3">

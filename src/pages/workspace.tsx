@@ -28,8 +28,10 @@ import {
   Users,
   Camera,
   Upload,
+  Sparkles,
+  Building2,
 } from 'lucide-react';
-import { categories, formatCrore, healthOptions, locations, projectStatuses, issueCategories, type Category, type Health, type Project, type ProjectStatus, type IssueCategory, type IssueStatus, type ProjectIssue, type SitePhoto, type PhotoCategory, photoCategories } from '@/data/projects';
+import { categories, formatCrore, healthOptions, locations, projectStatuses, issueCategories, type Category, type Health, type Project, type ProjectStatus, type IssueCategory, type IssueStatus, type ProjectIssue, type SitePhoto, type PhotoCategory, photoCategories, vizagHotelAreaProgram } from '@/data/projects';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
 import { CRORE } from '@/data/projects';
@@ -1645,6 +1647,7 @@ function NewProjectView() {
   const { toast } = useToast();
   const [createdName, setCreatedName] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
+  const [includeAreaProgram, setIncludeAreaProgram] = useState(false);
   const [form, setForm] = useState({
     name: '',
     location: 'Delhi' as Project['location'],
@@ -1662,6 +1665,24 @@ function NewProjectView() {
     paxKeys: '',
     scope: '',
   });
+
+  const handleLoadVizagTemplate = () => {
+    setForm((current) => ({
+      ...current,
+      name: current.name || 'Vizag Hotel & Suites',
+      location: 'Vizag',
+      category: 'Hotel',
+      projectType: 'Hotel & Suites',
+      area: '14,970 SQ.M. / 161,137 SQ.FT.',
+      paxKeys: '156 Keys / 168 Bays',
+      scope: 'Plot Area: 8,160 SQ.M. (2.0 Acres), BUA: 14,970 SQ.M. (161,137 SQ.FT.), 156 Keys / 168 Bays across B+G+1+Service+2nd-6th Floor.',
+    }));
+    setIncludeAreaProgram(true);
+    toast({
+      title: 'Vizag Hotel Area Template Applied',
+      description: 'Form filled with official Vizag Hotel metrics, space allocations, and area program.',
+    });
+  };
 
   const progressNum = Math.max(0, Math.min(100, Number(form.progress) || 0));
 
@@ -1733,6 +1754,7 @@ function NewProjectView() {
         terminal: form.location,
         floor: '',
         scope: form.scope,
+        areaProgram: includeAreaProgram || form.category === 'Hotel' ? vizagHotelAreaProgram : undefined,
       },
       phases: [
         { name: 'Brief & scope', status: 'active', progress: 0, owner: 'PMO' },
@@ -1777,7 +1799,24 @@ function NewProjectView() {
         )}
 
         <section className="rounded-2xl border border-border bg-card p-5 md:p-7">
-          <h2 className="text-[18px] font-extrabold">1. Basic Information & Ownership</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/70 pb-4">
+            <div>
+              <h2 className="text-[18px] font-extrabold">1. Basic Information & Ownership</h2>
+              {includeAreaProgram && (
+                <p className="mt-1 text-[11px] font-medium text-[#2e7c67] flex items-center gap-1">
+                  <CheckCircle2 size={13} /> Vizag Architectural Area Program (14,970 SQ.M. / 156 Keys) attached
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleLoadVizagTemplate}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#eadcb1] bg-[#fff8e9] px-3.5 py-2 text-[11px] font-bold text-[#8f691b] shadow-sm hover:bg-[#faeed3] transition shrink-0"
+            >
+              <Sparkles size={14} className="text-[#9a711f]" />
+              Load Vizag Hotel Template
+            </button>
+          </div>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <label className="md:col-span-2">
               <span className="mb-2 block text-[11px] font-bold">Project Name *</span>
