@@ -1,7 +1,445 @@
 {
   "version": 1,
-  "exportedAt": "2026-09-30T06:15:58.534Z",
-  "projectCount": 0,
-  "projects": [],
+  "exportedAt": "2026-09-30T07:05:22.830Z",
+  "projectCount": 1,
+  "projects": [
+    {
+      "id": "vizag-hotel-suites",
+      "name": "Vizag Hotel & Suites",
+      "location": "Vizag",
+      "category": "Hotel",
+      "code": "VIZ-HTL-26",
+      "health": "On track",
+      "status": "In Design",
+      "progress": 22,
+      "targetDate": "2027-03-31",
+      "targetLabel": "31 Mar 2027",
+      "aop": 1850000000,
+      "awarded": 420000000,
+      "spent": 18500000,
+      "projectedCost": 1850000000,
+      "area": "14,970 SQ.M. / 161,137 SQ.FT.",
+      "paxKeys": "156 Keys / 168 Bays",
+      "nextMilestone": "Detailed Design Development & BOQ",
+      "nextMilestoneDate": "2026-11-30",
+      "leadId": "user-chinmay-saxena",
+      "startDate": "2025-01-15",
+      "lastUpdated": "2026-09-30T07:05:22.814Z",
+      "templateId": "hotel",
+      "specification": {
+        "projectType": "Hotel & Suites",
+        "terminal": "Vizag",
+        "units": "156 Keys",
+        "floor": "B + G + 1 + Service + 2nd to 6th Floor",
+        "area": "14,970 SQ.M. / 161,137 SQ.FT.",
+        "capacity": "156 Keys / 168 Bays",
+        "scope": "Plot Area: 8,160 SQ.M. (2.0 Acres), BUA: 14,970 SQ.M. (161,137 SQ.FT.), 156 Keys / 168 Bays across Basement, Ground, First, Service floor, and 2nd to 6th Guest Floors with Banquet, ADD, Lounge Bar, Gym, Pool & 4 Presidential Suites.",
+        "areaProgram": {
+          "summary": {
+            "plotAreaSqm": 8160,
+            "plotAreaSqft": 87834,
+            "plotAreaAcres": 2,
+            "builtUpAreaSqm": 14970,
+            "builtUpAreaSqft": 161137,
+            "numberOfFloorsDescription": "Basement, Ground, First, Service floor, 2nd to 6th Guest floor",
+            "totalRoomKeys": 156,
+            "totalBays": 168,
+            "standardRoomSizeSqm": 27,
+            "numberOfElevators": 5,
+            "elevatorRemarks": "3 Guest Lifts and 2 Service Lifts + 1 Fire tower",
+            "generalRemarks": "152 Standard Rooms and 4 Presidential Suites (Total 156 Keys, 168 Bays)"
+          },
+          "fohAreas": {
+            "groundFloor": [
+              {
+                "sNo": 1,
+                "floor": "Ground Floor",
+                "description": "Banquet Hall",
+                "areaSqm": 360,
+                "areaSqft": 3875,
+                "capacityPax": "350",
+                "remarks": "Large banquet facility with pillarless span"
+              },
+              {
+                "sNo": 2,
+                "floor": "Ground Floor",
+                "description": "Pre-function + Banquet Lobby",
+                "areaSqm": 297,
+                "areaSqft": 3197,
+                "remarks": "Spacious pre-event registration foyer"
+              },
+              {
+                "sNo": 3,
+                "floor": "Ground Floor",
+                "description": "ADD (All Day Dining)",
+                "areaSqm": 330,
+                "areaSqft": 3552,
+                "capacityPax": "150",
+                "remarks": "100 Pax Indoor + 50 Alfresco seating"
+              },
+              {
+                "sNo": 4,
+                "floor": "Ground Floor",
+                "description": "Lounge BAR",
+                "areaSqm": 114,
+                "areaSqft": 1227,
+                "capacityPax": "37",
+                "remarks": "25 Pax Indoor + 12 Alfresco seating"
+              },
+              {
+                "sNo": 5,
+                "floor": "Ground Floor",
+                "description": "Kitchen",
+                "areaSqm": 335,
+                "areaSqft": 3606,
+                "remarks": "Full commercial production & banqueting kitchen"
+              },
+              {
+                "sNo": 6,
+                "floor": "Ground Floor",
+                "description": "Reception Lobby",
+                "areaSqm": 350,
+                "areaSqft": 3767,
+                "remarks": "Main double-height arrival lobby with reception desk"
+              },
+              {
+                "sNo": 7,
+                "floor": "Ground Floor",
+                "description": "Public area toilets",
+                "areaSqm": 130,
+                "areaSqft": 1399,
+                "remarks": "Executive male, female, accessible restrooms"
+              },
+              {
+                "sNo": 8,
+                "floor": "Ground Floor",
+                "description": "Courtyard",
+                "areaSqm": 52,
+                "areaSqft": 560,
+                "remarks": "Landscaped open-air light well"
+              },
+              {
+                "sNo": 9,
+                "floor": "Ground Floor",
+                "description": "Guest Lift Lobby",
+                "areaSqm": 44,
+                "areaSqft": 474,
+                "remarks": "Central core guest vertical circulation"
+              },
+              {
+                "sNo": 10,
+                "floor": "Ground Floor",
+                "description": "Meeting Rooms",
+                "areaSqm": 80,
+                "areaSqft": 861,
+                "remarks": "2 executive conference boardrooms"
+              }
+            ],
+            "groundFloorSubtotal": {
+              "areaSqm": 2092,
+              "areaSqft": 22518
+            },
+            "secondFloor": [
+              {
+                "sNo": 1,
+                "floor": "2nd Floor",
+                "description": "Gym and Changing Rooms",
+                "areaSqm": 155,
+                "areaSqft": 1668,
+                "remarks": "State-of-the-art fitness center with lockers"
+              },
+              {
+                "sNo": 2,
+                "floor": "2nd Floor",
+                "description": "Pool Deck",
+                "areaSqm": 150,
+                "areaSqft": 1615,
+                "remarks": "Sun lounges, shaded cabanas & service bar"
+              },
+              {
+                "sNo": 3,
+                "floor": "2nd Floor",
+                "description": "Swimming Pool",
+                "areaSqm": 160,
+                "areaSqft": 1722,
+                "remarks": "Temperature controlled overflow swimming pool"
+              }
+            ],
+            "secondFloorSubtotal": {
+              "areaSqm": 465,
+              "areaSqft": 5005
+            },
+            "grandSubtotal": {
+              "areaSqm": 2557,
+              "areaSqft": 27523
+            }
+          },
+          "floorWiseBua": {
+            "items": [
+              {
+                "sNo": 1,
+                "floor": "Basement Floor",
+                "areaSqm": 1337,
+                "areaSqft": 14391,
+                "remarks": "Parking (75 ECS), STP, WTP, DG yard & plant room"
+              },
+              {
+                "sNo": 2,
+                "floor": "Ground floor",
+                "areaSqm": 3145,
+                "areaSqft": 33853,
+                "remarks": "Main Lobby, Banquet, ADD, Lounge Bar, Commercial Kitchen"
+              },
+              {
+                "sNo": 3,
+                "floor": "First Floor",
+                "areaSqm": 1008,
+                "areaSqft": 10850,
+                "remarks": "BOH, Administration Offices & Staff Facilities"
+              },
+              {
+                "sNo": 4,
+                "floor": "Service floor",
+                "areaSqm": 1333,
+                "areaSqft": 14348,
+                "remarks": "MEP plant rooms, AHU units & transfer slab"
+              },
+              {
+                "sNo": 5,
+                "floor": "2nd floor",
+                "areaSqm": 1860,
+                "areaSqft": 20021,
+                "remarks": "41 Guest keys + Gym & Pool Deck"
+              },
+              {
+                "sNo": 6,
+                "floor": "3rd floor",
+                "areaSqm": 1860,
+                "areaSqft": 20021,
+                "remarks": "37 Guest keys"
+              },
+              {
+                "sNo": 7,
+                "floor": "4th floor",
+                "areaSqm": 1860,
+                "areaSqft": 20021,
+                "remarks": "37 Guest keys"
+              },
+              {
+                "sNo": 8,
+                "floor": "5th Floor",
+                "areaSqm": 1783,
+                "areaSqft": 19192,
+                "remarks": "37 Guest keys"
+              },
+              {
+                "sNo": 9,
+                "floor": "6th Floor",
+                "areaSqm": 1270,
+                "areaSqft": 13670,
+                "remarks": "4 Presidential Suites (16 bays footprint)"
+              },
+              {
+                "sNo": 10,
+                "floor": "Terrace / Services",
+                "areaSqm": 68,
+                "areaSqft": 732,
+                "remarks": "Lift machine room & overhead water storage"
+              }
+            ],
+            "subtotal": {
+              "areaSqm": 14970,
+              "areaSqft": 161137
+            }
+          },
+          "roomConfiguration": {
+            "items": [
+              {
+                "sNo": 1,
+                "floor": "2nd Guest Floor",
+                "keys": 41,
+                "bays": 41,
+                "remarks": "41 Standard Deluxe Rooms (41 bays)"
+              },
+              {
+                "sNo": 2,
+                "floor": "3rd Guest Floor",
+                "keys": 37,
+                "bays": 37,
+                "remarks": "37 Standard Deluxe Rooms (37 bays)"
+              },
+              {
+                "sNo": 3,
+                "floor": "4th Guest Floor",
+                "keys": 37,
+                "bays": 37,
+                "remarks": "37 Standard Deluxe Rooms (37 bays)"
+              },
+              {
+                "sNo": 4,
+                "floor": "5th Guest Floor",
+                "keys": 37,
+                "bays": 37,
+                "remarks": "37 Standard Deluxe Rooms (37 bays)"
+              },
+              {
+                "sNo": 5,
+                "floor": "6th Guest Floor",
+                "keys": 4,
+                "bays": 16,
+                "remarks": "4 Presidential Suites (4 bays per suite = 16 bays)"
+              }
+            ],
+            "totalKeys": 156,
+            "totalBays": 168
+          }
+        }
+      },
+      "phases": [
+        {
+          "id": "vizag-hotel-suites-phase-1",
+          "name": "Brief & Space Program",
+          "status": "complete",
+          "progress": 100,
+          "owner": "PMO",
+          "plannedStart": "2025-01-15",
+          "plannedFinish": "2025-04-30",
+          "actualFinish": "2025-04-25",
+          "workCompleted": "Architectural space program approved (8,160 sqm site, 14,970 sqm BUA, 156 keys/168 bays).",
+          "nextAction": "Handover to concept design architecture.",
+          "decisionRequired": "Approved by leadership.",
+          "weight": null,
+          "updatedAt": null
+        },
+        {
+          "id": "vizag-hotel-suites-phase-2",
+          "name": "Concept & Schematic Design",
+          "status": "active",
+          "progress": 55,
+          "owner": "Design",
+          "plannedStart": "2025-05-01",
+          "plannedFinish": "2025-11-30",
+          "actualFinish": null,
+          "workCompleted": "FOH public areas, Banquet 350 pax layout, and guest floor plans drafted.",
+          "nextAction": "Complete MEP, structural coordination, and 3D interior renders.",
+          "decisionRequired": "Facade material palette sign-off.",
+          "weight": null,
+          "updatedAt": null
+        },
+        {
+          "id": "vizag-hotel-suites-phase-3",
+          "name": "Statutory Approvals & Sourcing",
+          "status": "upcoming",
+          "progress": 10,
+          "owner": "Sourcing",
+          "plannedStart": "2025-12-01",
+          "plannedFinish": "2026-04-30",
+          "actualFinish": null,
+          "workCompleted": "Preliminary RFP for MEP & Civil packages drafted.",
+          "nextAction": "Submit building sanction drawings and fire NOC clearance.",
+          "decisionRequired": "General Contractor pre-qualification criteria.",
+          "weight": null,
+          "updatedAt": null
+        },
+        {
+          "id": "vizag-hotel-suites-phase-4",
+          "name": "Civil & Fit-Out Execution",
+          "status": "upcoming",
+          "progress": 0,
+          "owner": "Projects",
+          "plannedStart": "2026-05-01",
+          "plannedFinish": "2026-12-31",
+          "actualFinish": null,
+          "workCompleted": "Site boundary and soil testing completed.",
+          "nextAction": "Mobilize site team post contractor award.",
+          "decisionRequired": "Excavation contractor selection.",
+          "weight": null,
+          "updatedAt": null
+        },
+        {
+          "id": "vizag-hotel-suites-phase-5",
+          "name": "Commissioning & Handover",
+          "status": "upcoming",
+          "progress": 0,
+          "owner": "Operations",
+          "plannedStart": "2027-01-01",
+          "plannedFinish": "2027-03-31",
+          "actualFinish": null,
+          "workCompleted": "Pre-opening checklist prepared.",
+          "nextAction": "Trial operations and hospitality snag clearance.",
+          "decisionRequired": "Commercial operations date sign-off.",
+          "weight": null,
+          "updatedAt": null
+        }
+      ],
+      "milestones": [
+        {
+          "id": "vizag-hotel-suites-ms-1",
+          "title": "Architectural Area Program Approval",
+          "date": "2025-04-15",
+          "status": "complete",
+          "stage": "Brief & Space Program",
+          "owner": "Chinmay Saxena",
+          "approvalRequired": true,
+          "approvalStatus": "Approved",
+          "completedDate": "2025-04-12"
+        },
+        {
+          "id": "vizag-hotel-suites-ms-2",
+          "title": "Concept Design & 3D Render Presentation",
+          "date": "2025-08-30",
+          "status": "complete",
+          "stage": "Concept & Schematic Design",
+          "owner": "Design Lead",
+          "approvalRequired": true,
+          "approvalStatus": "Approved",
+          "completedDate": "2025-08-28"
+        },
+        {
+          "id": "vizag-hotel-suites-ms-3",
+          "title": "Detailed Design Development & BOQ",
+          "date": "2026-11-30",
+          "status": "upcoming",
+          "stage": "Concept & Schematic Design",
+          "owner": "Design Lead",
+          "approvalRequired": true,
+          "approvalStatus": "In review",
+          "completedDate": null
+        },
+        {
+          "id": "vizag-hotel-suites-ms-4",
+          "title": "Civil & MEP Package Tender Award",
+          "date": "2026-04-15",
+          "status": "upcoming",
+          "stage": "Statutory Approvals & Sourcing",
+          "owner": "Sourcing Head",
+          "approvalRequired": true,
+          "approvalStatus": "Not required",
+          "completedDate": null
+        }
+      ],
+      "issues": [
+        {
+          "id": "vizag-hotel-suites-issue-1",
+          "title": "Airport Authority Height NOC Pending",
+          "detail": "Clearance required from airport authority for crane operation during 6-floor structural construction.",
+          "severity": "Medium",
+          "owner": "Compliance Officer",
+          "category": "Permits & Approvals",
+          "status": "Open",
+          "stage": "Design",
+          "dateRaised": "2025-09-01",
+          "dueDate": "2025-12-15",
+          "impactCost": null,
+          "impactSchedule": "May impact crane mobilization scheduled for phase 4.",
+          "impactScope": null,
+          "action": "Follow up with regional aviation office for expedited NOC.",
+          "resolution": null
+        }
+      ],
+      "updates": [],
+      "photos": []
+    }
+  ],
   "notifications": []
 }
