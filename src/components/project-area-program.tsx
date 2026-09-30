@@ -32,20 +32,53 @@ interface ProjectAreaProgramProps {
   onSave?: (patch: Partial<Project>) => void;
 }
 
+export const emptyAreaProgram: ArchitecturalAreaProgram = {
+  summary: {
+    plotAreaSqm: 0,
+    plotAreaSqft: 0,
+    plotAreaAcres: 0,
+    builtUpAreaSqm: 0,
+    builtUpAreaSqft: 0,
+    numberOfFloorsDescription: '',
+    totalRoomKeys: 0,
+    totalBays: 0,
+    standardRoomSizeSqm: 27,
+    numberOfElevators: 0,
+    elevatorRemarks: '',
+    generalRemarks: '',
+  },
+  fohAreas: {
+    groundFloor: [],
+    groundFloorSubtotal: { areaSqm: 0, areaSqft: 0 },
+    secondFloor: [],
+    secondFloorSubtotal: { areaSqm: 0, areaSqft: 0 },
+    grandSubtotal: { areaSqm: 0, areaSqft: 0 },
+  },
+  floorWiseBua: {
+    items: [],
+    subtotal: { areaSqm: 0, areaSqft: 0 },
+  },
+  roomConfiguration: {
+    items: [],
+    totalKeys: 0,
+    totalBays: 0,
+  },
+};
+
 export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaProgramProps) {
   const { toast } = useToast();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
 
-  // If project has no areaProgram saved yet, fall back to vizagHotelAreaProgram
+  const hasProgram = Boolean(project.specification?.areaProgram);
   const currentProgram: ArchitecturalAreaProgram =
-    project.specification?.areaProgram || vizagHotelAreaProgram;
+    project.specification?.areaProgram || emptyAreaProgram;
 
   const handleExportCSV = () => {
     try {
       const rows: string[][] = [];
 
       // Section 1: Summary
-      rows.push(['VIZAG HOTEL PROJECT - ARCHITECTURAL AREA PROGRAM & SUMMARY']);
+      rows.push(['ARCHITECTURAL AREA PROGRAM & SPACE SUMMARY']);
       rows.push(['Project Name', project.name]);
       rows.push(['Location', project.location]);
       rows.push(['Export Date', new Date().toLocaleDateString('en-GB')]);
@@ -126,7 +159,7 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
       ]);
       rows.push([
         '',
-        'FOH Grand Subtotal',
+        'FOH Grand Total',
         '',
         String(currentProgram.fohAreas.grandSubtotal.areaSqm),
         String(currentProgram.fohAreas.grandSubtotal.areaSqft),
@@ -206,29 +239,64 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
     window.print();
   };
 
-  const handleApplyVizagTemplate = () => {
-    if (!editable || !onSave) return;
-    onSave({
-      area: `${vizagHotelAreaProgram.summary.builtUpAreaSqm.toLocaleString()} SQ.M. / ${vizagHotelAreaProgram.summary.builtUpAreaSqft.toLocaleString()} SQ.FT.`,
-      paxKeys: `${vizagHotelAreaProgram.summary.totalRoomKeys} Keys / ${vizagHotelAreaProgram.summary.totalBays} Bays`,
-      specification: {
-        ...(project.specification || {
-          projectType: 'Hotel',
-          units: '',
-          terminal: project.location,
-          floor: '',
-          scope: '',
-        }),
-        area: `${vizagHotelAreaProgram.summary.builtUpAreaSqm.toLocaleString()} SQ.M. / ${vizagHotelAreaProgram.summary.builtUpAreaSqft.toLocaleString()} SQ.FT.`,
-        capacity: `${vizagHotelAreaProgram.summary.totalRoomKeys} Keys / ${vizagHotelAreaProgram.summary.totalBays} Bays`,
-        areaProgram: vizagHotelAreaProgram,
-      },
-    });
-    toast({
-      title: 'Vizag Area Program loaded',
-      description: 'The architectural program has been populated with the official PDF dataset.',
-    });
-  };
+  if (!hasProgram) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center max-w-2xl mx-auto my-8">
+        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-[#f8f5ec] text-[#9a711f]">
+          <Building2 size={30} />
+        </div>
+        <h3 className="mt-4 text-[19px] font-bold text-foreground">
+          Architectural Space Program Not Configured
+        </h3>
+        <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground max-w-lg mx-auto">
+          No architectural area or room configuration has been entered for <strong>{project.name}</strong> yet. You can manually enter plot area, BUA, keys, bays, floor-wise built-up area, and FOH public facilities.
+        </p>
+        {editable && (
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsEditorOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-5 py-2.5 text-[12px] font-bold text-white shadow-sm hover:bg-[#205160] transition"
+            >
+              <Plus size={15} />
+              Configure Architectural Area Program
+            </button>
+          </div>
+        )}
+        {isEditorOpen && (
+          <AreaProgramEditorModal
+            initialProgram={emptyAreaProgram}
+            onClose={() => setIsEditorOpen(false)}
+            onSave={(updated) => {
+              if (onSave) {
+                onSave({
+                  area: `${updated.summary.builtUpAreaSqm.toLocaleString()} SQ.M. / ${updated.summary.builtUpAreaSqft.toLocaleString()} SQ.FT.`,
+                  paxKeys: `${updated.summary.totalRoomKeys} Keys / ${updated.summary.totalBays} Bays`,
+                  specification: {
+                    ...(project.specification || {
+                      projectType: project.category,
+                      units: '',
+                      terminal: project.location,
+                      floor: '',
+                      scope: '',
+                    }),
+                    area: `${updated.summary.builtUpAreaSqm.toLocaleString()} SQ.M. / ${updated.summary.builtUpAreaSqft.toLocaleString()} SQ.FT.`,
+                    capacity: `${updated.summary.totalRoomKeys} Keys / ${updated.summary.totalBays} Bays`,
+                    areaProgram: updated,
+                  },
+                });
+                toast({
+                  title: 'Area Program configured',
+                  description: 'The architectural program has been saved to the database.',
+                });
+              }
+              setIsEditorOpen(false);
+            }}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 print:p-0 print:space-y-4">
@@ -244,7 +312,7 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
             </span>
           </div>
           <h2 className="mt-1 text-[22px] font-extrabold tracking-tight text-[#173e49]">
-            Vizag Hotel Project Area Program
+            {project.name} Area Program
           </h2>
           <p className="mt-1 text-[12px] text-muted-foreground">
             Complete space allocation, FOH area bifurcation, floor-wise built-up area (BUA), and room inventory matrix.
@@ -269,25 +337,14 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
             Print Summary
           </button>
           {editable && (
-            <>
-              <button
-                type="button"
-                onClick={handleApplyVizagTemplate}
-                title="Reset or re-populate with official Vizag Hotel PDF values"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#eadcb1] bg-[#fff8e9] px-3.5 py-2 text-[11px] font-bold text-[#8f691b] shadow-sm hover:bg-[#fbedd0] transition"
-              >
-                <Sparkles size={14} />
-                Load Standard PDF
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsEditorOpen(true)}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-2 text-[11px] font-bold text-white shadow-sm hover:bg-[#225766] transition"
-              >
-                <Edit3 size={14} />
-                Edit Program Data
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => setIsEditorOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-2 text-[11px] font-bold text-white shadow-sm hover:bg-[#225766] transition"
+            >
+              <Edit3 size={14} />
+              Edit Program Data
+            </button>
           )}
         </div>
       </div>
@@ -775,7 +832,7 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
 }
 
 /** Interactive Editor Modal for architectural area program */
-function AreaProgramEditorModal({
+export function AreaProgramEditorModal({
   initialProgram,
   onClose,
   onSave,
@@ -811,14 +868,22 @@ function AreaProgramEditorModal({
     const totalKeys = draft.roomConfiguration.items.reduce((acc, it) => acc + (Number(it.keys) || 0), 0);
     const totalBays = draft.roomConfiguration.items.reduce((acc, it) => acc + (Number(it.bays) || 0), 0);
 
+    const hasFloorItems = draft.floorWiseBua.items.length > 0;
+    const finalBuaSqm = hasFloorItems ? buaSubtotalSqm : (draft.summary.builtUpAreaSqm || 0);
+    const finalBuaSqft = hasFloorItems ? buaSubtotalSqft : (draft.summary.builtUpAreaSqft || Math.round(finalBuaSqm * 10.7639));
+
+    const hasRoomItems = draft.roomConfiguration.items.length > 0;
+    const finalKeys = hasRoomItems ? totalKeys : (draft.summary.totalRoomKeys || 0);
+    const finalBays = hasRoomItems ? totalBays : (draft.summary.totalBays || 0);
+
     const updated: ArchitecturalAreaProgram = {
       ...draft,
       summary: {
         ...draft.summary,
-        builtUpAreaSqm: buaSubtotalSqm,
-        builtUpAreaSqft: buaSubtotalSqft,
-        totalRoomKeys: totalKeys,
-        totalBays: totalBays,
+        builtUpAreaSqm: finalBuaSqm,
+        builtUpAreaSqft: finalBuaSqft,
+        totalRoomKeys: finalKeys,
+        totalBays: finalBays,
       },
       fohAreas: {
         groundFloor: draft.fohAreas.groundFloor,

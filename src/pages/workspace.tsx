@@ -31,7 +31,8 @@ import {
   Sparkles,
   Building2,
 } from 'lucide-react';
-import { categories, formatCrore, healthOptions, locations, projectStatuses, issueCategories, type Category, type Health, type Project, type ProjectStatus, type IssueCategory, type IssueStatus, type ProjectIssue, type SitePhoto, type PhotoCategory, photoCategories, vizagHotelAreaProgram } from '@/data/projects';
+import { categories, formatCrore, healthOptions, locations, projectStatuses, issueCategories, type Category, type Health, type Project, type ProjectStatus, type IssueCategory, type IssueStatus, type ProjectIssue, type SitePhoto, type PhotoCategory, photoCategories, type ArchitecturalAreaProgram } from '@/data/projects';
+import { AreaProgramEditorModal, emptyAreaProgram } from '@/components/project-area-program';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
 import { CRORE } from '@/data/projects';
@@ -1647,7 +1648,9 @@ function NewProjectView() {
   const { toast } = useToast();
   const [createdName, setCreatedName] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
-  const [includeAreaProgram, setIncludeAreaProgram] = useState(false);
+  const [includeAdvancedAreaProgram, setIncludeAdvancedAreaProgram] = useState(false);
+  const [areaProgram, setAreaProgram] = useState<ArchitecturalAreaProgram>(emptyAreaProgram);
+  const [isDetailedTableModalOpen, setIsDetailedTableModalOpen] = useState(false);
   const [form, setForm] = useState({
     name: '',
     location: 'Delhi' as Project['location'],
@@ -1665,24 +1668,6 @@ function NewProjectView() {
     paxKeys: '',
     scope: '',
   });
-
-  const handleLoadVizagTemplate = () => {
-    setForm((current) => ({
-      ...current,
-      name: current.name || 'Vizag Hotel & Suites',
-      location: 'Vizag',
-      category: 'Hotel',
-      projectType: 'Hotel & Suites',
-      area: '14,970 SQ.M. / 161,137 SQ.FT.',
-      paxKeys: '156 Keys / 168 Bays',
-      scope: 'Plot Area: 8,160 SQ.M. (2.0 Acres), BUA: 14,970 SQ.M. (161,137 SQ.FT.), 156 Keys / 168 Bays across B+G+1+Service+2nd-6th Floor.',
-    }));
-    setIncludeAreaProgram(true);
-    toast({
-      title: 'Vizag Hotel Area Template Applied',
-      description: 'Form filled with official Vizag Hotel metrics, space allocations, and area program.',
-    });
-  };
 
   const progressNum = Math.max(0, Math.min(100, Number(form.progress) || 0));
 
@@ -1754,7 +1739,7 @@ function NewProjectView() {
         terminal: form.location,
         floor: '',
         scope: form.scope,
-        areaProgram: includeAreaProgram || form.category === 'Hotel' ? vizagHotelAreaProgram : undefined,
+        areaProgram: includeAdvancedAreaProgram ? areaProgram : undefined,
       },
       phases: [
         { name: 'Brief & scope', status: 'active', progress: 0, owner: 'PMO' },
@@ -1799,23 +1784,8 @@ function NewProjectView() {
         )}
 
         <section className="rounded-2xl border border-border bg-card p-5 md:p-7">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/70 pb-4">
-            <div>
-              <h2 className="text-[18px] font-extrabold">1. Basic Information & Ownership</h2>
-              {includeAreaProgram && (
-                <p className="mt-1 text-[11px] font-medium text-[#2e7c67] flex items-center gap-1">
-                  <CheckCircle2 size={13} /> Vizag Architectural Area Program (14,970 SQ.M. / 156 Keys) attached
-                </p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={handleLoadVizagTemplate}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#eadcb1] bg-[#fff8e9] px-3.5 py-2 text-[11px] font-bold text-[#8f691b] shadow-sm hover:bg-[#faeed3] transition shrink-0"
-            >
-              <Sparkles size={14} className="text-[#9a711f]" />
-              Load Vizag Hotel Template
-            </button>
+          <div className="border-b border-border/70 pb-4">
+            <h2 className="text-[18px] font-extrabold">1. Basic Information & Ownership</h2>
           </div>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <label className="md:col-span-2">
@@ -1989,6 +1959,338 @@ function NewProjectView() {
             </label>
           </div>
         </section>
+
+        {/* Section 3: Architectural Space Program (Advanced Specifications) */}
+        <section className="rounded-2xl border border-border bg-card p-5 md:p-7">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/70 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Building2 size={20} className="text-[#9a711f]" />
+                <h2 className="text-[18px] font-extrabold text-[#173e49]">
+                  3. Architectural Space Program (Advanced Specifications)
+                </h2>
+              </div>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                Optional comprehensive architectural breakdown: Plot area, Total BUA, floor stacking, keys/bays, FOH public areas with pax, floor-wise BUA table, and room matrix.
+              </p>
+            </div>
+            <label className="inline-flex items-center gap-2 cursor-pointer rounded-xl border border-border bg-muted/30 px-3.5 py-2 text-[12px] font-bold text-foreground hover:bg-muted/50 transition shrink-0 select-none">
+              <input
+                type="checkbox"
+                checked={includeAdvancedAreaProgram}
+                onChange={(e) => setIncludeAdvancedAreaProgram(e.target.checked)}
+                className="size-4 rounded text-[#173e49] focus:ring-[#9a711f] accent-[#173e49]"
+              />
+              <span>Enable Advanced Specifications</span>
+            </label>
+          </div>
+
+          {includeAdvancedAreaProgram ? (
+            <div className="mt-6 space-y-6">
+              {/* Site & BUA Metrics */}
+              <div>
+                <h3 className="text-[13px] font-extrabold uppercase tracking-wider text-[#9a711f]">
+                  Site & Built-Up Area (BUA)
+                </h3>
+                <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <label>
+                    <span className="mb-1.5 block text-[11px] font-bold text-foreground">
+                      Plot Area (SQ.M.)
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={areaProgram.summary.plotAreaSqm || ''}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setAreaProgram((prev) => ({
+                          ...prev,
+                          summary: {
+                            ...prev.summary,
+                            plotAreaSqm: val,
+                            plotAreaSqft: Math.round(val * 10.7639),
+                          },
+                        }));
+                      }}
+                      placeholder="e.g. 8160"
+                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-semibold outline-none focus:border-[#c9a04e]"
+                    />
+                    <span className="mt-1 block font-mono text-[10px] text-muted-foreground">
+                      = {(areaProgram.summary.plotAreaSqft || 0).toLocaleString()} SQ.FT.
+                    </span>
+                  </label>
+
+                  <label>
+                    <span className="mb-1.5 block text-[11px] font-bold text-foreground">
+                      Site Area (Acres)
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={areaProgram.summary.plotAreaAcres || ''}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setAreaProgram((prev) => ({
+                          ...prev,
+                          summary: { ...prev.summary, plotAreaAcres: val },
+                        }));
+                      }}
+                      placeholder="e.g. 2.0"
+                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-semibold outline-none focus:border-[#c9a04e]"
+                    />
+                  </label>
+
+                  <label>
+                    <span className="mb-1.5 block text-[11px] font-bold text-foreground">
+                      Total BUA (SQ.M.)
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={areaProgram.summary.builtUpAreaSqm || ''}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        const sqft = Math.round(val * 10.7639);
+                        setAreaProgram((prev) => ({
+                          ...prev,
+                          summary: {
+                            ...prev.summary,
+                            builtUpAreaSqm: val,
+                            builtUpAreaSqft: sqft,
+                          },
+                        }));
+                        if (!form.area || form.area.includes('SQ.M.')) {
+                          set('area', `${val.toLocaleString()} SQ.M. / ${sqft.toLocaleString()} SQ.FT.`);
+                        }
+                      }}
+                      placeholder="e.g. 14970"
+                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-semibold outline-none focus:border-[#c9a04e]"
+                    />
+                    <span className="mt-1 block font-mono text-[10px] text-muted-foreground">
+                      = {(areaProgram.summary.builtUpAreaSqft || 0).toLocaleString()} SQ.FT.
+                    </span>
+                  </label>
+
+                  <label>
+                    <span className="mb-1.5 block text-[11px] font-bold text-foreground">
+                      Floor Stacking / Level Breakdown
+                    </span>
+                    <input
+                      type="text"
+                      value={areaProgram.summary.numberOfFloorsDescription}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setAreaProgram((prev) => ({
+                          ...prev,
+                          summary: { ...prev.summary, numberOfFloorsDescription: val },
+                        }));
+                      }}
+                      placeholder="e.g. B + G + 1 + Service + 2nd-6th Floor"
+                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none focus:border-[#c9a04e]"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Room Inventory & Stacking */}
+              <div>
+                <h3 className="text-[13px] font-extrabold uppercase tracking-wider text-[#9a711f]">
+                  Keys, Bays & Transportation
+                </h3>
+                <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <label>
+                    <span className="mb-1.5 block text-[11px] font-bold text-foreground">
+                      Total Room Keys
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={areaProgram.summary.totalRoomKeys || ''}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10) || 0;
+                        setAreaProgram((prev) => ({
+                          ...prev,
+                          summary: { ...prev.summary, totalRoomKeys: val },
+                        }));
+                        if (!form.paxKeys || form.paxKeys.includes('Keys')) {
+                          set('paxKeys', `${val} Keys / ${areaProgram.summary.totalBays || val} Bays`);
+                        }
+                      }}
+                      placeholder="e.g. 156"
+                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-semibold outline-none focus:border-[#c9a04e]"
+                    />
+                  </label>
+
+                  <label>
+                    <span className="mb-1.5 block text-[11px] font-bold text-foreground">
+                      Total Room Bays
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={areaProgram.summary.totalBays || ''}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10) || 0;
+                        setAreaProgram((prev) => ({
+                          ...prev,
+                          summary: { ...prev.summary, totalBays: val },
+                        }));
+                        if (!form.paxKeys || form.paxKeys.includes('Bays')) {
+                          set('paxKeys', `${areaProgram.summary.totalRoomKeys || 0} Keys / ${val} Bays`);
+                        }
+                      }}
+                      placeholder="e.g. 168"
+                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-semibold outline-none focus:border-[#c9a04e]"
+                    />
+                  </label>
+
+                  <label>
+                    <span className="mb-1.5 block text-[11px] font-bold text-foreground">
+                      Standard Room Size (SQ.M.)
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={areaProgram.summary.standardRoomSizeSqm || ''}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setAreaProgram((prev) => ({
+                          ...prev,
+                          summary: { ...prev.summary, standardRoomSizeSqm: val },
+                        }));
+                      }}
+                      placeholder="e.g. 27"
+                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-semibold outline-none focus:border-[#c9a04e]"
+                    />
+                  </label>
+
+                  <label>
+                    <span className="mb-1.5 block text-[11px] font-bold text-foreground">
+                      Number of Elevators
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={areaProgram.summary.numberOfElevators || ''}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10) || 0;
+                        setAreaProgram((prev) => ({
+                          ...prev,
+                          summary: { ...prev.summary, numberOfElevators: val },
+                        }));
+                      }}
+                      placeholder="e.g. 4"
+                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] font-semibold outline-none focus:border-[#c9a04e]"
+                    />
+                  </label>
+
+                  <label className="sm:col-span-2">
+                    <span className="mb-1.5 block text-[11px] font-bold text-foreground">
+                      Elevator / Core Notes
+                    </span>
+                    <input
+                      type="text"
+                      value={areaProgram.summary.elevatorRemarks}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setAreaProgram((prev) => ({
+                          ...prev,
+                          summary: { ...prev.summary, elevatorRemarks: val },
+                        }));
+                      }}
+                      placeholder="e.g. 2 Passenger Elevators + 2 Service Lifts"
+                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none focus:border-[#c9a04e]"
+                    />
+                  </label>
+
+                  <label className="sm:col-span-2">
+                    <span className="mb-1.5 block text-[11px] font-bold text-foreground">
+                      Special Amenities / Scope Remarks
+                    </span>
+                    <input
+                      type="text"
+                      value={areaProgram.summary.generalRemarks}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setAreaProgram((prev) => ({
+                          ...prev,
+                          summary: { ...prev.summary, generalRemarks: val },
+                        }));
+                      }}
+                      placeholder="e.g. Banquet, ADD, Lounge Bar, Gym, Pool & 4 Presidential Suites"
+                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none focus:border-[#c9a04e]"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Detailed Breakdown Tables Action Card */}
+              <div className="rounded-xl border border-[#eadcb1] bg-[#fffbf2] p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="text-[14px] font-extrabold text-[#173e49]">
+                      Detailed Breakdown Tables (FOH Pax, Floor BUA & Room Matrix)
+                    </h4>
+                    <p className="mt-1 text-[12px] text-muted-foreground">
+                      Add row-by-row entries for Ground/2nd Floor public spaces (Banquet, ADD, Lounge Bar, etc.) with Pax capacities, floor-wise BUA allocations, and room inventory across guest floors.
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-2 font-mono text-[11px]">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-white border border-[#eadcb1] px-2.5 py-1 text-[#8f691b] font-semibold">
+                        {areaProgram.fohAreas.groundFloor.length + areaProgram.fohAreas.secondFloor.length} FOH Areas
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-md bg-white border border-[#eadcb1] px-2.5 py-1 text-[#8f691b] font-semibold">
+                        {areaProgram.floorWiseBua.items.length} Floor BUA Rows
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-md bg-white border border-[#eadcb1] px-2.5 py-1 text-[#8f691b] font-semibold">
+                        {areaProgram.roomConfiguration.items.length} Guest Floor Rows
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsDetailedTableModalOpen(true)}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-2.5 text-[12px] font-bold text-white shadow hover:bg-[#205160] transition shrink-0"
+                  >
+                    <SlidersHorizontal size={14} />
+                    Open Detailed Tables Editor
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl border border-dashed border-border/80 bg-muted/20 p-5 text-center">
+              <p className="text-[12px] text-muted-foreground">
+                Advanced Architectural Space Program is currently disabled for this project. Check the box above to enter plot area, BUA, floor stacking, keys, bays, and detailed space allocation tables.
+              </p>
+            </div>
+          )}
+        </section>
+
+        {isDetailedTableModalOpen && (
+          <AreaProgramEditorModal
+            initialProgram={areaProgram}
+            onClose={() => setIsDetailedTableModalOpen(false)}
+            onSave={(updated) => {
+              setAreaProgram(updated);
+              setIncludeAdvancedAreaProgram(true);
+              if (updated.summary.builtUpAreaSqm) {
+                set('area', `${updated.summary.builtUpAreaSqm.toLocaleString()} SQ.M. / ${updated.summary.builtUpAreaSqft.toLocaleString()} SQ.FT.`);
+              }
+              if (updated.summary.totalRoomKeys) {
+                set('paxKeys', `${updated.summary.totalRoomKeys} Keys / ${updated.summary.totalBays} Bays`);
+              }
+              setIsDetailedTableModalOpen(false);
+              toast({
+                title: 'Space Program Tables Updated',
+                description: 'Floor breakdown, FOH capacities, and room matrices have been saved to this draft.',
+              });
+            }}
+          />
+        )}
 
         <div className="flex justify-end">
           <button type="submit" className="rounded-xl bg-[#d6a95d] px-5 py-3 text-[11px] font-extrabold text-[#173e49] hover:bg-[#e2bd73]">
