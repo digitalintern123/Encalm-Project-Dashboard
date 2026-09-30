@@ -54,6 +54,14 @@ export function PhotoUploadDialog({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const openFilePicker = () => {
+    setMode('file');
+    setError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   const handleFileProcess = (file: File) => {
     if (!file.type.startsWith('image/')) {
       setError('Please select a valid image file (JPEG, PNG, WebP).');
@@ -79,6 +87,8 @@ export function PhotoUploadDialog({
     if (file) {
       handleFileProcess(file);
     }
+    // Reset input value so selecting the same file again triggers onChange
+    e.target.value = '';
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -170,7 +180,7 @@ export function PhotoUploadDialog({
           <div className="flex items-center gap-2 border-b border-border pb-3">
             <button
               type="button"
-              onClick={() => { setMode('file'); setError(null); }}
+              onClick={openFilePicker}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition ${
                 mode === 'file'
                   ? 'bg-[#173e49] text-white shadow-sm'
@@ -198,11 +208,13 @@ export function PhotoUploadDialog({
           {mode === 'file' ? (
             <div>
               <input
+                id="site-photo-file-input"
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/*"
                 onChange={handleFileChange}
-                className="hidden"
+                className="sr-only"
+                tabIndex={-1}
               />
 
               {fileData ? (
@@ -222,7 +234,7 @@ export function PhotoUploadDialog({
                       <span className="font-mono text-muted-foreground">{fileSizeText}</span>
                       <button
                         type="button"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={openFilePicker}
                         className="text-[11px] font-bold text-[#9a711f] hover:underline ml-2"
                       >
                         Change photo
@@ -235,11 +247,16 @@ export function PhotoUploadDialog({
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
                   onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-2xl p-7 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2.5 ${
+                  onClick={(e) => {
+                    // Only trigger if click wasn't already on the label
+                    if ((e.target as HTMLElement).tagName !== 'LABEL' && !(e.target as HTMLElement).closest('label')) {
+                      openFilePicker();
+                    }
+                  }}
+                  className={`border-2 border-dashed rounded-2xl p-7 text-center cursor-pointer transition flex flex-col items-center justify-center gap-3 ${
                     dragOver
                       ? 'border-[#9a711f] bg-[#f8f5ec]'
-                      : 'border-border/80 hover:border-muted-foreground/50 hover:bg-muted/30'
+                      : 'border-border/80 hover:border-muted-foreground/50 hover:bg-muted/20'
                   }`}
                 >
                   <div className="grid size-12 place-items-center rounded-2xl bg-[#f8f5ec] text-[#9a711f]">
@@ -247,12 +264,19 @@ export function PhotoUploadDialog({
                   </div>
                   <div>
                     <p className="text-[13px] font-bold text-foreground">
-                      Click to choose or drag & drop photograph
+                      Choose or drag & drop a site photograph
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       Supports JPEG, PNG, WebP from phone camera or computer (up to 50MB)
                     </p>
                   </div>
+                  <label
+                    htmlFor="site-photo-file-input"
+                    className="mt-1 inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-2.5 text-[11px] font-bold text-white shadow-sm hover:bg-[#205160] transition cursor-pointer active:scale-95"
+                  >
+                    <Upload size={14} />
+                    Browse from Device / Camera
+                  </label>
                 </div>
               )}
             </div>
