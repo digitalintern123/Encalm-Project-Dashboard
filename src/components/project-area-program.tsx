@@ -76,6 +76,7 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
   const hasProgram = Boolean(project.specification?.areaProgram);
   const currentProgram: ArchitecturalAreaProgram =
     project.specification?.areaProgram || emptyAreaProgram;
+  const upperFloorName = currentProgram.fohAreas.secondFloor[0]?.floor || 'Upper Floor';
 
   const handleExportCSV = () => {
     try {
@@ -154,7 +155,7 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
       });
       rows.push([
         '',
-        '2nd Floor Subtotal',
+        `${upperFloorName} Subtotal`,
         '',
         String(currentProgram.fohAreas.secondFloorSubtotal.areaSqm),
         String(currentProgram.fohAreas.secondFloorSubtotal.areaSqft),
@@ -403,8 +404,8 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
             <p className="mt-0.5 font-mono text-[11px] text-[#2e7c67] font-semibold">
               {currentProgram.summary.totalBays} Total Bays
             </p>
-            <p className="mt-1 text-[10px] text-muted-foreground font-medium">
-              152 Std + 4 Presidential
+            <p className="mt-1 text-[10px] text-muted-foreground font-medium truncate" title={currentProgram.summary.generalRemarks}>
+              {currentProgram.summary.generalRemarks || `${currentProgram.summary.totalRoomKeys} Keys across floors`}
             </p>
           </div>
         </div>
@@ -436,11 +437,11 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
             <span className="text-[20px] font-extrabold text-foreground">
               {currentProgram.summary.numberOfElevators} <span className="text-[12px] font-medium text-muted-foreground">Total</span>
             </span>
-            <p className="mt-0.5 text-[11px] text-foreground font-semibold">
-              3 Guest + 2 Service
+            <p className="mt-0.5 text-[11px] text-foreground font-semibold truncate" title={currentProgram.summary.elevatorRemarks}>
+              {currentProgram.summary.elevatorRemarks || `${currentProgram.summary.numberOfElevators} Elevators`}
             </p>
             <p className="mt-1 text-[10px] text-muted-foreground font-medium">
-              + 1 Fire tower core
+              Passenger & Service Vertical Transport
             </p>
           </div>
         </div>
@@ -480,7 +481,7 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
               <span className="size-2 rounded-full bg-[#3d9a7e]" /> Ground Floor: {currentProgram.fohAreas.groundFloorSubtotal.areaSqm.toLocaleString()} SQ.M.
             </span>
             <span className="inline-flex items-center gap-1.5 font-medium">
-              <span className="size-2 rounded-full bg-[#d19b35]" /> 2nd Floor: {currentProgram.fohAreas.secondFloorSubtotal.areaSqm.toLocaleString()} SQ.M.
+              <span className="size-2 rounded-full bg-[#d19b35]" /> {upperFloorName}: {currentProgram.fohAreas.secondFloorSubtotal.areaSqm.toLocaleString()} SQ.M.
             </span>
           </div>
         </div>
@@ -550,11 +551,11 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
           </div>
         </div>
 
-        {/* 2nd Floor FOH Table */}
+        {/* Upper Floor FOH Table */}
         <div className="mt-6">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-[13px] font-bold text-[#173e49] flex items-center gap-2">
-              <span className="size-2 rounded-full bg-[#d19b35]" /> 2nd Floor Wellness & Recreational Areas
+              <span className="size-2 rounded-full bg-[#d19b35]" /> {upperFloorName} Wellness & Recreational Areas
             </h4>
             <span className="font-mono text-[11px] text-muted-foreground">
               {currentProgram.fohAreas.secondFloor.length} Areas Allocated
@@ -598,7 +599,7 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
               <tfoot>
                 <tr className="border-t-2 border-border bg-[#f8f6f0] font-bold text-foreground">
                   <td colSpan={3} className="py-2.5 pl-4 pr-3 text-right font-mono uppercase text-[10px] tracking-wider text-muted-foreground">
-                    2nd Floor Subtotal
+                    {upperFloorName} Subtotal
                   </td>
                   <td className="px-3 py-2.5 text-right font-mono text-[#173e49]">
                     {currentProgram.fohAreas.secondFloorSubtotal.areaSqm.toLocaleString()}
@@ -607,7 +608,7 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
                     {currentProgram.fohAreas.secondFloorSubtotal.areaSqft.toLocaleString()}
                   </td>
                   <td colSpan={2} className="py-2.5 pl-3 pr-4 text-muted-foreground text-[11px] font-normal">
-                    Wellness & deck recreation
+                    Wellness & recreation
                   </td>
                 </tr>
                 <tr className="border-t border-border bg-[#faefe4] font-extrabold text-[#173e49]">
@@ -774,22 +775,24 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
                     <td className="px-3 py-2.5 text-center font-mono text-[13px] text-[#9a711f]">
                       {currentProgram.roomConfiguration.totalBays}
                     </td>
-                    <td className="py-2.5 pl-2 pr-3 text-[11px] text-[#173e49]">
-                      156 Keys (168 Bays)
+                    <td className="py-2.5 pl-2 pr-3 text-[11px] text-[#173e49] font-medium">
+                      {currentProgram.roomConfiguration.totalKeys} Keys ({currentProgram.roomConfiguration.totalBays} Bays)
                     </td>
                   </tr>
                 </tfoot>
               </table>
             </div>
 
-            {/* Presidential Suite Highlight Note */}
-            <div className="mt-5 rounded-xl border border-[#eadcb1] bg-[#fbf5e7] p-4 text-[11px] leading-relaxed text-[#7c5b1b]">
-              <div className="flex items-center gap-1.5 font-bold mb-1">
-                <Sparkles size={14} className="text-[#9a711f]" />
-                6th Floor Presidential Suites Bifurcation
+            {/* Room Inventory & Suite Configuration Note */}
+            {currentProgram.summary.generalRemarks ? (
+              <div className="mt-5 rounded-xl border border-[#eadcb1] bg-[#fbf5e7] p-4 text-[11px] leading-relaxed text-[#7c5b1b]">
+                <div className="flex items-center gap-1.5 font-bold mb-1">
+                  <Sparkles size={14} className="text-[#9a711f]" />
+                  Room Inventory & Configuration Notes
+                </div>
+                {currentProgram.summary.generalRemarks}
               </div>
-              The 6th Guest Floor contains <strong>4 Presidential Keys</strong> spanning <strong>16 structural bays</strong> (approx 4 bays per Presidential suite). Floors 2 to 5 provide standard 1-bay rooms (41 + 37 + 37 + 37 = 152 standard keys).
-            </div>
+            ) : null}
           </div>
 
           <div className="mt-5 pt-4 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
@@ -798,6 +801,38 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
           </div>
         </section>
       </div>
+
+      {/* 4. MEPF Infrastructure & Site Utilities (if present in specification) */}
+      {project.specification?.customFields && project.specification.customFields.length > 0 && (
+        <section className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm">
+          <div className="flex items-center justify-between border-b border-border/60 pb-4">
+            <div>
+              <span className="font-mono text-[9px] uppercase tracking-[.15em] text-[#2e7c67] font-bold">
+                Infrastructure & Utilities
+              </span>
+              <h3 className="mt-1 text-[18px] font-extrabold text-[#173e49]">
+                MEPF Services & Plant Capacities
+              </h3>
+            </div>
+            <span className="font-mono text-[11px] text-muted-foreground">
+              {project.specification.customFields.length} Specifications Recorded
+            </span>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {project.specification.customFields.map((field, idx) => (
+              <div key={`${field.label}-${idx}`} className="rounded-xl border border-border/80 bg-[#fbfaf6] p-3.5">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#9a711f]">
+                  {field.label}
+                </span>
+                <p className="mt-1 text-[12px] font-semibold text-[#173e49] leading-snug">
+                  {field.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Inline Editor Dialog */}
       {isEditorOpen && (

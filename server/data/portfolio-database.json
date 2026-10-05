@@ -1,8 +1,474 @@
 {
   "version": 1,
-  "exportedAt": "2026-09-30T07:05:22.830Z",
-  "projectCount": 1,
+  "exportedAt": "2026-10-05T06:04:30.365Z",
+  "projectCount": 2,
   "projects": [
+    {
+      "id": "mopa-goa-hotel",
+      "name": "Mopa Goa Hotel",
+      "location": "Goa",
+      "category": "Hotel",
+      "code": "MOP-HTL-26",
+      "health": "On track",
+      "status": "In Design",
+      "progress": 18,
+      "targetDate": "2027-09-30",
+      "targetLabel": "30 Sep 2027",
+      "aop": 2450000000,
+      "awarded": 580000000,
+      "spent": 24000000,
+      "projectedCost": 2450000000,
+      "area": "20,000 SQ.M. / 2,15,280 SQ.FT.",
+      "paxKeys": "220 Keys • 109 Car Parks",
+      "nextMilestone": "Detailed Design & MEPF Finalization",
+      "nextMilestoneDate": "2026-12-15",
+      "leadId": "user-chinmay-saxena",
+      "startDate": "2025-06-01",
+      "lastUpdated": "2026-10-05T06:04:30.350Z",
+      "templateId": "hotel",
+      "specification": {
+        "projectType": "Hotel",
+        "terminal": "Mopa, Goa",
+        "units": "220 Keys",
+        "floor": "Basement, Ground, Mezz-1 & 2, 1st floor, 2nd to 6th Guest floor",
+        "area": "20,000 SQ.M. / 2,15,280 SQ.FT.",
+        "capacity": "220 Keys • 109 Car Parks • 9 Elevators",
+        "scope": "Plot Area: 8,619 SQ.M. (2.13 Acre), FAR: 15,156 SQ.M. (1,63,139 SQ.FT.), Built-up Area: 20,000 SQ.M. (2,15,280 SQ.FT.), 220 Keys across Basement, Ground, Mezz-1 & 2, 1st floor, 2nd to 6th Guest floors with Ball Room, ADD, Lounge Bar, Gym, Health SPA, Function Terrace, Swimming Pool & MEPF infrastructure.",
+        "customFields": [
+          {
+            "label": "FAR Area",
+            "value": "15,156 SQ.M. / 1,63,139 SQ.FT."
+          },
+          {
+            "label": "Car Parking",
+            "value": "109 Nos. ((36 X 2) stack parking, 3 single, 34 ground surface)"
+          },
+          {
+            "label": "Elevators",
+            "value": "9 Nos. (6 Guest Lifts + 3 Service Lifts)"
+          },
+          {
+            "label": "STP Capacity",
+            "value": "140 KLD (MBBR Technology)"
+          },
+          {
+            "label": "Hot Water",
+            "value": "Hot Generation System"
+          },
+          {
+            "label": "HVAC Chillers",
+            "value": "Chilled water - 3 X 300TR (2working + 1standby) rotary screw chillers at Terrace Floor"
+          },
+          {
+            "label": "Cooling Towers",
+            "value": "Cooling Tower 375 TR X 2no. At Terrace Floor"
+          },
+          {
+            "label": "Electrical Sub-station",
+            "value": "2 X 800KVA compact type sub-station at Ground Floor level"
+          },
+          {
+            "label": "DG Power Backup",
+            "value": "2 X 750 + 1 X 500 KVA DG for 100% power backup in Basement Floor"
+          },
+          {
+            "label": "Main Electrical Panel",
+            "value": "Main electrical panel room in Basement Floor"
+          }
+        ],
+        "areaProgram": {
+          "summary": {
+            "plotAreaSqm": 8619,
+            "plotAreaSqft": 92775,
+            "plotAreaAcres": 2.13,
+            "builtUpAreaSqm": 20000,
+            "builtUpAreaSqft": 215280,
+            "numberOfFloorsDescription": "Basement, Ground, Mezz-1 & 2, 1st floor, 2nd to 6th Guest floor",
+            "totalRoomKeys": 220,
+            "totalBays": 220,
+            "standardRoomSizeSqm": 28,
+            "numberOfElevators": 9,
+            "elevatorRemarks": "6 Guest Lifts + 3 Service Lifts",
+            "generalRemarks": "218 Std. Guest Room, 4 Executive suites, 4 Presidential suites (Total 220 Keys)"
+          },
+          "fohAreas": {
+            "groundFloor": [
+              {
+                "sNo": 1,
+                "floor": "Ground Floor",
+                "description": "Ball Room",
+                "areaSqm": 465,
+                "areaSqft": 5005,
+                "capacityPax": "300",
+                "remarks": "Large ballroom banquet facility"
+              },
+              {
+                "sNo": 2,
+                "floor": "Ground Floor",
+                "description": "Pre-function",
+                "areaSqm": 217,
+                "areaSqft": 2336,
+                "remarks": "Grand pre-event registration foyer"
+              },
+              {
+                "sNo": 3,
+                "floor": "Ground Floor",
+                "description": "ADD (All Day Dining)",
+                "areaSqm": 610,
+                "areaSqft": 6566,
+                "capacityPax": "174",
+                "remarks": "Main all day dining restaurant"
+              },
+              {
+                "sNo": 4,
+                "floor": "Ground Floor",
+                "description": "Lounge BAR",
+                "areaSqm": 115,
+                "areaSqft": 1238,
+                "capacityPax": "23",
+                "remarks": "Premium lounge & cocktail bar"
+              },
+              {
+                "sNo": 5,
+                "floor": "Ground Floor",
+                "description": "Kitchen",
+                "areaSqm": 304,
+                "areaSqft": 3272,
+                "remarks": "Main commercial kitchen and banqueting support"
+              }
+            ],
+            "groundFloorSubtotal": {
+              "areaSqm": 1711,
+              "areaSqft": 18417
+            },
+            "secondFloor": [
+              {
+                "sNo": 1,
+                "floor": "1st Floor",
+                "description": "GYM",
+                "areaSqm": 59,
+                "areaSqft": 635,
+                "remarks": "Modern fitness studio & workout floor"
+              },
+              {
+                "sNo": 2,
+                "floor": "1st Floor",
+                "description": "Health SPA",
+                "areaSqm": 139,
+                "areaSqft": 1496,
+                "remarks": "1no. Relaxation Room, 2no. Of treatment rooms & SPA BOH area"
+              },
+              {
+                "sNo": 3,
+                "floor": "1st Floor",
+                "description": "Function Terrace",
+                "areaSqm": 325,
+                "areaSqft": 3498,
+                "capacityPax": "34",
+                "remarks": "Pool BAR Counter, semi covered seating"
+              },
+              {
+                "sNo": 4,
+                "floor": "1st Floor",
+                "description": "Swimming Pool",
+                "areaSqm": 250,
+                "areaSqft": 2691,
+                "remarks": "Swimming Pool, Kid's Pool"
+              }
+            ],
+            "secondFloorSubtotal": {
+              "areaSqm": 773,
+              "areaSqft": 8320
+            },
+            "grandSubtotal": {
+              "areaSqm": 2484,
+              "areaSqft": 26737
+            }
+          },
+          "floorWiseBua": {
+            "items": [
+              {
+                "sNo": 1,
+                "floor": "Basement Floor",
+                "areaSqm": 2800,
+                "areaSqft": 30139,
+                "remarks": "Parking (75 cars), 100% DG backup, Main electrical panel room, STP (140 KLD)"
+              },
+              {
+                "sNo": 2,
+                "floor": "Ground Floor",
+                "areaSqm": 3200,
+                "areaSqft": 34445,
+                "remarks": "Main Lobby, Ball Room (300 Pax), Pre-function, ADD (174 Pax), Lounge Bar (23 Pax), Kitchen, Sub-station, Surface parking"
+              },
+              {
+                "sNo": 3,
+                "floor": "Mezzanine 1 Floor",
+                "areaSqm": 1400,
+                "areaSqft": 15070,
+                "remarks": "Administration, engineering offices, BOH locker rooms"
+              },
+              {
+                "sNo": 4,
+                "floor": "Mezzanine 2 Floor",
+                "areaSqm": 1400,
+                "areaSqft": 15070,
+                "remarks": "MEP service routing, storage, banquet back-of-house"
+              },
+              {
+                "sNo": 5,
+                "floor": "1st Floor",
+                "areaSqm": 2200,
+                "areaSqft": 23681,
+                "remarks": "Gym, Health SPA, Function Terrace (Pool Bar, 34 Pax), Swimming Pool & Kid’s pool"
+              },
+              {
+                "sNo": 6,
+                "floor": "2nd Guest Floor",
+                "areaSqm": 1800,
+                "areaSqft": 19375,
+                "remarks": "44 Guest keys"
+              },
+              {
+                "sNo": 7,
+                "floor": "3rd Guest Floor",
+                "areaSqm": 1800,
+                "areaSqft": 19375,
+                "remarks": "44 Guest keys"
+              },
+              {
+                "sNo": 8,
+                "floor": "4th Guest Floor",
+                "areaSqm": 1800,
+                "areaSqft": 19375,
+                "remarks": "44 Guest keys"
+              },
+              {
+                "sNo": 9,
+                "floor": "5th Guest Floor",
+                "areaSqm": 1800,
+                "areaSqft": 19375,
+                "remarks": "44 Guest keys"
+              },
+              {
+                "sNo": 10,
+                "floor": "6th Guest Floor",
+                "areaSqm": 1700,
+                "areaSqft": 18299,
+                "remarks": "44 Keys (4 Executive Suites, 4 Presidential Suites)"
+              },
+              {
+                "sNo": 11,
+                "floor": "Terrace Floor",
+                "areaSqm": 100,
+                "areaSqft": 1076,
+                "remarks": "3x300TR screw chillers, 2x375TR cooling towers, lift machine room"
+              }
+            ],
+            "subtotal": {
+              "areaSqm": 20000,
+              "areaSqft": 215280
+            }
+          },
+          "roomConfiguration": {
+            "items": [
+              {
+                "sNo": 1,
+                "floor": "2nd Guest Floor",
+                "keys": 44,
+                "bays": 44,
+                "remarks": "44 Standard Deluxe Rooms"
+              },
+              {
+                "sNo": 2,
+                "floor": "3rd Guest Floor",
+                "keys": 44,
+                "bays": 44,
+                "remarks": "44 Standard Deluxe Rooms"
+              },
+              {
+                "sNo": 3,
+                "floor": "4th Guest Floor",
+                "keys": 44,
+                "bays": 44,
+                "remarks": "44 Standard Deluxe Rooms"
+              },
+              {
+                "sNo": 4,
+                "floor": "5th Guest Floor",
+                "keys": 44,
+                "bays": 44,
+                "remarks": "44 Standard Deluxe Rooms"
+              },
+              {
+                "sNo": 5,
+                "floor": "6th Guest Floor",
+                "keys": 44,
+                "bays": 44,
+                "remarks": "36 Standard Rooms, 4 Executive Suites, 4 Presidential Suites"
+              }
+            ],
+            "totalKeys": 220,
+            "totalBays": 220
+          }
+        }
+      },
+      "phases": [
+        {
+          "id": "mopa-goa-hotel-phase-1",
+          "name": "Feasibility & Brief",
+          "status": "complete",
+          "progress": 100,
+          "owner": "PMO",
+          "plannedStart": "2025-06-01",
+          "plannedFinish": "2025-08-31",
+          "actualFinish": "2025-08-25",
+          "workCompleted": "Site boundary survey, soil investigation, traffic impact study and 220-key operator brief ratified.",
+          "nextAction": "Proceed to statutory filings",
+          "decisionRequired": "Operator architectural sign-off completed.",
+          "weight": null,
+          "updatedAt": null
+        },
+        {
+          "id": "mopa-goa-hotel-phase-2",
+          "name": "Design Development & MEPF",
+          "status": "active",
+          "progress": 55,
+          "owner": "Design",
+          "plannedStart": "2025-09-01",
+          "plannedFinish": "2026-03-31",
+          "actualFinish": null,
+          "workCompleted": "Architectural schematic drawings, structural transfer slab layout, and terrace MEPF chillers layout frozen.",
+          "nextAction": "Finalize BOQ and tender packages for substructure and MEPF packages.",
+          "decisionRequired": "Confirmation on façade material and chiller energy efficiency specifications.",
+          "weight": null,
+          "updatedAt": null
+        },
+        {
+          "id": "mopa-goa-hotel-phase-3",
+          "name": "Approvals & Statutory Clearances",
+          "status": "active",
+          "progress": 40,
+          "owner": "Projects",
+          "plannedStart": "2025-10-01",
+          "plannedFinish": "2026-06-30",
+          "actualFinish": null,
+          "workCompleted": "Environmental Clearance (EC) application and Airport Authority Height NOC submitted.",
+          "nextAction": "Attend state pollution control board committee review.",
+          "decisionRequired": "State environmental committee compliance response.",
+          "weight": null,
+          "updatedAt": null
+        },
+        {
+          "id": "mopa-goa-hotel-phase-4",
+          "name": "Procurement & Contracts",
+          "status": "upcoming",
+          "progress": 0,
+          "owner": "Sourcing",
+          "plannedStart": "2026-04-01",
+          "plannedFinish": "2026-09-30",
+          "actualFinish": null,
+          "workCompleted": null,
+          "nextAction": "Issue RFP for general civil contractor and long-lead HVAC chillers.",
+          "decisionRequired": null,
+          "weight": null,
+          "updatedAt": null
+        },
+        {
+          "id": "mopa-goa-hotel-phase-5",
+          "name": "Construction & Fit-out",
+          "status": "upcoming",
+          "progress": 0,
+          "owner": "Projects",
+          "plannedStart": "2026-07-01",
+          "plannedFinish": "2027-09-30",
+          "actualFinish": null,
+          "workCompleted": null,
+          "nextAction": "Site mobilization, excavation, and basement diaphragm wall construction.",
+          "decisionRequired": null,
+          "weight": null,
+          "updatedAt": null
+        }
+      ],
+      "milestones": [
+        {
+          "id": "mopa-goa-hotel-ms-1",
+          "title": "Architectural Concept & 220-Key Brief Approval",
+          "date": "2025-08-25",
+          "status": "complete",
+          "stage": "Design",
+          "owner": "PMO",
+          "approvalRequired": true,
+          "approvalStatus": "Approved",
+          "completedDate": "2025-08-25"
+        },
+        {
+          "id": "mopa-goa-hotel-ms-2",
+          "title": "Detailed Design & MEPF Finalization",
+          "date": "2026-12-15",
+          "status": "upcoming",
+          "stage": "Design",
+          "owner": "Design",
+          "approvalRequired": true,
+          "approvalStatus": "Pending",
+          "completedDate": null
+        },
+        {
+          "id": "mopa-goa-hotel-ms-3",
+          "title": "Statutory Height & Environmental Clearances",
+          "date": "2026-05-31",
+          "status": "upcoming",
+          "stage": "Approvals",
+          "owner": "Projects",
+          "approvalRequired": true,
+          "approvalStatus": "Pending",
+          "completedDate": null
+        },
+        {
+          "id": "mopa-goa-hotel-ms-4",
+          "title": "Substructure & Basement Completion",
+          "date": "2026-11-30",
+          "status": "upcoming",
+          "stage": "Construction",
+          "owner": "Projects",
+          "approvalRequired": false,
+          "approvalStatus": "Not required",
+          "completedDate": null
+        },
+        {
+          "id": "mopa-goa-hotel-ms-5",
+          "title": "Hotel Soft Opening & Handover",
+          "date": "2027-09-30",
+          "status": "upcoming",
+          "stage": "Opening",
+          "owner": "Operations",
+          "approvalRequired": true,
+          "approvalStatus": "Pending",
+          "completedDate": null
+        }
+      ],
+      "issues": [
+        {
+          "id": "mopa-goa-hotel-issue-1",
+          "title": "HVAC Chiller Delivery Lead Time",
+          "detail": "3 X 300TR rotary screw chillers have a 24-week delivery lead time from overseas manufacturer.",
+          "severity": "Medium",
+          "owner": "Procurement Lead",
+          "category": "Procurement",
+          "status": "Open",
+          "stage": "Design",
+          "dateRaised": "2025-11-15",
+          "dueDate": "2026-03-31",
+          "impactCost": null,
+          "impactSchedule": "Tender release must be advanced to Q1 2026 to ensure chillers arrive before terrace slab closure.",
+          "impactScope": null,
+          "action": "Issue advance procurement package for long-lead HVAC equipment.",
+          "resolution": null
+        }
+      ],
+      "updates": [],
+      "photos": []
+    },
     {
       "id": "vizag-hotel-suites",
       "name": "Vizag Hotel & Suites",
