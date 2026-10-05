@@ -65,7 +65,7 @@ export default function AreaSheet() {
         sheet?.status ||
         (p.status === 'Operational' ? 'Operational / Handed-over'
         : p.status === 'Under Construction' ? 'Under Construction'
-        : p.status === 'On Hold' ? 'HOLD'
+        : (p.status as string) === 'On Hold' ? 'HOLD'
         : p.status || 'Operational / Handed-over');
 
       return {

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exportedAt": "2026-10-05T08:56:10.480Z",
+  "exportedAt": "2026-10-05T10:03:39.360Z",
   "projectCount": 68,
   "projects": [
     {
@@ -24,7 +24,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.346Z",
+      "lastUpdated": "2026-10-05T10:03:39.274Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -175,7 +175,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.352Z",
+      "lastUpdated": "2026-10-05T10:03:39.277Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -325,7 +325,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.365Z",
+      "lastUpdated": "2026-10-05T10:03:39.285Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -473,7 +473,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.385Z",
+      "lastUpdated": "2026-10-05T10:03:39.293Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -622,7 +622,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.368Z",
+      "lastUpdated": "2026-10-05T10:03:39.288Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -773,7 +773,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.368Z",
+      "lastUpdated": "2026-10-05T10:03:39.287Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -924,7 +924,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T08:56:10.352Z",
+      "lastUpdated": "2026-10-05T10:03:39.278Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1075,7 +1075,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.367Z",
+      "lastUpdated": "2026-10-05T10:03:39.287Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1226,7 +1226,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.366Z",
+      "lastUpdated": "2026-10-05T10:03:39.285Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1377,7 +1377,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.355Z",
+      "lastUpdated": "2026-10-05T10:03:39.280Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1527,7 +1527,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.355Z",
+      "lastUpdated": "2026-10-05T10:03:39.280Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1675,7 +1675,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.387Z",
+      "lastUpdated": "2026-10-05T10:03:39.293Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -1824,7 +1824,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T08:56:10.352Z",
+      "lastUpdated": "2026-10-05T10:03:39.278Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1975,7 +1975,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.361Z",
+      "lastUpdated": "2026-10-05T10:03:39.283Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2125,7 +2125,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.365Z",
+      "lastUpdated": "2026-10-05T10:03:39.284Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2274,7 +2274,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.366Z",
+      "lastUpdated": "2026-10-05T10:03:39.286Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2425,7 +2425,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.367Z",
+      "lastUpdated": "2026-10-05T10:03:39.286Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2576,7 +2576,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T08:56:10.362Z",
+      "lastUpdated": "2026-10-05T10:03:39.283Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2727,7 +2727,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.386Z",
+      "lastUpdated": "2026-10-05T10:03:39.293Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -2878,7 +2878,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T08:56:10.362Z",
+      "lastUpdated": "2026-10-05T10:03:39.283Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3028,7 +3028,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.383Z",
+      "lastUpdated": "2026-10-05T10:03:39.292Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -3177,7 +3177,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.384Z",
+      "lastUpdated": "2026-10-05T10:03:39.292Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -3327,7 +3327,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.382Z",
+      "lastUpdated": "2026-10-05T10:03:39.292Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -3476,7 +3476,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.354Z",
+      "lastUpdated": "2026-10-05T10:03:39.279Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3627,7 +3627,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.363Z",
+      "lastUpdated": "2026-10-05T10:03:39.284Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3778,7 +3778,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.367Z",
+      "lastUpdated": "2026-10-05T10:03:39.287Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3929,7 +3929,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.363Z",
+      "lastUpdated": "2026-10-05T10:03:39.284Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -4079,7 +4079,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.364Z",
+      "lastUpdated": "2026-10-05T10:03:39.284Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -4228,7 +4228,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.359Z",
+      "lastUpdated": "2026-10-05T10:03:39.282Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -4379,7 +4379,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.357Z",
+      "lastUpdated": "2026-10-05T10:03:39.281Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -4530,7 +4530,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.381Z",
+      "lastUpdated": "2026-10-05T10:03:39.291Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -4680,7 +4680,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.378Z",
+      "lastUpdated": "2026-10-05T10:03:39.291Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -4828,7 +4828,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.379Z",
+      "lastUpdated": "2026-10-05T10:03:39.291Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -4977,7 +4977,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T08:56:10.360Z",
+      "lastUpdated": "2026-10-05T10:03:39.282Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -5128,7 +5128,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.356Z",
+      "lastUpdated": "2026-10-05T10:03:39.281Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -5279,7 +5279,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.371Z",
+      "lastUpdated": "2026-10-05T10:03:39.290Z",
       "templateId": "encalm-eats",
       "specification": {
         "projectType": "Encalm Eats",
@@ -5430,7 +5430,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.371Z",
+      "lastUpdated": "2026-10-05T10:03:39.290Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -5580,7 +5580,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.388Z",
+      "lastUpdated": "2026-10-05T10:03:39.294Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -5729,7 +5729,7 @@
       "nextMilestoneDate": "2026-12-15",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-06-01",
-      "lastUpdated": "2026-10-05T08:56:10.288Z",
+      "lastUpdated": "2026-10-05T10:03:39.241Z",
       "templateId": "hotel",
       "specification": {
         "projectType": "Hotel",
@@ -6213,7 +6213,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.353Z",
+      "lastUpdated": "2026-10-05T10:03:39.278Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -6363,7 +6363,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.387Z",
+      "lastUpdated": "2026-10-05T10:03:39.293Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -6511,7 +6511,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.380Z",
+      "lastUpdated": "2026-10-05T10:03:39.291Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -6659,7 +6659,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.386Z",
+      "lastUpdated": "2026-10-05T10:03:39.293Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -6808,7 +6808,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.368Z",
+      "lastUpdated": "2026-10-05T10:03:39.288Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -6958,7 +6958,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.351Z",
+      "lastUpdated": "2026-10-05T10:03:39.275Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7107,7 +7107,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.369Z",
+      "lastUpdated": "2026-10-05T10:03:39.288Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7257,7 +7257,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.389Z",
+      "lastUpdated": "2026-10-05T10:03:39.294Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -7406,7 +7406,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.372Z",
+      "lastUpdated": "2026-10-05T10:03:39.290Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -7556,7 +7556,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.384Z",
+      "lastUpdated": "2026-10-05T10:03:39.292Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -7705,7 +7705,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.355Z",
+      "lastUpdated": "2026-10-05T10:03:39.281Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7856,7 +7856,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.347Z",
+      "lastUpdated": "2026-10-05T10:03:39.275Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8007,7 +8007,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.348Z",
+      "lastUpdated": "2026-10-05T10:03:39.275Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8158,7 +8158,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.348Z",
+      "lastUpdated": "2026-10-05T10:03:39.275Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8309,7 +8309,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T08:56:10.360Z",
+      "lastUpdated": "2026-10-05T10:03:39.282Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8460,7 +8460,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.350Z",
+      "lastUpdated": "2026-10-05T10:03:39.275Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8611,7 +8611,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.354Z",
+      "lastUpdated": "2026-10-05T10:03:39.280Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8761,7 +8761,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.370Z",
+      "lastUpdated": "2026-10-05T10:03:39.289Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -8910,7 +8910,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.371Z",
+      "lastUpdated": "2026-10-05T10:03:39.289Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -9060,7 +9060,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.354Z",
+      "lastUpdated": "2026-10-05T10:03:39.279Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -9209,7 +9209,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T08:56:10.351Z",
+      "lastUpdated": "2026-10-05T10:03:39.276Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -9359,7 +9359,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.370Z",
+      "lastUpdated": "2026-10-05T10:03:39.289Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -9508,7 +9508,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.353Z",
+      "lastUpdated": "2026-10-05T10:03:39.279Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -9659,7 +9659,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.369Z",
+      "lastUpdated": "2026-10-05T10:03:39.288Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -9810,7 +9810,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.353Z",
+      "lastUpdated": "2026-10-05T10:03:39.279Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -9961,7 +9961,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.370Z",
+      "lastUpdated": "2026-10-05T10:03:39.289Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -10112,7 +10112,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.377Z",
+      "lastUpdated": "2026-10-05T10:03:39.290Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -10263,7 +10263,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T08:56:10.358Z",
+      "lastUpdated": "2026-10-05T10:03:39.281Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -10414,7 +10414,7 @@
       "nextMilestoneDate": "2026-11-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T08:56:10.214Z",
+      "lastUpdated": "2026-10-05T10:03:39.188Z",
       "templateId": "hotel",
       "specification": {
         "projectType": "Hotel & Suites",

@@ -233,12 +233,35 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const refreshProjects = useCallback(async () => {
     try {
       const data = await api.projects.getAll();
-      if (Array.isArray(data.projects)) {
+      if (Array.isArray(data.projects) && data.projects.length >= 68) {
+        setProjectState(data.projects.map(normaliseProject));
+        setIsConnected(true);
+      } else if (Array.isArray(data.projects) && data.projects.length > 0 && data.projects.length < 68) {
+        // Backend has partial data (e.g. only 2 hotels); auto-trigger restoration of all 68
+        console.warn(`[AppState] Backend only returned ${data.projects.length} projects (< 68). Triggering restore of all 3 PDFs...`);
+        try {
+          await api.system.restoreAllPdfs();
+          const refreshed = await api.projects.getAll();
+          if (Array.isArray(refreshed.projects) && refreshed.projects.length >= 68) {
+            setProjectState(refreshed.projects.map(normaliseProject));
+            setIsConnected(true);
+            return;
+          }
+        } catch {}
+        // Fallback to complete 68 snapshot
+        if (Array.isArray(portfolioFallback?.projects) && portfolioFallback.projects.length >= 68) {
+          setProjectState((portfolioFallback.projects as unknown as Project[]).map(normaliseProject));
+        }
+      } else if (Array.isArray(data.projects)) {
         setProjectState(data.projects.map(normaliseProject));
         setIsConnected(true);
       }
     } catch {
       setIsConnected(false);
+      // When offline or disconnected, ensure full 68-facility fallback is active
+      if (Array.isArray(portfolioFallback?.projects) && portfolioFallback.projects.length >= 68) {
+        setProjectState((prev) => (prev.length < 68 ? (portfolioFallback.projects as unknown as Project[]).map(normaliseProject) : prev));
+      }
     }
   }, []);
 

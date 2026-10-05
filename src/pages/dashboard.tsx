@@ -208,7 +208,14 @@ export default function Dashboard() {
           <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3 fade-up">
             <div className="mr-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.1em] text-muted-foreground"><SlidersHorizontal size={13} /> Refine</div>
             <select value={location} onChange={(event) => setLocation(event.target.value as 'All' | Location)} data-testid="select-location-filter" className="h-8 rounded-lg border border-border bg-background px-2 text-[11px] font-semibold outline-none"><option value="All">All locations</option>{locations.map((value) => <option key={value} value={value}>{value}</option>)}</select>
-            <select value={category} onChange={(event) => setCategory(event.target.value as 'All' | Category)} data-testid="select-category-filter" className="h-8 rounded-lg border border-border bg-background px-2 text-[11px] font-semibold outline-none"><option value="All">All categories</option>{categories.map((value) => <option key={value} value={value}>{value}</option>)}</select>
+            <select value={category} onChange={(event) => setCategory(event.target.value as 'All' | Category)} data-testid="select-category-filter" className="h-8 rounded-lg border border-border bg-background px-2 text-[11px] font-semibold outline-none">
+              <option value="All">All categories ({projects.length})</option>
+              <option value="Lounge">Lounges & Spas ({projects.filter((p) => p.category === 'Lounge').length})</option>
+              <option value="Kitchen">Central Kitchens ({projects.filter((p) => p.category === 'Kitchen').length})</option>
+              <option value="Other">Operations & Support ({projects.filter((p) => p.category === 'Other').length})</option>
+              <option value="Encalm Eats">Encalm Eats ({projects.filter((p) => p.category === 'Encalm Eats').length})</option>
+              <option value="Hotel">Airport Hotels ({projects.filter((p) => p.category === 'Hotel').length})</option>
+            </select>
             <select value={status} onChange={(event) => setStatus(event.target.value as 'All' | ProjectStatus)} className="h-8 rounded-lg border border-border bg-background px-2 text-[11px] font-semibold outline-none"><option value="All">All statuses</option>{projectStatuses.map((value) => <option key={value} value={value}>{value}</option>)}</select>
             <select value={health} onChange={(event) => setHealth(event.target.value as 'All' | Health)} data-testid="select-health-filter" className="h-8 rounded-lg border border-border bg-background px-2 text-[11px] font-semibold outline-none"><option value="All">All health</option>{healthOptions.map((value) => <option key={value} value={value}>{value}</option>)}</select>
             {hasFilters && <button type="button" data-testid="button-clear-filters" onClick={clearFilters} className="ml-auto flex items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-bold text-[#b2473d] hover:bg-[#fae5e1]">Clear <X size={12} /></button>}

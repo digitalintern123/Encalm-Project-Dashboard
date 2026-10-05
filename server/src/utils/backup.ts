@@ -360,19 +360,19 @@ export function restoreDatabaseFromJSON(data: { projects?: any[]; notifications?
 }
 
 /**
- * On server boot, if the database has 0 projects, automatically checks for a snapshot and restores it.
+ * On server boot, if the database has fewer than 68 projects, automatically restores from snapshot.
  */
 export function autoRestoreSnapshotIfEmpty(): void {
   try {
     const row = db.prepare('SELECT COUNT(*) as count FROM projects').get() as { count: number };
-    if (row && row.count === 0) {
+    if (row && row.count < 68) {
       if (fs.existsSync(SNAPSHOT_FILE_PATH)) {
         const raw = fs.readFileSync(SNAPSHOT_FILE_PATH, 'utf-8');
         const data = JSON.parse(raw);
-        if (Array.isArray(data.projects) && data.projects.length > 0) {
-          console.log(`[Auto-Restore] SQLite database is empty. Auto-restoring ${data.projects.length} projects from ${SNAPSHOT_FILE_PATH}...`);
+        if (Array.isArray(data.projects) && data.projects.length >= 68) {
+          console.log(`[Auto-Restore] SQLite database has ${row.count} projects (< 68). Auto-restoring ${data.projects.length} authentic facilities from ${SNAPSHOT_FILE_PATH}...`);
           restoreDatabaseFromJSON(data);
-          console.log(`[Auto-Restore] Successfully restored portfolio projects!`);
+          console.log(`[Auto-Restore] Successfully restored full portfolio with ${data.projects.length} projects!`);
         }
       }
     }
