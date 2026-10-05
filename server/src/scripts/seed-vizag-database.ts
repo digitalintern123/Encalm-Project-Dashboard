@@ -78,6 +78,13 @@ export function seedVizagHotelToDatabase() {
         totalBays: 168,
       },
     },
+    areaSheet: {
+      slNo: 1,
+      section: 'HOTELS',
+      status: 'In Design',
+      areaSqft: 161137,
+      areaSqm: 14970,
+    },
   };
 
   const projectRecord = {

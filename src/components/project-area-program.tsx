@@ -1,4 +1,5 @@
 import { useState, useId } from 'react';
+import { Link } from 'wouter';
 import {
   Building2,
   FileSpreadsheet,
@@ -245,27 +246,112 @@ export function ProjectAreaProgram({ project, editable, onSave }: ProjectAreaPro
   };
 
   if (!hasProgram) {
+    const sheet = project.specification?.areaSheet;
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center max-w-2xl mx-auto my-8">
-        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-[#f8f5ec] text-[#9a711f]">
-          <Building2 size={30} />
-        </div>
-        <h3 className="mt-4 text-[19px] font-bold text-foreground">
-          Architectural Space Program Not Configured
-        </h3>
-        <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground max-w-lg mx-auto">
-          No architectural area or room configuration has been entered for <strong>{project.name}</strong> yet. You can manually enter plot area, BUA, keys, bays, floor-wise built-up area, and FOH public facilities.
-        </p>
-        {editable && (
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => setIsEditorOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-5 py-2.5 text-[12px] font-bold text-white shadow-sm hover:bg-[#205160] transition"
-            >
-              <Plus size={15} />
-              Configure Architectural Area Program
-            </button>
+      <div className="space-y-6 max-w-4xl mx-auto my-6">
+        {sheet || project.area ? (
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-5">
+              <div>
+                <span className="font-mono text-[9px] uppercase tracking-[.15em] text-[#9a711f]">
+                  Official Master Area Register · Source: 3rd PDF
+                </span>
+                <h3 className="mt-1 text-[20px] font-bold text-foreground">
+                  Project Area Sheet Specification
+                </h3>
+                <p className="mt-1 text-[12px] text-muted-foreground">
+                  Master space allocation for <strong>{project.name}</strong> from the official Project Area Sheet blueprint.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/area-sheet"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#cbe4d9] bg-[#edf5f0] px-3.5 py-2 text-[11px] font-bold text-[#2e7c67] hover:bg-[#dfeee5] transition shadow-xs"
+                >
+                  <FileSpreadsheet size={13} /> View Master Sheet
+                </Link>
+                {editable && (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditorOpen(true)}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#173e49] px-3.5 py-2 text-[11px] font-bold text-white hover:bg-[#205160] transition shadow-xs"
+                  >
+                    <Plus size={13} /> Advanced Space Program
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-xl border border-border bg-[#f8f6f0] p-4 text-center">
+                <span className="block font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Sheet Entry No</span>
+                <span className="mt-1 block text-[20px] font-extrabold text-[#173e49]">
+                  #{sheet?.slNo ?? '—'}
+                </span>
+                <span className="font-mono text-[10px] text-[#2e7c67]">
+                  {sheet?.section ?? 'FACILITIES'}
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-[#eadcb1] bg-[#fff8e9] p-4 text-center">
+                <span className="block font-mono text-[9px] uppercase tracking-wider text-[#9a711f]">Facility Area</span>
+                <span className="mt-1 block text-[18px] font-extrabold text-[#173e49]">
+                  {sheet?.areaSqft ? `${sheet.areaSqft.toLocaleString()} SQ.FT.` : (project.area || '—')}
+                </span>
+                <span className="font-mono text-[10px] text-[#9a711f]">
+                  {sheet?.areaSqm ? `${sheet.areaSqm.toLocaleString()} SQ.M.` : ''}
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-border bg-[#f8f6f0] p-4 text-center">
+                <span className="block font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Location & Level</span>
+                <span className="mt-1 block text-[16px] font-extrabold text-[#173e49]">
+                  {project.location}
+                </span>
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  {project.specification?.floor || 'Terminal / Concourse'}
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-border bg-[#f8f6f0] p-4 text-center">
+                <span className="block font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Sheet Status</span>
+                <span className="mt-1 block text-[13px] font-extrabold text-[#2e7c67]">
+                  {sheet?.status || project.status || 'Operational'}
+                </span>
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  Progress: {project.progress}%
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-xl border border-border bg-[#fcfaf4] p-4 text-[12px] leading-relaxed text-muted-foreground">
+              <strong className="text-foreground">Facility Scope:</strong>{' '}
+              {project.specification?.scope || `${project.name} at ${project.location} airport. Area: ${project.area || 'Standard'}.`}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center max-w-2xl mx-auto my-8">
+            <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-[#f8f5ec] text-[#9a711f]">
+              <Building2 size={30} />
+            </div>
+            <h3 className="mt-4 text-[19px] font-bold text-foreground">
+              Architectural Space Program Not Configured
+            </h3>
+            <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground max-w-lg mx-auto">
+              No architectural area or room configuration has been entered for <strong>{project.name}</strong> yet. You can manually enter plot area, BUA, keys, bays, floor-wise built-up area, and FOH public facilities.
+            </p>
+            {editable && (
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditorOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-5 py-2.5 text-[12px] font-bold text-white shadow-sm hover:bg-[#205160] transition"
+                >
+                  <Plus size={15} />
+                  Configure Architectural Area Program
+                </button>
+              </div>
+            )}
           </div>
         )}
         {isEditorOpen && (

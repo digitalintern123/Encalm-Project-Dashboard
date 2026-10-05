@@ -10,6 +10,7 @@ import { AppShell } from '@/components/app-shell';
 import Login from '@/pages/login';
 import { AppStateProvider, useAppState } from '@/state/app-state';
 import Workspace from '@/pages/workspace';
+import AreaSheet from '@/pages/area-sheet';
 import {
   Route,
   Switch,
@@ -30,6 +31,7 @@ function Router() {
       <AppShell>
         <Switch>
           <Route path="/" component={Dashboard} />
+          <Route path="/area-sheet" component={AreaSheet} />
           <Route path="/projects">{() => <Workspace view="projects" />}</Route>
           <Route path="/my-projects">{() => <Workspace view="my-projects" />}</Route>
           <Route path="/timeline">{() => <Workspace view="timeline" />}</Route>

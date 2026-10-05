@@ -35,6 +35,7 @@ import {
   UserCheck,
   Database,
   RefreshCw,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useAppState, type AppRole } from '@/state/app-state';
 import { BrandLogo } from './brand-logo';
@@ -65,6 +66,7 @@ const groups: NavGroup[] = [
     label: 'Projects',
     items: [
       { label: 'All projects', href: '/projects', icon: ListChecks },
+      { label: 'Project Area Sheet', href: '/area-sheet', icon: FileSpreadsheet },
       { label: 'New project', href: '/new-project', icon: Plus, allowedRoles: ['lead', 'coordinator'] },
       { label: 'My projects', href: '/my-projects', icon: Target, allowedRoles: ['lead'] },
       { label: 'Team & Allotment', href: '/team', icon: Users, allowedRoles: ['coordinator'] },

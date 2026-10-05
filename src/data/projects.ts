@@ -145,6 +145,14 @@ export type ArchitecturalAreaProgram = {
   };
 };
 
+export type AreaSheetItem = {
+  slNo: number;
+  section: 'LOUNGES' | 'OFFICE, KITCHEN & MISC WORKS' | 'HOTELS';
+  status: string;
+  areaSqft?: number;
+  areaSqm?: number;
+};
+
 export type ProjectSpecification = {
   projectType: string;
   area: string;
@@ -155,6 +163,7 @@ export type ProjectSpecification = {
   scope: string;
   customFields?: { label: string; value: string }[];
   areaProgram?: ArchitecturalAreaProgram;
+  areaSheet?: AreaSheetItem;
 };
 
 export type PhotoCategory = 'Progress' | 'Snag / Issue' | 'Milestone' | 'Before / After' | 'Inspection' | 'General';

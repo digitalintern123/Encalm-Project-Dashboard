@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exportedAt": "2026-10-05T07:28:37.267Z",
+  "exportedAt": "2026-10-05T08:56:10.480Z",
   "projectCount": 68,
   "projects": [
     {
@@ -24,7 +24,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.188Z",
+      "lastUpdated": "2026-10-05T08:56:10.346Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -33,7 +33,14 @@
         "floor": "Ground / Airport Core",
         "area": "724 SQ.M. / 7,793 SQ.FT.",
         "capacity": "7,793 SQ.FT.",
-        "scope": "1st Class Lounge - INL 07&07A (Xenia) at Delhi airport terminal/facility. Area: 724 SQ.M. / 7,793 SQ.FT.. Status: Operational."
+        "scope": "1st Class Lounge - INL 07&07A (Xenia) at Delhi airport terminal/facility. Area: 724 SQ.M. / 7,793 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 1,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 7793,
+          "areaSqm": 724
+        }
       },
       "phases": [
         {
@@ -168,7 +175,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.194Z",
+      "lastUpdated": "2026-10-05T08:56:10.352Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -177,7 +184,14 @@
         "floor": "Ground / Airport Core",
         "area": "1,508 SQ.M. / 16,237 SQ.FT.",
         "capacity": "16,237 SQ.FT.",
-        "scope": "Air India lounge-International-T3 at Delhi airport terminal/facility. Area: 1,508 SQ.M. / 16,237 SQ.FT.. Status: Operational."
+        "scope": "Air India lounge-International-T3 at Delhi airport terminal/facility. Area: 1,508 SQ.M. / 16,237 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 8,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 16237,
+          "areaSqm": 1508
+        }
       },
       "phases": [
         {
@@ -311,7 +325,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.202Z",
+      "lastUpdated": "2026-10-05T08:56:10.365Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -320,7 +334,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "Airport Lodge at Hyderabad airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "Airport Lodge at Hyderabad airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 33,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -454,7 +473,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.210Z",
+      "lastUpdated": "2026-10-05T08:56:10.385Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -463,7 +482,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "Base Kitchen, GOA at Goa airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "Base Kitchen, GOA at Goa airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 56,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -598,7 +622,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.204Z",
+      "lastUpdated": "2026-10-05T08:56:10.368Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -607,7 +631,14 @@
         "floor": "Ground / Airport Core",
         "area": "1,040 SQ.M. / 11,195 SQ.FT.",
         "capacity": "11,195 SQ.FT.",
-        "scope": "Bhogapuram Card Lounge at Domestic Departure (Area Approx- 1040 sqm) at Vizag airport terminal/facility. Area: 1,040 SQ.M. / 11,195 SQ.FT.. Status: Operational."
+        "scope": "Bhogapuram Card Lounge at Domestic Departure (Area Approx- 1040 sqm) at Vizag airport terminal/facility. Area: 1,040 SQ.M. / 11,195 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 40,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 11195,
+          "areaSqm": 1040
+        }
       },
       "phases": [
         {
@@ -742,7 +773,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.204Z",
+      "lastUpdated": "2026-10-05T08:56:10.368Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -751,7 +782,14 @@
         "floor": "Ground / Airport Core",
         "area": "164 SQ.M. / 1,765 SQ.FT.",
         "capacity": "1,765 SQ.FT.",
-        "scope": "Bhogapuram Card Lounge at International Departure (Area Approx- 164 sqm) at Vizag airport terminal/facility. Area: 164 SQ.M. / 1,765 SQ.FT.. Status: Operational."
+        "scope": "Bhogapuram Card Lounge at International Departure (Area Approx- 164 sqm) at Vizag airport terminal/facility. Area: 164 SQ.M. / 1,765 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 39,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 1765,
+          "areaSqm": 164
+        }
       },
       "phases": [
         {
@@ -886,7 +924,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T07:28:37.194Z",
+      "lastUpdated": "2026-10-05T08:56:10.352Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -895,7 +933,14 @@
         "floor": "Ground / Airport Core",
         "area": "1,929 SQ.M. / 20,767 SQ.FT.",
         "capacity": "20,767 SQ.FT.",
-        "scope": "CIP Delhi at Delhi airport terminal/facility. Area: 1,929 SQ.M. / 20,767 SQ.FT.. Status: On Hold."
+        "scope": "CIP Delhi at Delhi airport terminal/facility. Area: 1,929 SQ.M. / 20,767 SQ.FT.. Status: HOLD.",
+        "areaSheet": {
+          "slNo": 10,
+          "section": "LOUNGES",
+          "status": "HOLD",
+          "areaSqft": 20767,
+          "areaSqm": 1929
+        }
       },
       "phases": [
         {
@@ -1030,7 +1075,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.203Z",
+      "lastUpdated": "2026-10-05T08:56:10.367Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1039,7 +1084,14 @@
         "floor": "Ground / Airport Core",
         "area": "269 SQ.M. / 2,896 SQ.FT.",
         "capacity": "2,896 SQ.FT.",
-        "scope": "CIP LOUNGE Goa Refurbishment Work (Cost to be beared by GGIAL) at Goa airport terminal/facility. Area: 269 SQ.M. / 2,896 SQ.FT.. Status: Operational."
+        "scope": "CIP LOUNGE Goa Refurbishment Work (Cost to be beared by GGIAL) at Goa airport terminal/facility. Area: 269 SQ.M. / 2,896 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 37,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 2896,
+          "areaSqm": 269
+        }
       },
       "phases": [
         {
@@ -1174,7 +1226,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.202Z",
+      "lastUpdated": "2026-10-05T08:56:10.366Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1183,7 +1235,14 @@
         "floor": "Ground / Airport Core",
         "area": "269 SQ.M. / 2,896 SQ.FT.",
         "capacity": "2,896 SQ.FT.",
-        "scope": "CIP Lounge Goa at Goa airport terminal/facility. Area: 269 SQ.M. / 2,896 SQ.FT.. Status: Operational."
+        "scope": "CIP Lounge Goa at Goa airport terminal/facility. Area: 269 SQ.M. / 2,896 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 34,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 2896,
+          "areaSqm": 269
+        }
       },
       "phases": [
         {
@@ -1318,7 +1377,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.196Z",
+      "lastUpdated": "2026-10-05T08:56:10.355Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1327,7 +1386,14 @@
         "floor": "Ground / Airport Core",
         "area": "259 SQ.M. / 2,787 SQ.FT.",
         "capacity": "2,787 SQ.FT.",
-        "scope": "D-49 at Delhi airport terminal/facility. Area: 259 SQ.M. / 2,787 SQ.FT.. Status: Operational."
+        "scope": "D-49 at Delhi airport terminal/facility. Area: 259 SQ.M. / 2,787 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 17,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 2787,
+          "areaSqm": 259
+        }
       },
       "phases": [
         {
@@ -1461,7 +1527,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.196Z",
+      "lastUpdated": "2026-10-05T08:56:10.355Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1470,7 +1536,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "DPA10A-Spa at Delhi airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "DPA10A-Spa at Delhi airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 18,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -1604,7 +1675,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.211Z",
+      "lastUpdated": "2026-10-05T08:56:10.387Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -1613,7 +1684,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "Dhargal Store at Goa airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "Dhargal Store at Goa airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 59,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -1748,7 +1824,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T07:28:37.194Z",
+      "lastUpdated": "2026-10-05T08:56:10.352Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1757,7 +1833,14 @@
         "floor": "Ground / Airport Core",
         "area": "924 SQ.M. / 9,942 SQ.FT.",
         "capacity": "9,942 SQ.FT.",
-        "scope": "Domestic Air India Lounge Del at Delhi airport terminal/facility. Area: 924 SQ.M. / 9,942 SQ.FT.. Status: Yet to start."
+        "scope": "Domestic Air India Lounge Del at Delhi airport terminal/facility. Area: 924 SQ.M. / 9,942 SQ.FT.. Status: Yet to start.",
+        "areaSheet": {
+          "slNo": 9,
+          "section": "LOUNGES",
+          "status": "Yet to start",
+          "areaSqft": 9942,
+          "areaSqm": 924
+        }
       },
       "phases": [
         {
@@ -1892,7 +1975,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.198Z",
+      "lastUpdated": "2026-10-05T08:56:10.361Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1901,7 +1984,14 @@
         "floor": "Ground / Airport Core",
         "area": "1,794 SQ.M. / 19,311 SQ.FT.",
         "capacity": "19,311 SQ.FT.",
-        "scope": "Domestic Card Lounge 1794 at Hyderabad airport terminal/facility. Area: 1,794 SQ.M. / 19,311 SQ.FT.. Status: Operational."
+        "scope": "Domestic Card Lounge 1794 at Hyderabad airport terminal/facility. Area: 1,794 SQ.M. / 19,311 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 26,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 19311,
+          "areaSqm": 1794
+        }
       },
       "phases": [
         {
@@ -2035,7 +2125,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.201Z",
+      "lastUpdated": "2026-10-05T08:56:10.365Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2044,7 +2134,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "Domestic Card Lounge- Additional New Buffet& BOH at Hyderabad airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "Domestic Card Lounge- Additional New Buffet& BOH at Hyderabad airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 32,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -2179,7 +2274,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.203Z",
+      "lastUpdated": "2026-10-05T08:56:10.366Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2188,7 +2283,14 @@
         "floor": "Ground / Airport Core",
         "area": "361 SQ.M. / 3,886 SQ.FT.",
         "capacity": "3,886 SQ.FT.",
-        "scope": "Domestic Lounge Goa at Goa airport terminal/facility. Area: 361 SQ.M. / 3,886 SQ.FT.. Status: Operational."
+        "scope": "Domestic Lounge Goa at Goa airport terminal/facility. Area: 361 SQ.M. / 3,886 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 35,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 3886,
+          "areaSqm": 361
+        }
       },
       "phases": [
         {
@@ -2323,7 +2425,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.203Z",
+      "lastUpdated": "2026-10-05T08:56:10.367Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2332,7 +2434,14 @@
         "floor": "Ground / Airport Core",
         "area": "76 SQ.M. / 813 SQ.FT.",
         "capacity": "813 SQ.FT.",
-        "scope": "Domestic Lounge-Extension at Goa airport terminal/facility. Area: 76 SQ.M. / 813 SQ.FT.. Status: Operational."
+        "scope": "Domestic Lounge-Extension at Goa airport terminal/facility. Area: 76 SQ.M. / 813 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 36,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 813,
+          "areaSqm": 76
+        }
       },
       "phases": [
         {
@@ -2467,7 +2576,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T07:28:37.199Z",
+      "lastUpdated": "2026-10-05T08:56:10.362Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2476,7 +2585,14 @@
         "floor": "Ground / Airport Core",
         "area": "785 SQ.M. / 8,450 SQ.FT.",
         "capacity": "8,450 SQ.FT.",
-        "scope": "Domestic Premium Lounge Hyderabad at Hyderabad airport terminal/facility. Area: 785 SQ.M. / 8,450 SQ.FT.. Status: Yet to start."
+        "scope": "Domestic Premium Lounge Hyderabad at Hyderabad airport terminal/facility. Area: 785 SQ.M. / 8,450 SQ.FT.. Status: Yet to start.",
+        "areaSheet": {
+          "slNo": 27,
+          "section": "LOUNGES",
+          "status": "Yet to start",
+          "areaSqft": 8450,
+          "areaSqm": 785
+        }
       },
       "phases": [
         {
@@ -2611,7 +2727,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.211Z",
+      "lastUpdated": "2026-10-05T08:56:10.386Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -2620,7 +2736,14 @@
         "floor": "Ground / Airport Core",
         "area": "38 SQ.M. / 413 SQ.FT.",
         "capacity": "413 SQ.FT.",
-        "scope": "ENCALM Office, GOA at Goa airport terminal/facility. Area: 38 SQ.M. / 413 SQ.FT.. Status: Operational."
+        "scope": "ENCALM Office, GOA at Goa airport terminal/facility. Area: 38 SQ.M. / 413 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 57,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over",
+          "areaSqft": 413,
+          "areaSqm": 38
+        }
       },
       "phases": [
         {
@@ -2755,7 +2878,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T07:28:37.199Z",
+      "lastUpdated": "2026-10-05T08:56:10.362Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2764,7 +2887,14 @@
         "floor": "Ground / Airport Core",
         "area": "200 SQ.M. / 2,153 SQ.FT.",
         "capacity": "2,153 SQ.FT.",
-        "scope": "Hyderabad Amex Lounge (200sqm) at Hyderabad airport terminal/facility. Area: 200 SQ.M. / 2,153 SQ.FT.. Status: Yet to start."
+        "scope": "Hyderabad Amex Lounge (200sqm) at Hyderabad airport terminal/facility. Area: 200 SQ.M. / 2,153 SQ.FT.. Status: Yet to start.",
+        "areaSheet": {
+          "slNo": 28,
+          "section": "LOUNGES",
+          "status": "Yet to start",
+          "areaSqft": 2153,
+          "areaSqm": 200
+        }
       },
       "phases": [
         {
@@ -2898,7 +3028,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.210Z",
+      "lastUpdated": "2026-10-05T08:56:10.383Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -2907,7 +3037,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "Hyderabad Back Office at Hyderabad airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "Hyderabad Back Office at Hyderabad airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 53,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -3042,7 +3177,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.210Z",
+      "lastUpdated": "2026-10-05T08:56:10.384Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -3051,7 +3186,14 @@
         "floor": "Ground / Airport Core",
         "area": "774 SQ.M. / 8,328 SQ.FT.",
         "capacity": "8,328 SQ.FT.",
-        "scope": "Hyderabad Domestic Existing at Hyderabad airport terminal/facility. Area: 774 SQ.M. / 8,328 SQ.FT.. Status: Operational."
+        "scope": "Hyderabad Domestic Existing at Hyderabad airport terminal/facility. Area: 774 SQ.M. / 8,328 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 54,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over",
+          "areaSqft": 8328,
+          "areaSqm": 774
+        }
       },
       "phases": [
         {
@@ -3185,7 +3327,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.209Z",
+      "lastUpdated": "2026-10-05T08:56:10.382Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -3194,7 +3336,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "Hyderabad Existing Base Kitchen at Hyderabad airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "Hyderabad Existing Base Kitchen at Hyderabad airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 52,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -3329,7 +3476,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.196Z",
+      "lastUpdated": "2026-10-05T08:56:10.354Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3338,7 +3485,14 @@
         "floor": "Ground / Airport Core",
         "area": "176 SQ.M. / 1,894 SQ.FT.",
         "capacity": "1,894 SQ.FT.",
-        "scope": "INL 7 SPA at Delhi airport terminal/facility. Area: 176 SQ.M. / 1,894 SQ.FT.. Status: Operational."
+        "scope": "INL 7 SPA at Delhi airport terminal/facility. Area: 176 SQ.M. / 1,894 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 15,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 1894,
+          "areaSqm": 176
+        }
       },
       "phases": [
         {
@@ -3473,7 +3627,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.200Z",
+      "lastUpdated": "2026-10-05T08:56:10.363Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3482,7 +3636,14 @@
         "floor": "Ground / Airport Core",
         "area": "1,383 SQ.M. / 14,887 SQ.FT.",
         "capacity": "14,887 SQ.FT.",
-        "scope": "International Card Lounge Hyderabad at Hyderabad airport terminal/facility. Area: 1,383 SQ.M. / 14,887 SQ.FT.. Status: Operational."
+        "scope": "International Card Lounge Hyderabad at Hyderabad airport terminal/facility. Area: 1,383 SQ.M. / 14,887 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 30,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 14887,
+          "areaSqm": 1383
+        }
       },
       "phases": [
         {
@@ -3617,7 +3778,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.204Z",
+      "lastUpdated": "2026-10-05T08:56:10.367Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3626,7 +3787,14 @@
         "floor": "Ground / Airport Core",
         "area": "175 SQ.M. / 1,883 SQ.FT.",
         "capacity": "1,883 SQ.FT.",
-        "scope": "International Lounge-Goa at Goa airport terminal/facility. Area: 175 SQ.M. / 1,883 SQ.FT.. Status: Operational."
+        "scope": "International Lounge-Goa at Goa airport terminal/facility. Area: 175 SQ.M. / 1,883 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 38,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 1883,
+          "areaSqm": 175
+        }
       },
       "phases": [
         {
@@ -3761,7 +3929,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.200Z",
+      "lastUpdated": "2026-10-05T08:56:10.363Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3770,7 +3938,14 @@
         "floor": "Ground / Airport Core",
         "area": "883 SQ.M. / 9,505 SQ.FT.",
         "capacity": "9,505 SQ.FT.",
-        "scope": "International Premium Lounge Hyderabad at Hyderabad airport terminal/facility. Area: 883 SQ.M. / 9,505 SQ.FT.. Status: Operational."
+        "scope": "International Premium Lounge Hyderabad at Hyderabad airport terminal/facility. Area: 883 SQ.M. / 9,505 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 29,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 9505,
+          "areaSqm": 883
+        }
       },
       "phases": [
         {
@@ -3904,7 +4079,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.201Z",
+      "lastUpdated": "2026-10-05T08:56:10.364Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3913,7 +4088,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "International Premium Lounge-Extension at Hyderabad airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "International Premium Lounge-Extension at Hyderabad airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 31,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -4048,7 +4228,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.198Z",
+      "lastUpdated": "2026-10-05T08:56:10.359Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -4057,7 +4237,14 @@
         "floor": "Ground / Airport Core",
         "area": "285 SQ.M. / 3,067 SQ.FT.",
         "capacity": "3,067 SQ.FT.",
-        "scope": "LA-12 at Delhi airport terminal/facility. Area: 285 SQ.M. / 3,067 SQ.FT.. Status: Operational."
+        "scope": "LA-12 at Delhi airport terminal/facility. Area: 285 SQ.M. / 3,067 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 23,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 3067,
+          "areaSqm": 285
+        }
       },
       "phases": [
         {
@@ -4192,7 +4379,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.197Z",
+      "lastUpdated": "2026-10-05T08:56:10.357Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -4201,7 +4388,14 @@
         "floor": "Ground / Airport Core",
         "area": "150 SQ.M. / 1,614 SQ.FT.",
         "capacity": "1,614 SQ.FT.",
-        "scope": "LA22 Lounge at Delhi airport terminal/facility. Area: 150 SQ.M. / 1,614 SQ.FT.. Status: Operational."
+        "scope": "LA22 Lounge at Delhi airport terminal/facility. Area: 150 SQ.M. / 1,614 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 21,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 1614,
+          "areaSqm": 150
+        }
       },
       "phases": [
         {
@@ -4336,7 +4530,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.209Z",
+      "lastUpdated": "2026-10-05T08:56:10.381Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -4345,7 +4539,14 @@
         "floor": "Ground / Airport Core",
         "area": "168 SQ.M. / 1,808 SQ.FT.",
         "capacity": "1,808 SQ.FT.",
-        "scope": "M&G Del at Delhi airport terminal/facility. Area: 168 SQ.M. / 1,808 SQ.FT.. Status: Operational."
+        "scope": "M&G Del at Delhi airport terminal/facility. Area: 168 SQ.M. / 1,808 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 51,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over",
+          "areaSqft": 1808,
+          "areaSqm": 168
+        }
       },
       "phases": [
         {
@@ -4479,7 +4680,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.208Z",
+      "lastUpdated": "2026-10-05T08:56:10.378Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -4488,7 +4689,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "MK-01 at Delhi airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "MK-01 at Delhi airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 48,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -4622,7 +4828,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.209Z",
+      "lastUpdated": "2026-10-05T08:56:10.379Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -4631,7 +4837,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "MK-02 at Delhi airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "MK-02 at Delhi airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 49,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -4766,7 +4977,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T07:28:37.198Z",
+      "lastUpdated": "2026-10-05T08:56:10.360Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -4775,7 +4986,14 @@
         "floor": "Ground / Airport Core",
         "area": "164 SQ.M. / 1,765 SQ.FT.",
         "capacity": "1,765 SQ.FT.",
-        "scope": "MLCP Nap Room Level-06,T3 (250 sqm approx.) at Delhi airport terminal/facility. Area: 164 SQ.M. / 1,765 SQ.FT.. Status: Under Construction."
+        "scope": "MLCP Nap Room Level-06,T3 (250 sqm approx.) at Delhi airport terminal/facility. Area: 164 SQ.M. / 1,765 SQ.FT.. Status: Under Construction.",
+        "areaSheet": {
+          "slNo": 25,
+          "section": "LOUNGES",
+          "status": "Under Construction",
+          "areaSqft": 1765,
+          "areaSqm": 164
+        }
       },
       "phases": [
         {
@@ -4910,7 +5128,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.197Z",
+      "lastUpdated": "2026-10-05T08:56:10.356Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -4919,7 +5137,14 @@
         "floor": "Ground / Airport Core",
         "area": "80 SQ.M. / 861 SQ.FT.",
         "capacity": "861 SQ.FT.",
-        "scope": "MS 05,06 – Business Centre at Delhi airport terminal/facility. Area: 80 SQ.M. / 861 SQ.FT.. Status: Operational."
+        "scope": "MS 05,06 – Business Centre at Delhi airport terminal/facility. Area: 80 SQ.M. / 861 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 20,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 861,
+          "areaSqm": 80
+        }
       },
       "phases": [
         {
@@ -5054,7 +5279,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.207Z",
+      "lastUpdated": "2026-10-05T08:56:10.371Z",
       "templateId": "encalm-eats",
       "specification": {
         "projectType": "Encalm Eats",
@@ -5063,7 +5288,14 @@
         "floor": "Ground / Airport Core",
         "area": "68 SQ.M. / 732 SQ.FT.",
         "capacity": "732 SQ.FT.",
-        "scope": "Mehram nagar café at Delhi airport terminal/facility. Area: 68 SQ.M. / 732 SQ.FT.. Status: Operational."
+        "scope": "Mehram nagar café at Delhi airport terminal/facility. Area: 68 SQ.M. / 732 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 45,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over",
+          "areaSqft": 732,
+          "areaSqm": 68
+        }
       },
       "phases": [
         {
@@ -5198,7 +5430,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.207Z",
+      "lastUpdated": "2026-10-05T08:56:10.371Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -5207,7 +5439,14 @@
         "floor": "Ground / Airport Core",
         "area": "92 SQ.M. / 985 SQ.FT.",
         "capacity": "985 SQ.FT.",
-        "scope": "Mehramnagar Kitchen at Delhi airport terminal/facility. Area: 92 SQ.M. / 985 SQ.FT.. Status: Operational."
+        "scope": "Mehramnagar Kitchen at Delhi airport terminal/facility. Area: 92 SQ.M. / 985 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 44,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over",
+          "areaSqft": 985,
+          "areaSqm": 92
+        }
       },
       "phases": [
         {
@@ -5341,7 +5580,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.212Z",
+      "lastUpdated": "2026-10-05T08:56:10.388Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -5350,7 +5589,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "Misc Works (ie Corporate office, retrofit works etc) at Delhi airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "Misc Works (ie Corporate office, retrofit works etc) at Delhi airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 61,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -5485,7 +5729,7 @@
       "nextMilestoneDate": "2026-12-15",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-06-01",
-      "lastUpdated": "2026-10-05T07:28:37.142Z",
+      "lastUpdated": "2026-10-05T08:56:10.288Z",
       "templateId": "hotel",
       "specification": {
         "projectType": "Hotel",
@@ -5772,6 +6016,13 @@
             "totalKeys": 220,
             "totalBays": 220
           }
+        },
+        "areaSheet": {
+          "slNo": 2,
+          "section": "HOTELS",
+          "status": "In Design",
+          "areaSqft": 215280,
+          "areaSqm": 20000
         }
       },
       "phases": [
@@ -5962,7 +6213,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.194Z",
+      "lastUpdated": "2026-10-05T08:56:10.353Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -5971,7 +6222,14 @@
         "floor": "Ground / Airport Core",
         "area": "193 SQ.M. / 2,077 SQ.FT.",
         "capacity": "2,077 SQ.FT.",
-        "scope": "Naping Room LA01-Refurbishment at Delhi airport terminal/facility. Area: 193 SQ.M. / 2,077 SQ.FT.. Status: Operational."
+        "scope": "Naping Room LA01-Refurbishment at Delhi airport terminal/facility. Area: 193 SQ.M. / 2,077 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 11,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 2077,
+          "areaSqm": 193
+        }
       },
       "phases": [
         {
@@ -6105,7 +6363,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.211Z",
+      "lastUpdated": "2026-10-05T08:56:10.387Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -6114,7 +6372,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "PMC & Cost Consultant at Delhi airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "PMC & Cost Consultant at Delhi airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 60,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -6248,7 +6511,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.209Z",
+      "lastUpdated": "2026-10-05T08:56:10.380Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -6257,7 +6520,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "Porter Del at Delhi airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "Porter Del at Delhi airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 50,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -6391,7 +6659,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.211Z",
+      "lastUpdated": "2026-10-05T08:56:10.386Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -6400,7 +6668,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "Porter Goa at Goa airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "Porter Goa at Goa airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 58,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -6535,7 +6808,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.204Z",
+      "lastUpdated": "2026-10-05T08:56:10.368Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -6544,7 +6817,14 @@
         "floor": "Ground / Airport Core",
         "area": "216 SQ.M. / 2,325 SQ.FT.",
         "capacity": "2,325 SQ.FT.",
-        "scope": "Reserve Lounge at Domestic Departure (Area Approx- 216 sqm) at Vizag airport terminal/facility. Area: 216 SQ.M. / 2,325 SQ.FT.. Status: Operational."
+        "scope": "Reserve Lounge at Domestic Departure (Area Approx- 216 sqm) at Vizag airport terminal/facility. Area: 216 SQ.M. / 2,325 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 41,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 2325,
+          "areaSqm": 216
+        }
       },
       "phases": [
         {
@@ -6678,7 +6958,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.193Z",
+      "lastUpdated": "2026-10-05T08:56:10.351Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -6687,7 +6967,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "Rupay Lounge,T3 at Delhi airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "Rupay Lounge,T3 at Delhi airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 6,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -6822,7 +7107,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.205Z",
+      "lastUpdated": "2026-10-05T08:56:10.369Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -6831,7 +7116,14 @@
         "floor": "Ground / Airport Core",
         "area": "150 SQ.M. / 1,615 SQ.FT.",
         "capacity": "1,615 SQ.FT.",
-        "scope": "SPA at Domestic Departure (Area Approx-150 Sqm) at Vizag airport terminal/facility. Area: 150 SQ.M. / 1,615 SQ.FT.. Status: Operational."
+        "scope": "SPA at Domestic Departure (Area Approx-150 Sqm) at Vizag airport terminal/facility. Area: 150 SQ.M. / 1,615 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 42,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 1615,
+          "areaSqm": 150
+        }
       },
       "phases": [
         {
@@ -6965,7 +7257,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.212Z",
+      "lastUpdated": "2026-10-05T08:56:10.389Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -6974,7 +7266,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "Split Order at Delhi airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "Split Order at Delhi airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 62,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -7109,7 +7406,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.208Z",
+      "lastUpdated": "2026-10-05T08:56:10.372Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -7118,7 +7415,14 @@
         "floor": "Ground / Airport Core",
         "area": "63 SQ.M. / 678 SQ.FT.",
         "capacity": "678 SQ.FT.",
-        "scope": "Staff Facilities - Male & Female Lockers and Storage space at Mehramnagar at Delhi airport terminal/facility. Area: 63 SQ.M. / 678 SQ.FT.. Status: Operational."
+        "scope": "Staff Facilities - Male & Female Lockers and Storage space at Mehramnagar at Delhi airport terminal/facility. Area: 63 SQ.M. / 678 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 46,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over",
+          "areaSqft": 678,
+          "areaSqm": 63
+        }
       },
       "phases": [
         {
@@ -7252,7 +7556,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.210Z",
+      "lastUpdated": "2026-10-05T08:56:10.384Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -7261,7 +7565,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "Stores Hyd at Hyderabad airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "Stores Hyd at Hyderabad airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 55,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -7396,7 +7705,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.197Z",
+      "lastUpdated": "2026-10-05T08:56:10.355Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7405,7 +7714,14 @@
         "floor": "Ground / Airport Core",
         "area": "348 SQ.M. / 3,744 SQ.FT.",
         "capacity": "3,744 SQ.FT.",
-        "scope": "T1D Lounge & Additional Area at Delhi airport terminal/facility. Area: 348 SQ.M. / 3,744 SQ.FT.. Status: Operational."
+        "scope": "T1D Lounge & Additional Area at Delhi airport terminal/facility. Area: 348 SQ.M. / 3,744 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 19,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 3744,
+          "areaSqm": 348
+        }
       },
       "phases": [
         {
@@ -7540,7 +7856,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.189Z",
+      "lastUpdated": "2026-10-05T08:56:10.347Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7549,7 +7865,14 @@
         "floor": "Ground / Airport Core",
         "area": "1,831 SQ.M. / 19,709 SQ.FT.",
         "capacity": "19,709 SQ.FT.",
-        "scope": "T1D Lounge 1 (Level 4&5) card at Delhi airport terminal/facility. Area: 1,831 SQ.M. / 19,709 SQ.FT.. Status: Operational."
+        "scope": "T1D Lounge 1 (Level 4&5) card at Delhi airport terminal/facility. Area: 1,831 SQ.M. / 19,709 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 2,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 19709,
+          "areaSqm": 1831
+        }
       },
       "phases": [
         {
@@ -7684,7 +8007,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.189Z",
+      "lastUpdated": "2026-10-05T08:56:10.348Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7693,7 +8016,14 @@
         "floor": "Ground / Airport Core",
         "area": "260 SQ.M. / 2,799 SQ.FT.",
         "capacity": "2,799 SQ.FT.",
-        "scope": "T1D Lounge 2(level 5 premium) at Delhi airport terminal/facility. Area: 260 SQ.M. / 2,799 SQ.FT.. Status: Operational."
+        "scope": "T1D Lounge 2(level 5 premium) at Delhi airport terminal/facility. Area: 260 SQ.M. / 2,799 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 3,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 2799,
+          "areaSqm": 260
+        }
       },
       "phases": [
         {
@@ -7828,7 +8158,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.190Z",
+      "lastUpdated": "2026-10-05T08:56:10.348Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7837,7 +8167,14 @@
         "floor": "Ground / Airport Core",
         "area": "326 SQ.M. / 3,509 SQ.FT.",
         "capacity": "3,509 SQ.FT.",
-        "scope": "T1D Lounge 3(level 4 ) AMEX at Delhi airport terminal/facility. Area: 326 SQ.M. / 3,509 SQ.FT.. Status: Operational."
+        "scope": "T1D Lounge 3(level 4 ) AMEX at Delhi airport terminal/facility. Area: 326 SQ.M. / 3,509 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 4,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 3509,
+          "areaSqm": 326
+        }
       },
       "phases": [
         {
@@ -7972,7 +8309,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T07:28:37.198Z",
+      "lastUpdated": "2026-10-05T08:56:10.360Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7981,7 +8318,14 @@
         "floor": "Ground / Airport Core",
         "area": "237 SQ.M. / 2,551 SQ.FT.",
         "capacity": "2,551 SQ.FT.",
-        "scope": "T1D Operations- BOH facility ( 237 sqm approx.) at Delhi airport terminal/facility. Area: 237 SQ.M. / 2,551 SQ.FT.. Status: Under Construction."
+        "scope": "T1D Operations- BOH facility ( 237 sqm approx.) at Delhi airport terminal/facility. Area: 237 SQ.M. / 2,551 SQ.FT.. Status: Under Construction.",
+        "areaSheet": {
+          "slNo": 24,
+          "section": "LOUNGES",
+          "status": "Under Construction",
+          "areaSqft": 2551,
+          "areaSqm": 237
+        }
       },
       "phases": [
         {
@@ -8116,7 +8460,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.192Z",
+      "lastUpdated": "2026-10-05T08:56:10.350Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8125,7 +8469,14 @@
         "floor": "Ground / Airport Core",
         "area": "174 SQ.M. / 1,873 SQ.FT.",
         "capacity": "1,873 SQ.FT.",
-        "scope": "T1D SPA at Delhi airport terminal/facility. Area: 174 SQ.M. / 1,873 SQ.FT.. Status: Operational."
+        "scope": "T1D SPA at Delhi airport terminal/facility. Area: 174 SQ.M. / 1,873 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 5,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 1873,
+          "areaSqm": 174
+        }
       },
       "phases": [
         {
@@ -8260,7 +8611,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.196Z",
+      "lastUpdated": "2026-10-05T08:56:10.354Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8269,7 +8620,14 @@
         "floor": "Ground / Airport Core",
         "area": "370 SQ.M. / 3,981 SQ.FT.",
         "capacity": "3,981 SQ.FT.",
-        "scope": "T2 Lounge at Delhi airport terminal/facility. Area: 370 SQ.M. / 3,981 SQ.FT.. Status: Operational."
+        "scope": "T2 Lounge at Delhi airport terminal/facility. Area: 370 SQ.M. / 3,981 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 16,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 3981,
+          "areaSqm": 370
+        }
       },
       "phases": [
         {
@@ -8403,7 +8761,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.206Z",
+      "lastUpdated": "2026-10-05T08:56:10.370Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -8412,7 +8770,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "T3 Arrival office at Delhi airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "T3 Arrival office at Delhi airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 41,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -8547,7 +8910,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.207Z",
+      "lastUpdated": "2026-10-05T08:56:10.371Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -8556,7 +8919,14 @@
         "floor": "Ground / Airport Core",
         "area": "167 SQ.M. / 1,800 SQ.FT.",
         "capacity": "1,800 SQ.FT.",
-        "scope": "T3 Base Kitchen at Delhi airport terminal/facility. Area: 167 SQ.M. / 1,800 SQ.FT.. Status: Operational."
+        "scope": "T3 Base Kitchen at Delhi airport terminal/facility. Area: 167 SQ.M. / 1,800 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 43,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over",
+          "areaSqft": 1800,
+          "areaSqm": 167
+        }
       },
       "phases": [
         {
@@ -8690,7 +9060,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.195Z",
+      "lastUpdated": "2026-10-05T08:56:10.354Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8699,7 +9069,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "T3 DLO2/03/04 at Delhi airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "T3 DLO2/03/04 at Delhi airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 14,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -8834,7 +9209,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T07:28:37.193Z",
+      "lastUpdated": "2026-10-05T08:56:10.351Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8843,7 +9218,14 @@
         "floor": "Ground / Airport Core",
         "area": "169 SQ.M. / 1,819 SQ.FT.",
         "capacity": "1,819 SQ.FT.",
-        "scope": "T3 Domestic Departure-Old Costa lounge at Delhi airport terminal/facility. Area: 169 SQ.M. / 1,819 SQ.FT.. Status: On Hold."
+        "scope": "T3 Domestic Departure-Old Costa lounge at Delhi airport terminal/facility. Area: 169 SQ.M. / 1,819 SQ.FT.. Status: HOLD.",
+        "areaSheet": {
+          "slNo": 7,
+          "section": "LOUNGES",
+          "status": "HOLD",
+          "areaSqft": 1819,
+          "areaSqm": 169
+        }
       },
       "phases": [
         {
@@ -8977,7 +9359,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.206Z",
+      "lastUpdated": "2026-10-05T08:56:10.370Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -8986,7 +9368,12 @@
         "floor": "Ground / Airport Core",
         "area": "",
         "capacity": "Facility",
-        "scope": "T3 Encalm Office at Delhi airport terminal/facility. Area: Standard. Status: Operational."
+        "scope": "T3 Encalm Office at Delhi airport terminal/facility. Area: Standard. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 40,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over"
+        }
       },
       "phases": [
         {
@@ -9121,7 +9508,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.195Z",
+      "lastUpdated": "2026-10-05T08:56:10.353Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -9130,7 +9517,14 @@
         "floor": "Ground / Airport Core",
         "area": "1,137 SQ.M. / 12,234 SQ.FT.",
         "capacity": "12,234 SQ.FT.",
-        "scope": "T3 INL 5&6 at Delhi airport terminal/facility. Area: 1,137 SQ.M. / 12,234 SQ.FT.. Status: Operational."
+        "scope": "T3 INL 5&6 at Delhi airport terminal/facility. Area: 1,137 SQ.M. / 12,234 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 13,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 12234,
+          "areaSqm": 1137
+        }
       },
       "phases": [
         {
@@ -9265,7 +9659,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.205Z",
+      "lastUpdated": "2026-10-05T08:56:10.369Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -9274,7 +9668,14 @@
         "floor": "Ground / Airport Core",
         "area": "585 SQ.M. / 6,294 SQ.FT.",
         "capacity": "6,294 SQ.FT.",
-        "scope": "T3 Lower Lobby Area at Delhi airport terminal/facility. Area: 585 SQ.M. / 6,294 SQ.FT.. Status: Operational."
+        "scope": "T3 Lower Lobby Area at Delhi airport terminal/facility. Area: 585 SQ.M. / 6,294 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 39,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over",
+          "areaSqft": 6294,
+          "areaSqm": 585
+        }
       },
       "phases": [
         {
@@ -9409,7 +9810,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.195Z",
+      "lastUpdated": "2026-10-05T08:56:10.353Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -9418,7 +9819,14 @@
         "floor": "Ground / Airport Core",
         "area": "2,847 SQ.M. / 30,650 SQ.FT.",
         "capacity": "30,650 SQ.FT.",
-        "scope": "T3 Prive Lounge at Delhi airport terminal/facility. Area: 2,847 SQ.M. / 30,650 SQ.FT.. Status: Operational."
+        "scope": "T3 Prive Lounge at Delhi airport terminal/facility. Area: 2,847 SQ.M. / 30,650 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 12,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 30650,
+          "areaSqm": 2847
+        }
       },
       "phases": [
         {
@@ -9553,7 +9961,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.207Z",
+      "lastUpdated": "2026-10-05T08:56:10.370Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -9562,7 +9970,14 @@
         "floor": "Ground / Airport Core",
         "area": "2,044 SQ.M. / 22,000 SQ.FT.",
         "capacity": "22,000 SQ.FT.",
-        "scope": "The Encalm Kitchen at Delhi airport terminal/facility. Area: 2,044 SQ.M. / 22,000 SQ.FT.. Status: Operational."
+        "scope": "The Encalm Kitchen at Delhi airport terminal/facility. Area: 2,044 SQ.M. / 22,000 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 42,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over",
+          "areaSqft": 22000,
+          "areaSqm": 2044
+        }
       },
       "phases": [
         {
@@ -9697,7 +10112,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.208Z",
+      "lastUpdated": "2026-10-05T08:56:10.377Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -9706,7 +10121,14 @@
         "floor": "Ground / Airport Core",
         "area": "88 SQ.M. / 945 SQ.FT.",
         "capacity": "945 SQ.FT.",
-        "scope": "Training Room - Mehramnagar at Delhi airport terminal/facility. Area: 88 SQ.M. / 945 SQ.FT.. Status: Operational."
+        "scope": "Training Room - Mehramnagar at Delhi airport terminal/facility. Area: 88 SQ.M. / 945 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 47,
+          "section": "OFFICE, KITCHEN & MISC WORKS",
+          "status": "Operational / Handed-over",
+          "areaSqft": 945,
+          "areaSqm": 88
+        }
       },
       "phases": [
         {
@@ -9841,7 +10263,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T07:28:37.197Z",
+      "lastUpdated": "2026-10-05T08:56:10.358Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -9850,7 +10272,14 @@
         "floor": "Ground / Airport Core",
         "area": "128 SQ.M. / 1,377 SQ.FT.",
         "capacity": "1,377 SQ.FT.",
-        "scope": "Visitor Lounge at T3 at Delhi airport terminal/facility. Area: 128 SQ.M. / 1,377 SQ.FT.. Status: Operational."
+        "scope": "Visitor Lounge at T3 at Delhi airport terminal/facility. Area: 128 SQ.M. / 1,377 SQ.FT.. Status: Operational / Handed-over.",
+        "areaSheet": {
+          "slNo": 22,
+          "section": "LOUNGES",
+          "status": "Operational / Handed-over",
+          "areaSqft": 1377,
+          "areaSqm": 128
+        }
       },
       "phases": [
         {
@@ -9985,7 +10414,7 @@
       "nextMilestoneDate": "2026-11-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T07:28:37.101Z",
+      "lastUpdated": "2026-10-05T08:56:10.214Z",
       "templateId": "hotel",
       "specification": {
         "projectType": "Hotel & Suites",
@@ -10254,6 +10683,13 @@
             "totalKeys": 156,
             "totalBays": 168
           }
+        },
+        "areaSheet": {
+          "slNo": 1,
+          "section": "HOTELS",
+          "status": "In Design",
+          "areaSqft": 161137,
+          "areaSqm": 14970
         }
       },
       "phases": [

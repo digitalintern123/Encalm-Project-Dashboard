@@ -1560,7 +1560,26 @@ export function seedPortfolioAreaSheetToDatabase() {
       )
     `);
 
-    for (const p of projects) {
+    for (let idx = 0; idx < projects.length; idx++) {
+      const p = projects[idx];
+      const section = idx < 42 ? 'LOUNGES' : 'OFFICE, KITCHEN & MISC WORKS';
+      const slNo = idx < 42 ? idx + 1 : 39 + (idx - 42);
+
+      let areaSqft: number | undefined;
+      let areaSqm: number | undefined;
+      if (p.area) {
+        const sqftMatch = p.area.match(/([0-9,]+)\s*SQ\.FT/i);
+        if (sqftMatch) areaSqft = parseInt(sqftMatch[1].replace(/,/g, ''), 10);
+        const sqmMatch = p.area.match(/([0-9,]+)\s*SQ\.M/i);
+        if (sqmMatch) areaSqm = parseInt(sqmMatch[1].replace(/,/g, ''), 10);
+      }
+
+      const sheetStatus =
+        p.status === 'Operational' ? 'Operational / Handed-over'
+        : p.status === 'Under Construction' ? 'Under Construction'
+        : p.status === 'On Hold' ? 'HOLD'
+        : 'Yet to start';
+
       // 1. Insert or replace project
       insertProject.run({
         id: p.id,
@@ -1591,7 +1610,14 @@ export function seedPortfolioAreaSheetToDatabase() {
           floor: 'Ground / Airport Core',
           area: p.area || '',
           capacity: p.pax_keys || '',
-          scope: `${p.name} at ${p.location} airport terminal/facility. Area: ${p.area || 'Standard'}. Status: ${p.status}.`
+          scope: `${p.name} at ${p.location} airport terminal/facility. Area: ${p.area || 'Standard'}. Status: ${sheetStatus}.`,
+          areaSheet: {
+            slNo,
+            section,
+            status: sheetStatus,
+            areaSqft,
+            areaSqm,
+          },
         }),
         template_id: p.template_id,
       });

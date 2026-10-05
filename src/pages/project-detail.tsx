@@ -15,6 +15,7 @@ import {
   ClipboardCheck,
   Clock3,
   FileText,
+  FileSpreadsheet,
   Layers3,
   Mail,
   MapPin,
@@ -1982,6 +1983,61 @@ function OverviewPanel({
                     View Full Space Breakdown &rarr;
                   </button>
                 )}
+              </div>
+            </div>
+          </DetailCard>
+        )}
+        {(spec?.areaSheet || (project.area && project.category !== 'Hotel')) && (
+          <DetailCard title="Project Area Sheet Record" eyebrow="Official Master Area Register" icon={FileSpreadsheet}>
+            <div className="mt-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-xl border border-border bg-[#f8f6f0] p-3 text-center">
+                  <span className="block font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Sheet Entry</span>
+                  <span className="mt-1 block text-[15px] font-extrabold text-[#173e49]">
+                    #{spec?.areaSheet?.slNo ?? '—'}
+                  </span>
+                  <span className="font-mono text-[10px] text-[#2e7c67]">
+                    {spec?.areaSheet?.section ?? (project.category === 'Lounge' ? 'LOUNGES' : 'OFFICE, KITCHEN & MISC')}
+                  </span>
+                </div>
+                <div className="rounded-xl border border-[#eadcb1] bg-[#fff8e9] p-3 text-center">
+                  <span className="block font-mono text-[9px] uppercase tracking-wider text-[#9a711f]">Area (SQ.FT.)</span>
+                  <span className="mt-1 block text-[15px] font-extrabold text-[#173e49]">
+                    {spec?.areaSheet?.areaSqft ? `${spec.areaSheet.areaSqft.toLocaleString()} SQ.FT.` : (project.area || '—')}
+                  </span>
+                  <span className="font-mono text-[10px] text-[#9a711f]">
+                    {spec?.areaSheet?.areaSqm ? `${spec.areaSheet.areaSqm.toLocaleString()} SQ.M.` : ''}
+                  </span>
+                </div>
+                <div className="rounded-xl border border-border bg-[#f8f6f0] p-3 text-center">
+                  <span className="block font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Airport Terminal</span>
+                  <span className="mt-1 block text-[14px] font-extrabold text-[#173e49]">
+                    {project.location}
+                  </span>
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    {spec?.floor || 'Terminal Core'}
+                  </span>
+                </div>
+                <div className="rounded-xl border border-border bg-[#f8f6f0] p-3 text-center">
+                  <span className="block font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Sheet Status</span>
+                  <span className="mt-1 block text-[12px] font-extrabold text-[#2e7c67]">
+                    {spec?.areaSheet?.status || project.status || 'Operational'}
+                  </span>
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    Source: Master Sheet
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between border-t border-border/70 pt-3">
+                <span className="text-[11px] text-muted-foreground">
+                  Facility Name: <strong>{project.name}</strong> ({project.code})
+                </span>
+                <Link
+                  href="/area-sheet"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#173e49] hover:text-[#2e7c67] transition"
+                >
+                  View in Master Area Sheet &rarr;
+                </Link>
               </div>
             </div>
           </DetailCard>

@@ -87,6 +87,13 @@ export function seedMopaGoaHotelToDatabase() {
         totalBays: 220,
       },
     },
+    areaSheet: {
+      slNo: 2,
+      section: 'HOTELS',
+      status: 'In Design',
+      areaSqft: 215280,
+      areaSqm: 20000,
+    },
   };
 
   const projectRecord = {

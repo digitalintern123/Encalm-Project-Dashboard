@@ -67,13 +67,13 @@ function ProjectTable({ rows }: { rows: Project[] }) {
   return (
     <>
       <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-[#173e49]/[.03]">
-        <div className="hidden grid-cols-[minmax(190px,1.3fr)_90px_120px_110px_100px_90px_110px_95px_40px] gap-3 border-b border-border bg-[#f7f4ec] px-5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground md:grid">
+        <div className="hidden grid-cols-[minmax(180px,1.2fr)_85px_110px_110px_100px_85px_100px_90px_36px] gap-3 border-b border-border bg-[#f7f4ec] px-5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground md:grid">
           <span>Project</span>
           <span>Location</span>
           <span>Status</span>
+          <span>Area</span>
           <span>Lead</span>
           <span>Progress</span>
-          <span>Pax / Keys</span>
           <span>Target</span>
           <span>Health</span>
           <span className="text-right">Action</span>
@@ -82,7 +82,7 @@ function ProjectTable({ rows }: { rows: Project[] }) {
         {rows.map((project) => (
           <div
             key={project.id}
-            className="grid gap-3 border-b border-border/70 px-5 py-4 transition hover:bg-[#fcf5e5] md:grid-cols-[minmax(190px,1.3fr)_90px_120px_110px_100px_90px_110px_95px_40px] md:items-center"
+            className="grid gap-3 border-b border-border/70 px-5 py-4 transition hover:bg-[#fcf5e5] md:grid-cols-[minmax(180px,1.2fr)_85px_110px_110px_100px_85px_100px_90px_36px] md:items-center"
           >
             <Link href={`/project/${project.id}`} className="flex items-center justify-between gap-3 group">
               <span>
@@ -97,14 +97,22 @@ function ProjectTable({ rows }: { rows: Project[] }) {
                 {project.status || 'Yet to start'}
               </span>
             </span>
-            <span className="text-[11px] font-semibold">{leadName(project.leadId)}</span>
+            <span className="font-mono text-[10px] font-bold text-foreground truncate" title={project.area || '—'}>
+              {project.area ? (
+                project.area.includes('SQ.FT.')
+                  ? project.area.split('/')[1]?.trim() || project.area
+                  : project.area
+              ) : (
+                <span className="text-muted-foreground font-normal">—</span>
+              )}
+            </span>
+            <span className="text-[11px] font-semibold truncate">{leadName(project.leadId)}</span>
             <span className="flex items-center gap-2 text-[11px] font-bold">
               <span className="h-1.5 flex-1 rounded-full bg-[#e7e7dc]">
                 <span className="block h-full rounded-full bg-[#3d9a7e]" style={{ width: `${project.progress}%` }} />
               </span>
               {project.progress}%
             </span>
-            <span className="text-[11px] text-muted-foreground">{project.paxKeys || project.specification?.capacity || '—'}</span>
             <span className="text-[11px] font-semibold">{project.targetLabel}</span>
             <span className={`w-fit rounded-full px-2.5 py-1 text-[10px] font-bold ${healthTone[project.health]}`}>{project.health}</span>
             <div className="flex justify-end">
