@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exportedAt": "2026-10-05T06:27:28.226Z",
+  "exportedAt": "2026-10-05T07:28:37.267Z",
   "projectCount": 68,
   "projects": [
     {
@@ -24,7 +24,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.182Z",
+      "lastUpdated": "2026-10-05T07:28:37.188Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -49,6 +49,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -64,6 +65,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -79,6 +81,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -94,6 +97,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -109,6 +113,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -122,7 +127,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-1st-class-lounge-inl-07-07a-xenia-ms-2",
@@ -133,7 +139,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -161,7 +168,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.187Z",
+      "lastUpdated": "2026-10-05T07:28:37.194Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -186,6 +193,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -201,6 +209,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -216,6 +225,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -231,6 +241,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -246,6 +257,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -259,7 +271,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-air-india-lounge-international-t3-ms-2",
@@ -270,7 +283,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -297,7 +311,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.191Z",
+      "lastUpdated": "2026-10-05T07:28:37.202Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -322,6 +336,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -337,6 +352,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -352,6 +368,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -367,6 +384,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -382,6 +400,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -395,7 +414,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "hyderabad-airport-lodge-ms-2",
@@ -406,7 +426,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -433,7 +454,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.195Z",
+      "lastUpdated": "2026-10-05T07:28:37.210Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -458,6 +479,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -473,6 +495,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -488,6 +511,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -503,6 +527,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -518,6 +543,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -531,7 +557,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "goa-base-kitchen-goa-ms-2",
@@ -542,7 +569,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -570,7 +598,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.192Z",
+      "lastUpdated": "2026-10-05T07:28:37.204Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -595,6 +623,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -610,6 +639,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -625,6 +655,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -640,6 +671,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -655,6 +687,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -668,7 +701,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "vizag-bhogapuram-card-lounge-at-domestic-departure-area-approx-1040-sqm-ms-2",
@@ -679,7 +713,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -707,7 +742,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.191Z",
+      "lastUpdated": "2026-10-05T07:28:37.204Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -732,6 +767,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -747,6 +783,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -762,6 +799,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -777,6 +815,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -792,6 +831,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -805,7 +845,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "vizag-bhogapuram-card-lounge-at-international-departure-area-approx-164-sqm-ms-2",
@@ -816,7 +857,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -844,7 +886,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T06:27:28.188Z",
+      "lastUpdated": "2026-10-05T07:28:37.194Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -869,6 +911,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -884,6 +927,7 @@
           "nextAction": null,
           "decisionRequired": "Awaiting project resumption clearance.",
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -899,6 +943,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -914,6 +959,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -929,6 +975,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -942,7 +989,8 @@
           "owner": "Projects",
           "approvalRequired": true,
           "approvalStatus": "Pending",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         },
         {
           "id": "delhi-cip-delhi-ms-2",
@@ -953,7 +1001,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -981,7 +1030,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.191Z",
+      "lastUpdated": "2026-10-05T07:28:37.203Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1006,6 +1055,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1021,6 +1071,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1036,6 +1087,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1051,6 +1103,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1066,6 +1119,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -1079,7 +1133,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "goa-cip-lounge-goa-refurbishment-work-cost-to-be-beared-by-ggial-ms-2",
@@ -1090,7 +1145,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -1118,7 +1174,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.191Z",
+      "lastUpdated": "2026-10-05T07:28:37.202Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1143,6 +1199,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1158,6 +1215,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1173,6 +1231,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1188,6 +1247,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1203,6 +1263,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -1216,7 +1277,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "goa-cip-lounge-goa-ms-2",
@@ -1227,7 +1289,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -1255,7 +1318,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.188Z",
+      "lastUpdated": "2026-10-05T07:28:37.196Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1280,6 +1343,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1295,6 +1359,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1310,6 +1375,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1325,6 +1391,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1340,6 +1407,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -1353,7 +1421,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-d-49-ms-2",
@@ -1364,7 +1433,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -1391,7 +1461,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.189Z",
+      "lastUpdated": "2026-10-05T07:28:37.196Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1416,6 +1486,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1431,6 +1502,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1446,6 +1518,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1461,6 +1534,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1476,6 +1550,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -1489,7 +1564,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-dpa10a-spa-ms-2",
@@ -1500,7 +1576,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -1527,7 +1604,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.196Z",
+      "lastUpdated": "2026-10-05T07:28:37.211Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -1552,6 +1629,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1567,6 +1645,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1582,6 +1661,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1597,6 +1677,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1612,6 +1693,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -1625,7 +1707,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "goa-dhargal-store-ms-2",
@@ -1636,7 +1719,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -1664,7 +1748,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T06:27:28.187Z",
+      "lastUpdated": "2026-10-05T07:28:37.194Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1689,6 +1773,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1704,6 +1789,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1719,6 +1805,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1734,6 +1821,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1749,6 +1837,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -1762,7 +1851,8 @@
           "owner": "Projects",
           "approvalRequired": true,
           "approvalStatus": "Pending",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         },
         {
           "id": "delhi-domestic-air-india-lounge-del-ms-2",
@@ -1773,7 +1863,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -1801,7 +1892,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.190Z",
+      "lastUpdated": "2026-10-05T07:28:37.198Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1826,6 +1917,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1841,6 +1933,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1856,6 +1949,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1871,6 +1965,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1886,6 +1981,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -1899,7 +1995,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "hyderabad-domestic-card-lounge-1794-ms-2",
@@ -1910,7 +2007,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -1937,7 +2035,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.191Z",
+      "lastUpdated": "2026-10-05T07:28:37.201Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1962,6 +2060,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1977,6 +2076,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -1992,6 +2092,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2007,6 +2108,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2022,6 +2124,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -2035,7 +2138,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "hyderabad-domestic-card-lounge-additional-new-buffet-boh-ms-2",
@@ -2046,7 +2150,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -2074,7 +2179,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.191Z",
+      "lastUpdated": "2026-10-05T07:28:37.203Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2099,6 +2204,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2114,6 +2220,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2129,6 +2236,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2144,6 +2252,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2159,6 +2268,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -2172,7 +2282,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "goa-domestic-lounge-goa-ms-2",
@@ -2183,7 +2294,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -2211,7 +2323,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.191Z",
+      "lastUpdated": "2026-10-05T07:28:37.203Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2236,6 +2348,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2251,6 +2364,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2266,6 +2380,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2281,6 +2396,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2296,6 +2412,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -2309,7 +2426,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "goa-domestic-lounge-extension-ms-2",
@@ -2320,7 +2438,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -2348,7 +2467,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T06:27:28.190Z",
+      "lastUpdated": "2026-10-05T07:28:37.199Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2373,6 +2492,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2388,6 +2508,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2403,6 +2524,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2418,6 +2540,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2433,6 +2556,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -2446,7 +2570,8 @@
           "owner": "Projects",
           "approvalRequired": true,
           "approvalStatus": "Pending",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         },
         {
           "id": "hyderabad-domestic-premium-lounge-hyderabad-ms-2",
@@ -2457,7 +2582,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -2485,7 +2611,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.196Z",
+      "lastUpdated": "2026-10-05T07:28:37.211Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -2510,6 +2636,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2525,6 +2652,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2540,6 +2668,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2555,6 +2684,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2570,6 +2700,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -2583,7 +2714,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "goa-encalm-office-goa-ms-2",
@@ -2594,7 +2726,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -2622,7 +2755,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T06:27:28.190Z",
+      "lastUpdated": "2026-10-05T07:28:37.199Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -2647,6 +2780,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2662,6 +2796,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2677,6 +2812,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2692,6 +2828,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2707,6 +2844,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -2720,7 +2858,8 @@
           "owner": "Projects",
           "approvalRequired": true,
           "approvalStatus": "Pending",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         },
         {
           "id": "hyderabad-hyderabad-amex-lounge-200sqm-ms-2",
@@ -2731,7 +2870,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -2758,7 +2898,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.194Z",
+      "lastUpdated": "2026-10-05T07:28:37.210Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -2783,6 +2923,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2798,6 +2939,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2813,6 +2955,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2828,6 +2971,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2843,6 +2987,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -2856,7 +3001,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "hyderabad-hyderabad-back-office-ms-2",
@@ -2867,7 +3013,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -2895,7 +3042,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.194Z",
+      "lastUpdated": "2026-10-05T07:28:37.210Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -2920,6 +3067,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2935,6 +3083,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2950,6 +3099,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2965,6 +3115,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -2980,6 +3131,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -2993,7 +3145,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "hyderabad-hyderabad-domestic-existing-ms-2",
@@ -3004,7 +3157,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -3031,7 +3185,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.194Z",
+      "lastUpdated": "2026-10-05T07:28:37.209Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -3056,6 +3210,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3071,6 +3226,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3086,6 +3242,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3101,6 +3258,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3116,6 +3274,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -3129,7 +3288,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "hyderabad-hyderabad-existing-base-kitchen-ms-2",
@@ -3140,7 +3300,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -3168,7 +3329,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.188Z",
+      "lastUpdated": "2026-10-05T07:28:37.196Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3193,6 +3354,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3208,6 +3370,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3223,6 +3386,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3238,6 +3402,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3253,6 +3418,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -3266,7 +3432,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-inl-7-spa-ms-2",
@@ -3277,7 +3444,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -3305,7 +3473,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.190Z",
+      "lastUpdated": "2026-10-05T07:28:37.200Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3330,6 +3498,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3345,6 +3514,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3360,6 +3530,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3375,6 +3546,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3390,6 +3562,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -3403,7 +3576,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "hyderabad-international-card-lounge-hyderabad-ms-2",
@@ -3414,7 +3588,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -3442,7 +3617,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.191Z",
+      "lastUpdated": "2026-10-05T07:28:37.204Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3467,6 +3642,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3482,6 +3658,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3497,6 +3674,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3512,6 +3690,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3527,6 +3706,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -3540,7 +3720,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "goa-international-lounge-goa-ms-2",
@@ -3551,7 +3732,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -3579,7 +3761,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.190Z",
+      "lastUpdated": "2026-10-05T07:28:37.200Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3604,6 +3786,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3619,6 +3802,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3634,6 +3818,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3649,6 +3834,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3664,6 +3850,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -3677,7 +3864,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "hyderabad-international-premium-lounge-hyderabad-ms-2",
@@ -3688,7 +3876,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -3715,7 +3904,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.190Z",
+      "lastUpdated": "2026-10-05T07:28:37.201Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3740,6 +3929,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3755,6 +3945,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3770,6 +3961,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3785,6 +3977,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3800,6 +3993,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -3813,7 +4007,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "hyderabad-international-premium-lounge-extension-ms-2",
@@ -3824,7 +4019,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -3852,7 +4048,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.189Z",
+      "lastUpdated": "2026-10-05T07:28:37.198Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -3877,6 +4073,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3892,6 +4089,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3907,6 +4105,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3922,6 +4121,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -3937,6 +4137,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -3950,7 +4151,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-la-12-ms-2",
@@ -3961,7 +4163,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -3989,7 +4192,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.189Z",
+      "lastUpdated": "2026-10-05T07:28:37.197Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -4014,6 +4217,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4029,6 +4233,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4044,6 +4249,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4059,6 +4265,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4074,6 +4281,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -4087,7 +4295,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-la22-lounge-ms-2",
@@ -4098,7 +4307,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -4126,7 +4336,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.194Z",
+      "lastUpdated": "2026-10-05T07:28:37.209Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -4151,6 +4361,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4166,6 +4377,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4181,6 +4393,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4196,6 +4409,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4211,6 +4425,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -4224,7 +4439,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-m-g-del-ms-2",
@@ -4235,7 +4451,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -4262,7 +4479,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.193Z",
+      "lastUpdated": "2026-10-05T07:28:37.208Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -4287,6 +4504,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4302,6 +4520,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4317,6 +4536,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4332,6 +4552,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4347,6 +4568,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -4360,7 +4582,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-mk-01-ms-2",
@@ -4371,7 +4594,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -4398,7 +4622,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.193Z",
+      "lastUpdated": "2026-10-05T07:28:37.209Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -4423,6 +4647,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4438,6 +4663,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4453,6 +4679,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4468,6 +4695,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4483,6 +4711,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -4496,7 +4725,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-mk-02-ms-2",
@@ -4507,7 +4737,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -4535,7 +4766,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T06:27:28.190Z",
+      "lastUpdated": "2026-10-05T07:28:37.198Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -4560,6 +4791,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4575,6 +4807,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4590,6 +4823,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4605,6 +4839,7 @@
           "nextAction": "Continuing ongoing site execution.",
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4620,6 +4855,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -4633,7 +4869,8 @@
           "owner": "Projects",
           "approvalRequired": true,
           "approvalStatus": "Pending",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         },
         {
           "id": "delhi-mlcp-nap-room-level-06-t3-250-sqm-approx-ms-2",
@@ -4644,7 +4881,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -4672,7 +4910,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.189Z",
+      "lastUpdated": "2026-10-05T07:28:37.197Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -4697,6 +4935,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4712,6 +4951,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4727,6 +4967,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4742,6 +4983,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4757,6 +4999,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -4770,7 +5013,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-ms-05-06-business-centre-ms-2",
@@ -4781,7 +5025,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -4809,7 +5054,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.193Z",
+      "lastUpdated": "2026-10-05T07:28:37.207Z",
       "templateId": "encalm-eats",
       "specification": {
         "projectType": "Encalm Eats",
@@ -4834,6 +5079,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4849,6 +5095,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4864,6 +5111,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4879,6 +5127,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4894,6 +5143,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -4907,7 +5157,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-mehram-nagar-caf-ms-2",
@@ -4918,7 +5169,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -4946,7 +5198,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.193Z",
+      "lastUpdated": "2026-10-05T07:28:37.207Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -4971,6 +5223,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -4986,6 +5239,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5001,6 +5255,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5016,6 +5271,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5031,6 +5287,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -5044,7 +5301,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-mehramnagar-kitchen-ms-2",
@@ -5055,7 +5313,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -5082,7 +5341,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.196Z",
+      "lastUpdated": "2026-10-05T07:28:37.212Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -5107,6 +5366,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5122,6 +5382,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5137,6 +5398,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5152,6 +5414,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5167,6 +5430,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -5180,7 +5444,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-misc-works-ie-corporate-office-retrofit-works-etc-ms-2",
@@ -5191,7 +5456,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -5219,7 +5485,7 @@
       "nextMilestoneDate": "2026-12-15",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-06-01",
-      "lastUpdated": "2026-10-05T06:04:30.350Z",
+      "lastUpdated": "2026-10-05T07:28:37.142Z",
       "templateId": "hotel",
       "specification": {
         "projectType": "Hotel",
@@ -5522,6 +5788,7 @@
           "nextAction": "Proceed to statutory filings",
           "decisionRequired": "Operator architectural sign-off completed.",
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5537,6 +5804,7 @@
           "nextAction": "Finalize BOQ and tender packages for substructure and MEPF packages.",
           "decisionRequired": "Confirmation on façade material and chiller energy efficiency specifications.",
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5552,6 +5820,7 @@
           "nextAction": "Attend state pollution control board committee review.",
           "decisionRequired": "State environmental committee compliance response.",
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5567,6 +5836,7 @@
           "nextAction": "Issue RFP for general civil contractor and long-lead HVAC chillers.",
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5582,6 +5852,7 @@
           "nextAction": "Site mobilization, excavation, and basement diaphragm wall construction.",
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -5595,7 +5866,8 @@
           "owner": "PMO",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2025-08-25"
+          "completedDate": "2025-08-25",
+          "taggedUsers": []
         },
         {
           "id": "mopa-goa-hotel-ms-2",
@@ -5606,7 +5878,8 @@
           "owner": "Design",
           "approvalRequired": true,
           "approvalStatus": "Pending",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         },
         {
           "id": "mopa-goa-hotel-ms-3",
@@ -5617,7 +5890,8 @@
           "owner": "Projects",
           "approvalRequired": true,
           "approvalStatus": "Pending",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         },
         {
           "id": "mopa-goa-hotel-ms-4",
@@ -5628,7 +5902,8 @@
           "owner": "Projects",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         },
         {
           "id": "mopa-goa-hotel-ms-5",
@@ -5639,7 +5914,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Pending",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         }
       ],
       "issues": [
@@ -5658,7 +5934,8 @@
           "impactSchedule": "Tender release must be advanced to Q1 2026 to ensure chillers arrive before terrace slab closure.",
           "impactScope": null,
           "action": "Issue advance procurement package for long-lead HVAC equipment.",
-          "resolution": null
+          "resolution": null,
+          "taggedUsers": []
         }
       ],
       "updates": [],
@@ -5685,7 +5962,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.188Z",
+      "lastUpdated": "2026-10-05T07:28:37.194Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -5710,6 +5987,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5725,6 +6003,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5740,6 +6019,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5755,6 +6035,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5770,6 +6051,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -5783,7 +6065,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-naping-room-la01-refurbishment-ms-2",
@@ -5794,7 +6077,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -5821,7 +6105,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.196Z",
+      "lastUpdated": "2026-10-05T07:28:37.211Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -5846,6 +6130,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5861,6 +6146,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5876,6 +6162,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5891,6 +6178,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5906,6 +6194,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -5919,7 +6208,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-pmc-cost-consultant-ms-2",
@@ -5930,7 +6220,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -5957,7 +6248,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.194Z",
+      "lastUpdated": "2026-10-05T07:28:37.209Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -5982,6 +6273,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -5997,6 +6289,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6012,6 +6305,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6027,6 +6321,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6042,6 +6337,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -6055,7 +6351,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-porter-del-ms-2",
@@ -6066,7 +6363,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -6093,7 +6391,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.196Z",
+      "lastUpdated": "2026-10-05T07:28:37.211Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -6118,6 +6416,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6133,6 +6432,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6148,6 +6448,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6163,6 +6464,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6178,6 +6480,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -6191,7 +6494,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "goa-porter-goa-ms-2",
@@ -6202,7 +6506,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -6230,7 +6535,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.192Z",
+      "lastUpdated": "2026-10-05T07:28:37.204Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -6255,6 +6560,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6270,6 +6576,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6285,6 +6592,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6300,6 +6608,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6315,6 +6624,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -6328,7 +6638,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "vizag-reserve-lounge-at-domestic-departure-area-approx-216-sqm-ms-2",
@@ -6339,7 +6650,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -6366,7 +6678,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.187Z",
+      "lastUpdated": "2026-10-05T07:28:37.193Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -6391,6 +6703,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6406,6 +6719,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6421,6 +6735,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6436,6 +6751,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6451,6 +6767,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -6464,7 +6781,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-rupay-lounge-t3-ms-2",
@@ -6475,7 +6793,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -6503,7 +6822,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.192Z",
+      "lastUpdated": "2026-10-05T07:28:37.205Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -6528,6 +6847,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6543,6 +6863,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6558,6 +6879,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6573,6 +6895,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6588,6 +6911,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -6601,7 +6925,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "vizag-spa-at-domestic-departure-area-approx-150-sqm-ms-2",
@@ -6612,7 +6937,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -6639,7 +6965,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.196Z",
+      "lastUpdated": "2026-10-05T07:28:37.212Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -6664,6 +6990,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6679,6 +7006,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6694,6 +7022,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6709,6 +7038,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6724,6 +7054,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -6737,7 +7068,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-split-order-ms-2",
@@ -6748,7 +7080,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -6776,7 +7109,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.193Z",
+      "lastUpdated": "2026-10-05T07:28:37.208Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -6801,6 +7134,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6816,6 +7150,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6831,6 +7166,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6846,6 +7182,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6861,6 +7198,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -6874,7 +7212,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-staff-facilities-male-female-lockers-and-storage-space-at-mehramnagar-ms-2",
@@ -6885,7 +7224,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -6912,7 +7252,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.194Z",
+      "lastUpdated": "2026-10-05T07:28:37.210Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -6937,6 +7277,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6952,6 +7293,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6967,6 +7309,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6982,6 +7325,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -6997,6 +7341,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -7010,7 +7355,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "hyderabad-stores-hyd-ms-2",
@@ -7021,7 +7367,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -7049,7 +7396,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.189Z",
+      "lastUpdated": "2026-10-05T07:28:37.197Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7074,6 +7421,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7089,6 +7437,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7104,6 +7453,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7119,6 +7469,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7134,6 +7485,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -7147,7 +7499,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t1d-lounge-additional-area-ms-2",
@@ -7158,7 +7511,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -7186,7 +7540,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.186Z",
+      "lastUpdated": "2026-10-05T07:28:37.189Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7211,6 +7565,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7226,6 +7581,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7241,6 +7597,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7256,6 +7613,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7271,6 +7629,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -7284,7 +7643,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t1d-lounge-1-level-4-5-card-ms-2",
@@ -7295,7 +7655,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -7323,7 +7684,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.186Z",
+      "lastUpdated": "2026-10-05T07:28:37.189Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7348,6 +7709,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7363,6 +7725,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7378,6 +7741,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7393,6 +7757,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7408,6 +7773,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -7421,7 +7787,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t1d-lounge-2-level-5-premium-ms-2",
@@ -7432,7 +7799,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -7460,7 +7828,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.186Z",
+      "lastUpdated": "2026-10-05T07:28:37.190Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7485,6 +7853,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7500,6 +7869,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7515,6 +7885,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7530,6 +7901,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7545,6 +7917,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -7558,7 +7931,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t1d-lounge-3-level-4-amex-ms-2",
@@ -7569,7 +7943,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -7597,7 +7972,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T06:27:28.189Z",
+      "lastUpdated": "2026-10-05T07:28:37.198Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7622,6 +7997,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7637,6 +8013,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7652,6 +8029,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7667,6 +8045,7 @@
           "nextAction": "Continuing ongoing site execution.",
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7682,6 +8061,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -7695,7 +8075,8 @@
           "owner": "Projects",
           "approvalRequired": true,
           "approvalStatus": "Pending",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         },
         {
           "id": "delhi-t1d-operations-boh-facility-237-sqm-approx-ms-2",
@@ -7706,7 +8087,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -7734,7 +8116,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.187Z",
+      "lastUpdated": "2026-10-05T07:28:37.192Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7759,6 +8141,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7774,6 +8157,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7789,6 +8173,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7804,6 +8189,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7819,6 +8205,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -7832,7 +8219,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t1d-spa-ms-2",
@@ -7843,7 +8231,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -7871,7 +8260,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.188Z",
+      "lastUpdated": "2026-10-05T07:28:37.196Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -7896,6 +8285,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7911,6 +8301,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7926,6 +8317,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7941,6 +8333,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -7956,6 +8349,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -7969,7 +8363,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t2-lounge-ms-2",
@@ -7980,7 +8375,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -8007,7 +8403,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.192Z",
+      "lastUpdated": "2026-10-05T07:28:37.206Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -8032,6 +8428,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8047,6 +8444,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8062,6 +8460,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8077,6 +8476,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8092,6 +8492,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -8105,7 +8506,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t3-arrival-office-ms-2",
@@ -8116,7 +8518,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -8144,7 +8547,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.193Z",
+      "lastUpdated": "2026-10-05T07:28:37.207Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -8169,6 +8572,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8184,6 +8588,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8199,6 +8604,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8214,6 +8620,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8229,6 +8636,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -8242,7 +8650,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t3-base-kitchen-ms-2",
@@ -8253,7 +8662,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -8280,7 +8690,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.188Z",
+      "lastUpdated": "2026-10-05T07:28:37.195Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8305,6 +8715,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8320,6 +8731,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8335,6 +8747,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8350,6 +8763,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8365,6 +8779,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -8378,7 +8793,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t3-dlo2-03-04-ms-2",
@@ -8389,7 +8805,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -8417,7 +8834,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T06:27:28.187Z",
+      "lastUpdated": "2026-10-05T07:28:37.193Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8442,6 +8859,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8457,6 +8875,7 @@
           "nextAction": null,
           "decisionRequired": "Awaiting project resumption clearance.",
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8472,6 +8891,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8487,6 +8907,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8502,6 +8923,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -8515,7 +8937,8 @@
           "owner": "Projects",
           "approvalRequired": true,
           "approvalStatus": "Pending",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         },
         {
           "id": "delhi-t3-domestic-departure-old-costa-lounge-ms-2",
@@ -8526,7 +8949,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -8553,7 +8977,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.192Z",
+      "lastUpdated": "2026-10-05T07:28:37.206Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -8578,6 +9002,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8593,6 +9018,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8608,6 +9034,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8623,6 +9050,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8638,6 +9066,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -8651,7 +9080,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t3-encalm-office-ms-2",
@@ -8662,7 +9092,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -8690,7 +9121,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.188Z",
+      "lastUpdated": "2026-10-05T07:28:37.195Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8715,6 +9146,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8730,6 +9162,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8745,6 +9178,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8760,6 +9194,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8775,6 +9210,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -8788,7 +9224,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t3-inl-5-6-ms-2",
@@ -8799,7 +9236,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -8827,7 +9265,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.192Z",
+      "lastUpdated": "2026-10-05T07:28:37.205Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -8852,6 +9290,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8867,6 +9306,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8882,6 +9322,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8897,6 +9338,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -8912,6 +9354,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -8925,7 +9368,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t3-lower-lobby-area-ms-2",
@@ -8936,7 +9380,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -8964,7 +9409,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.188Z",
+      "lastUpdated": "2026-10-05T07:28:37.195Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -8989,6 +9434,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9004,6 +9450,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9019,6 +9466,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9034,6 +9482,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9049,6 +9498,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -9062,7 +9512,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-t3-prive-lounge-ms-2",
@@ -9073,7 +9524,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -9101,7 +9553,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.192Z",
+      "lastUpdated": "2026-10-05T07:28:37.207Z",
       "templateId": "kitchen",
       "specification": {
         "projectType": "Kitchen",
@@ -9126,6 +9578,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9141,6 +9594,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9156,6 +9610,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9171,6 +9626,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9186,6 +9642,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -9199,7 +9656,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-the-encalm-kitchen-ms-2",
@@ -9210,7 +9668,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -9238,7 +9697,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.193Z",
+      "lastUpdated": "2026-10-05T07:28:37.208Z",
       "templateId": "custom",
       "specification": {
         "projectType": "Other",
@@ -9263,6 +9722,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9278,6 +9738,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9293,6 +9754,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9308,6 +9770,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9323,6 +9786,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -9336,7 +9800,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-training-room-mehramnagar-ms-2",
@@ -9347,7 +9812,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -9375,7 +9841,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "2026-10-05T06:27:28.189Z",
+      "lastUpdated": "2026-10-05T07:28:37.197Z",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -9400,6 +9866,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9415,6 +9882,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9430,6 +9898,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9445,6 +9914,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9460,6 +9930,7 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -9473,7 +9944,8 @@
           "owner": "Operations",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2024-06-30"
+          "completedDate": "2024-06-30",
+          "taggedUsers": []
         },
         {
           "id": "delhi-visitor-lounge-at-t3-ms-2",
@@ -9484,7 +9956,8 @@
           "owner": "Operations",
           "approvalRequired": false,
           "approvalStatus": "Not required",
-          "completedDate": "2024-12-31"
+          "completedDate": "2024-12-31",
+          "taggedUsers": []
         }
       ],
       "issues": [],
@@ -9512,7 +9985,7 @@
       "nextMilestoneDate": "2026-11-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-09-30T07:05:22.814Z",
+      "lastUpdated": "2026-10-05T07:28:37.101Z",
       "templateId": "hotel",
       "specification": {
         "projectType": "Hotel & Suites",
@@ -9797,6 +10270,7 @@
           "nextAction": "Handover to concept design architecture.",
           "decisionRequired": "Approved by leadership.",
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9812,6 +10286,7 @@
           "nextAction": "Complete MEP, structural coordination, and 3D interior renders.",
           "decisionRequired": "Facade material palette sign-off.",
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9827,6 +10302,7 @@
           "nextAction": "Submit building sanction drawings and fire NOC clearance.",
           "decisionRequired": "General Contractor pre-qualification criteria.",
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9842,6 +10318,7 @@
           "nextAction": "Mobilize site team post contractor award.",
           "decisionRequired": "Excavation contractor selection.",
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         },
         {
@@ -9857,6 +10334,7 @@
           "nextAction": "Trial operations and hospitality snag clearance.",
           "decisionRequired": "Commercial operations date sign-off.",
           "weight": null,
+          "taggedUsers": [],
           "updatedAt": null
         }
       ],
@@ -9870,7 +10348,8 @@
           "owner": "Chinmay Saxena",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2025-04-12"
+          "completedDate": "2025-04-12",
+          "taggedUsers": []
         },
         {
           "id": "vizag-hotel-suites-ms-2",
@@ -9881,7 +10360,8 @@
           "owner": "Design Lead",
           "approvalRequired": true,
           "approvalStatus": "Approved",
-          "completedDate": "2025-08-28"
+          "completedDate": "2025-08-28",
+          "taggedUsers": []
         },
         {
           "id": "vizag-hotel-suites-ms-3",
@@ -9892,7 +10372,8 @@
           "owner": "Design Lead",
           "approvalRequired": true,
           "approvalStatus": "In review",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         },
         {
           "id": "vizag-hotel-suites-ms-4",
@@ -9903,7 +10384,8 @@
           "owner": "Sourcing Head",
           "approvalRequired": true,
           "approvalStatus": "Not required",
-          "completedDate": null
+          "completedDate": null,
+          "taggedUsers": []
         }
       ],
       "issues": [
@@ -9922,12 +10404,36 @@
           "impactSchedule": "May impact crane mobilization scheduled for phase 4.",
           "impactScope": null,
           "action": "Follow up with regional aviation office for expedited NOC.",
-          "resolution": null
+          "resolution": null,
+          "taggedUsers": []
         }
       ],
       "updates": [],
       "photos": []
     }
   ],
-  "notifications": []
+  "notifications": [
+    {
+      "id": "notif-tag-1791184289326-1qmxx",
+      "type": "tagged_issue",
+      "title": "Tagged on Issue: HVAC Chiller Delay on 6th Floor",
+      "message": "Rajesh Sharma tagged you on issue \"HVAC Chiller Delay on 6th Floor\" in Vizag Hotel & Suites",
+      "project_id": "project-vizag-hotel",
+      "link": "/project/project-vizag-hotel",
+      "read": 0,
+      "created_at": "2026-10-05 07:11:29",
+      "recipient_id": "user-ruchika-chauhan"
+    },
+    {
+      "id": "notif-tag-1791184289327-mayyg",
+      "type": "tagged_issue",
+      "title": "Tagged on Issue: HVAC Chiller Delay on 6th Floor",
+      "message": "Rajesh Sharma tagged you on issue \"HVAC Chiller Delay on 6th Floor\" in Vizag Hotel & Suites",
+      "project_id": "project-vizag-hotel",
+      "link": "/project/project-vizag-hotel",
+      "read": 0,
+      "created_at": "2026-10-05 07:11:29",
+      "recipient_id": "user-chinmay-saxena"
+    }
+  ]
 }

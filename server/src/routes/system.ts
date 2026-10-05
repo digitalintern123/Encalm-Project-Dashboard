@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db/database.js';
 import { clearAllProjectData } from '../db/seed.js';
 import { getFullProjectRecord, restoreDatabaseFromJSON, saveDatabaseSnapshot } from '../utils/backup.js';
+import { restoreAllPdfDataToDatabase } from '../scripts/restore-all-pdfs.js';
 
 const router = Router();
 
@@ -64,6 +65,20 @@ router.post('/clear', (req, res) => {
   } catch (err: any) {
     console.error('Clear database failed:', err);
     return res.status(500).json({ error: 'Failed to clear database', details: err.message });
+  }
+});
+
+// POST restore all 3 PDF master data
+router.post('/restore-all-pdfs', (req, res) => {
+  try {
+    const summary = restoreAllPdfDataToDatabase();
+    return res.json({
+      message: 'All 3 PDF datasets (Vizag Hotel & Suites, Mopa Goa Hotel, Master Project Area Sheet) restored successfully.',
+      ...summary,
+    });
+  } catch (err: any) {
+    console.error('Restore all PDFs failed:', err);
+    return res.status(500).json({ error: 'Failed to restore PDF data', details: err.message });
   }
 });
 

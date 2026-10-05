@@ -12,7 +12,9 @@
     "start": "tsx server/src/index.ts",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "create-user": "tsx server/src/scripts/create-user.ts"
+    "create-user": "tsx server/src/scripts/create-user.ts",
+    "restore:all": "tsx server/src/scripts/restore-all-pdfs.ts",
+    "seed:all": "tsx server/src/scripts/restore-all-pdfs.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.4",

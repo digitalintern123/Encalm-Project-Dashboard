@@ -4,6 +4,17 @@ import { db, dataDir } from '../db/database.js';
 
 export const SNAPSHOT_FILE_PATH = path.join(dataDir, 'portfolio-database.json');
 
+function parseTaggedUsers(val: any): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  try {
+    const parsed = JSON.parse(val);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Fetch full project tree for a given project ID directly from database.
  */
@@ -54,6 +65,7 @@ export function getFullProjectRecord(projectId: string) {
       nextAction: ph.next_action,
       decisionRequired: ph.decision_required,
       weight: ph.weight ?? null,
+      taggedUsers: parseTaggedUsers(ph.tagged_users),
       updatedAt: ph.updated_at,
     })),
     milestones: milestones.map((m) => ({
@@ -66,6 +78,7 @@ export function getFullProjectRecord(projectId: string) {
       approvalRequired: Boolean(m.approval_required),
       approvalStatus: m.approval_status,
       completedDate: m.completed_date,
+      taggedUsers: parseTaggedUsers(m.tagged_users),
     })),
     issues: issues.map((i) => ({
       id: i.id,
@@ -83,6 +96,7 @@ export function getFullProjectRecord(projectId: string) {
       impactScope: i.impact_scope,
       action: i.action,
       resolution: i.resolution,
+      taggedUsers: parseTaggedUsers(i.tagged_users),
     })),
     updates: updates.map((u) => ({
       id: u.id,
@@ -158,20 +172,20 @@ export function restoreDatabaseFromJSON(data: { projects?: any[]; notifications?
   const insertPhase = db.prepare(`
     INSERT OR REPLACE INTO phases (
       id, project_id, name, status, progress, weight, owner, order_index,
-      planned_start, planned_finish, actual_finish, work_completed, next_action, decision_required, updated_at
+      planned_start, planned_finish, actual_finish, work_completed, next_action, decision_required, tagged_users, updated_at
     ) VALUES (
       @id, @project_id, @name, @status, @progress, @weight, @owner, @order_index,
-      @planned_start, @planned_finish, @actual_finish, @work_completed, @next_action, @decision_required, @updated_at
+      @planned_start, @planned_finish, @actual_finish, @work_completed, @next_action, @decision_required, @tagged_users, @updated_at
     )
   `);
 
   const insertMilestone = db.prepare(`
     INSERT OR REPLACE INTO milestones (
       id, project_id, title, date, status, stage, owner,
-      approval_required, approval_status, completed_date, order_index
+      approval_required, approval_status, completed_date, tagged_users, order_index
     ) VALUES (
       @id, @project_id, @title, @date, @status, @stage, @owner,
-      @approval_required, @approval_status, @completed_date, @order_index
+      @approval_required, @approval_status, @completed_date, @tagged_users, @order_index
     )
   `);
 
@@ -179,11 +193,11 @@ export function restoreDatabaseFromJSON(data: { projects?: any[]; notifications?
     INSERT OR REPLACE INTO issues (
       id, project_id, title, detail, severity, owner, category, status,
       stage, date_raised, due_date, impact_cost, impact_schedule, impact_scope,
-      action, resolution, order_index
+      action, resolution, tagged_users, order_index
     ) VALUES (
       @id, @project_id, @title, @detail, @severity, @owner, @category, @status,
       @stage, @date_raised, @due_date, @impact_cost, @impact_schedule, @impact_scope,
-      @action, @resolution, @order_index
+      @action, @resolution, @tagged_users, @order_index
     )
   `);
 
@@ -255,6 +269,7 @@ export function restoreDatabaseFromJSON(data: { projects?: any[]; notifications?
             work_completed: ph.workCompleted || ph.work_completed || null,
             next_action: ph.nextAction || ph.next_action || null,
             decision_required: ph.decisionRequired || ph.decision_required || null,
+            tagged_users: JSON.stringify(parseTaggedUsers(ph.taggedUsers || ph.tagged_users)),
             updated_at: ph.updatedAt || ph.updated_at || null,
           });
         });
@@ -273,6 +288,7 @@ export function restoreDatabaseFromJSON(data: { projects?: any[]; notifications?
             approval_required: m.approvalRequired ? 1 : 0,
             approval_status: m.approvalStatus || 'Not required',
             completed_date: m.completedDate || m.completed_date || null,
+            tagged_users: JSON.stringify(parseTaggedUsers(m.taggedUsers || m.tagged_users)),
             order_index: idx,
           });
         });
@@ -297,6 +313,7 @@ export function restoreDatabaseFromJSON(data: { projects?: any[]; notifications?
             impact_scope: iss.impactScope || iss.impact_scope || null,
             action: iss.action || null,
             resolution: iss.resolution || null,
+            tagged_users: JSON.stringify(parseTaggedUsers(iss.taggedUsers || iss.tagged_users)),
             order_index: idx,
           });
         });

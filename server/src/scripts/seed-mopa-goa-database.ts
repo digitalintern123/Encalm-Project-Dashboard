@@ -394,5 +394,7 @@ export function seedMopaGoaHotelToDatabase() {
   saveDatabaseSnapshot();
 }
 
-// When executed directly via `npx tsx`
-seedMopaGoaHotelToDatabase();
+// Auto-run if executed directly
+if (process.argv[1]?.includes('seed-mopa-goa-database')) {
+  seedMopaGoaHotelToDatabase();
+}

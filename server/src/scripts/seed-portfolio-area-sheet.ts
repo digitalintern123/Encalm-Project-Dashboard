@@ -1670,4 +1670,7 @@ export function seedPortfolioAreaSheetToDatabase() {
   saveDatabaseSnapshot();
 }
 
-seedPortfolioAreaSheetToDatabase();
+// Auto-run if executed directly
+if (process.argv[1]?.includes('seed-portfolio-area-sheet')) {
+  seedPortfolioAreaSheetToDatabase();
+}
