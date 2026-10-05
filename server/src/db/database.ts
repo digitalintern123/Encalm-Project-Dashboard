@@ -16,6 +16,18 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+/**
+ * ============================================================================
+ * ARCHITECTURAL SINGLE SOURCE OF TRUTH (SSOT)
+ * ============================================================================
+ * The SQLite Database (`encalm.db`) is the canonical, authoritative master for
+ * all portfolio data (projects, phases, milestones, issues, photos, updates,
+ * notifications, and user authentications).
+ *
+ * Secondary artifacts (`portfolio-database.json` and client bundle fallbacks)
+ * are derived point-in-time snapshots and must never override live database records.
+ * ============================================================================
+ */
 export const dbPath = process.env.DATABASE_PATH || path.join(dataDir, 'encalm.db');
 export const db = new Database(dbPath);
 

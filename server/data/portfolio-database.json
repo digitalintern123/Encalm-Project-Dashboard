@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exportedAt": "2026-10-05T16:22:02.316Z",
+  "exportedAt": "2026-10-05T17:04:32.919Z",
   "projectCount": 68,
   "projects": [
     {
@@ -186,6 +186,22 @@
           "weight": null,
           "taggedUsers": [],
           "updatedAt": "05 Oct 2026"
+        },
+        {
+          "id": "delhi-1st-class-lounge-inl-07-07a-xenia-phase-1791219872593",
+          "name": "Diagnostic Test Phase",
+          "status": "upcoming",
+          "progress": 0,
+          "owner": "Quality Assurance",
+          "plannedStart": null,
+          "plannedFinish": null,
+          "actualFinish": null,
+          "workCompleted": null,
+          "nextAction": null,
+          "decisionRequired": null,
+          "weight": null,
+          "taggedUsers": [],
+          "updatedAt": "05 Oct 2026"
         }
       ],
       "milestones": [
@@ -251,6 +267,18 @@
         },
         {
           "id": "delhi-1st-class-lounge-inl-07-07a-xenia-milestone-1791217322208",
+          "title": "Diagnostic Test Milestone",
+          "date": "2026-12-31",
+          "status": "upcoming",
+          "stage": "Planning",
+          "owner": "QA Lead",
+          "approvalRequired": false,
+          "approvalStatus": "Not required",
+          "completedDate": null,
+          "taggedUsers": []
+        },
+        {
+          "id": "delhi-1st-class-lounge-inl-07-07a-xenia-milestone-1791219872676",
           "title": "Diagnostic Test Milestone",
           "date": "2026-12-31",
           "status": "upcoming",
@@ -334,9 +362,36 @@
           "action": null,
           "resolution": null,
           "taggedUsers": []
+        },
+        {
+          "id": "delhi-1st-class-lounge-inl-07-07a-xenia-issue-1791219872737",
+          "title": "Diagnostic Test Issue",
+          "detail": "Verification of issue creation pipeline.",
+          "severity": "Low",
+          "owner": "Project Lead",
+          "category": "Operational",
+          "status": "Open",
+          "stage": "Planning",
+          "dateRaised": "05 Oct 2026",
+          "dueDate": null,
+          "impactCost": null,
+          "impactSchedule": null,
+          "impactScope": null,
+          "action": null,
+          "resolution": null,
+          "taggedUsers": []
         }
       ],
       "updates": [
+        {
+          "id": "delhi-1st-class-lounge-inl-07-07a-xenia-update-1791219872850",
+          "date": "05 Oct 2026",
+          "author": "Audit Runner",
+          "role": "Quality Assurance",
+          "text": "Automated test update note verification.",
+          "stage": "Planning",
+          "kind": "Progress"
+        },
         {
           "id": "delhi-1st-class-lounge-inl-07-07a-xenia-update-1791217322294",
           "date": "05 Oct 2026",
@@ -344,6 +399,15 @@
           "role": "Quality Assurance",
           "text": "Automated test update note verification.",
           "stage": "Planning",
+          "kind": "Progress"
+        },
+        {
+          "id": "upd-1791217322754-t8ti",
+          "date": "2026-10-05",
+          "author": "Audit System",
+          "role": "Team Member",
+          "text": "[Tagged Ruchika Chauhan]: Audit comment: Please verify and sign off the drawings.",
+          "stage": "Stage 1: Concept & Planning",
           "kind": "Progress"
         },
         {
@@ -11089,6 +11153,17 @@
     }
   ],
   "notifications": [
+    {
+      "id": "notif-tag-1791217322354-iyb3j",
+      "type": "tagged_task",
+      "title": "Tagged on Stage: Stage 1: Concept & Planning",
+      "message": "Audit System tagged you on stage \"Stage 1: Concept & Planning\" in 1st Class Lounge - INL 07&07A (Xenia): \"Audit comment: Please verify and sign off the drawings.\"",
+      "project_id": "delhi-1st-class-lounge-inl-07-07a-xenia",
+      "link": "/project/delhi-1st-class-lounge-inl-07-07a-xenia",
+      "read": 0,
+      "created_at": "2026-10-05 16:22:02",
+      "recipient_id": "user-ruchika-chauhan"
+    },
     {
       "id": "notif-tag-1791202099919-c02wn",
       "type": "tagged_task",

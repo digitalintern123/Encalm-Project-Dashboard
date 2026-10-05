@@ -2,6 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { db, dataDir } from '../db/database.js';
 
+/**
+ * Disaster Recovery & Export Backup Snapshot.
+ * NOTE: The SQLite database (`encalm.db`) is the live single source of truth.
+ * This JSON file is an asynchronous point-in-time snapshot for cold-start recovery or manual exports.
+ */
 export const SNAPSHOT_FILE_PATH = path.join(dataDir, 'portfolio-database.json');
 
 function parseTaggedUsers(val: any): string[] {
