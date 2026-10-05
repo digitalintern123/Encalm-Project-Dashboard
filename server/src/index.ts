@@ -17,6 +17,7 @@ import issuesRouter from './routes/issues.js';
 import { projectUpdatesRouter, globalUpdatesRouter } from './routes/updates.js';
 import notificationsRouter from './routes/notifications.js';
 import systemRouter from './routes/system.js';
+import emailRouter from './routes/email.js';
 import { projectPhotosRouter, globalPhotosRouter } from './routes/photos.js';
 import { uploadsDir } from './db/database.js';
 
@@ -55,6 +56,7 @@ app.use('/api/projects/:id/photos', projectPhotosRouter);
 app.use('/api/updates', globalUpdatesRouter);
 app.use('/api/photos', globalPhotosRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/email', emailRouter);
 app.use('/api/system', systemRouter);
 
 // 404 handler for API routes

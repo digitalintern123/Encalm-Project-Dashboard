@@ -8,6 +8,17 @@ import { saveDatabaseSnapshot, restoreDatabaseFromJSON } from '../utils/backup.j
 
 const router = Router();
 
+export function parseTaggedUsers(val: string | null | undefined): string[] {
+  if (!val) return [];
+  try {
+    const parsed = JSON.parse(val);
+    if (Array.isArray(parsed)) return parsed.map(String);
+  } catch {
+    return val.split(',').map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 export function fetchFullProject(projectId: string) {
   const row = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId) as any;
   if (!row) return null;
@@ -55,6 +66,7 @@ export function fetchFullProject(projectId: string) {
       nextAction: ph.next_action,
       decisionRequired: ph.decision_required,
       weight: ph.weight ?? null,
+      taggedUsers: parseTaggedUsers(ph.tagged_users),
       updatedAt: ph.updated_at,
     })),
     milestones: milestones.map((m) => ({
@@ -67,6 +79,7 @@ export function fetchFullProject(projectId: string) {
       approvalRequired: Boolean(m.approval_required),
       approvalStatus: m.approval_status,
       completedDate: m.completed_date,
+      taggedUsers: parseTaggedUsers(m.tagged_users),
     })),
     issues: issues.map((iss) => ({
       id: iss.id,
@@ -86,6 +99,7 @@ export function fetchFullProject(projectId: string) {
       impactScope: iss.impact_scope,
       action: iss.action,
       resolution: iss.resolution,
+      taggedUsers: parseTaggedUsers(iss.tagged_users),
     })),
     updates: updates.map((u) => ({
       id: u.id,

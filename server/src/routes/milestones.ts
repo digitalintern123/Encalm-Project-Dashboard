@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { db } from '../db/database.js';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
-import { fetchFullProject } from './projects.js';
+import { fetchFullProject, parseTaggedUsers } from './projects.js';
 import { saveDatabaseSnapshot } from '../utils/backup.js';
+import { dispatchTagNotifications, dispatchMilestoneApprovalAlert } from '../services/notifications.js';
 
 const router = Router({ mergeParams: true });
 
 // POST add milestone
-router.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
+router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const project = fetchFullProject(projectId);
   if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -16,14 +17,15 @@ router.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
   const milestoneId = body.id || `${projectId}-milestone-${Date.now()}`;
   const maxOrder = db.prepare('SELECT MAX(order_index) as max_idx FROM milestones WHERE project_id = ?').get(projectId) as { max_idx: number | null };
   const nextOrder = (maxOrder.max_idx ?? -1) + 1;
+  const taggedUsers = Array.isArray(body.taggedUsers) ? body.taggedUsers : [];
 
   db.prepare(`
     INSERT INTO milestones (
       id, project_id, title, date, status, stage, owner,
-      approval_required, approval_status, completed_date, order_index
+      approval_required, approval_status, completed_date, tagged_users, order_index
     ) VALUES (
       @id, @project_id, @title, @date, @status, @stage, @owner,
-      @approval_required, @approval_status, @completed_date, @order_index
+      @approval_required, @approval_status, @completed_date, @tagged_users, @order_index
     )
   `).run({
     id: milestoneId,
@@ -36,10 +38,28 @@ router.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
     approval_required: body.approvalRequired ? 1 : 0,
     approval_status: body.approvalStatus || (body.approvalRequired ? 'Pending' : 'Not required'),
     completed_date: body.completedDate || null,
+    tagged_users: JSON.stringify(taggedUsers),
     order_index: nextOrder,
   });
 
-  // If requires approval, alert HOD
+  const origin = req.headers.origin || 'http://localhost:5173';
+  const authorName = req.user?.name || body.owner || 'Project Lead';
+
+  // 1. Notify tagged users
+  if (taggedUsers.length > 0) {
+    await dispatchTagNotifications({
+      taggedUserIds: taggedUsers,
+      taggedBy: authorName,
+      entityType: 'Milestone',
+      entityTitle: body.title,
+      entityContext: `Target date: ${body.date}${body.stage ? ` • Stage: ${body.stage}` : ''}`,
+      projectId,
+      projectName: project.name,
+      origin,
+    });
+  }
+
+  // 2. If requires approval, alert Coordinator
   if (body.approvalRequired) {
     db.prepare(`
       INSERT INTO notifications (id, type, title, message, project_id, link, read, created_at)
@@ -47,10 +67,20 @@ router.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
     `).run(
       `notif-appr-${milestoneId}`,
       `Approval Requested: ${body.title}`,
-      `${project.name} requires milestone approval from HOD.`,
+      `${project.name} requires milestone approval from Coordinator.`,
       projectId,
       `/project/${projectId}`
     );
+
+    await dispatchMilestoneApprovalAlert({
+      milestoneTitle: body.title,
+      targetDate: body.date,
+      stage: body.stage,
+      requestedBy: authorName,
+      projectId,
+      projectName: project.name,
+      origin,
+    });
   }
 
   saveDatabaseSnapshot();
@@ -60,12 +90,13 @@ router.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
 });
 
 // PATCH update milestone
-router.patch('/:milestoneId', optionalAuth, (req: AuthenticatedRequest, res) => {
+router.patch('/:milestoneId', optionalAuth, async (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const milestoneId = req.params.milestoneId as string;
   const milestone = db.prepare('SELECT * FROM milestones WHERE id = ? AND project_id = ?').get(milestoneId, projectId) as any;
   if (!milestone) return res.status(404).json({ error: 'Milestone not found' });
 
+  const project = fetchFullProject(projectId);
   const patch = req.body;
   const updates: string[] = [];
   const values: any[] = [];
@@ -85,10 +116,37 @@ router.patch('/:milestoneId', optionalAuth, (req: AuthenticatedRequest, res) => 
   }
   if (patch.completedDate !== undefined) { updates.push('completed_date = ?'); values.push(patch.completedDate); }
 
+  let newlyTaggedUsers: string[] = [];
+  if (patch.taggedUsers !== undefined) {
+    const updatedTagged: string[] = Array.isArray(patch.taggedUsers) ? patch.taggedUsers : [];
+    const prevTagged = parseTaggedUsers(milestone.tagged_users);
+    newlyTaggedUsers = updatedTagged.filter((u) => !prevTagged.includes(u));
+
+    updates.push('tagged_users = ?');
+    values.push(JSON.stringify(updatedTagged));
+  }
+
   if (updates.length > 0) {
     values.push(milestoneId);
     values.push(projectId);
     db.prepare(`UPDATE milestones SET ${updates.join(', ')} WHERE id = ? AND project_id = ?`).run(...values);
+  }
+
+  const origin = req.headers.origin || 'http://localhost:5173';
+  const authorName = req.user?.name || milestone.owner || 'Project Lead';
+
+  // Notify newly tagged users
+  if (newlyTaggedUsers.length > 0 && project) {
+    await dispatchTagNotifications({
+      taggedUserIds: newlyTaggedUsers,
+      taggedBy: authorName,
+      entityType: 'Milestone',
+      entityTitle: patch.title || milestone.title,
+      entityContext: `Target date: ${patch.date || milestone.date}`,
+      projectId,
+      projectName: project.name,
+      origin,
+    });
   }
 
   saveDatabaseSnapshot();

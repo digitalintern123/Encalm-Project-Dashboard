@@ -151,15 +151,35 @@ export function initDatabase() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS email_logs (
+      id TEXT PRIMARY KEY,
+      recipient_email TEXT NOT NULL,
+      recipient_name TEXT,
+      subject TEXT NOT NULL,
+      template_type TEXT NOT NULL,
+      project_id TEXT,
+      status TEXT NOT NULL CHECK(status IN ('sent', 'failed', 'outbox')),
+      html_content TEXT,
+      error TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_phases_project ON phases(project_id, order_index);
     CREATE INDEX IF NOT EXISTS idx_milestones_project ON milestones(project_id, date);
     CREATE INDEX IF NOT EXISTS idx_issues_project ON issues(project_id, severity);
     CREATE INDEX IF NOT EXISTS idx_updates_project ON updates(project_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_photos_project ON photos(project_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_email_logs_created ON email_logs(created_at DESC);
   `);
 
-  // Safe migrations for projects table
+  // Safe migrations for projects, phases, milestones, issues, and notifications tables
   try {
     const projectColumns = db.prepare("PRAGMA table_info(projects)").all() as { name: string }[];
     const colNames = new Set(projectColumns.map((c) => c.name));
@@ -180,6 +200,27 @@ export function initDatabase() {
     const phaseColNames = new Set(phaseColumns.map((c) => c.name));
     if (!phaseColNames.has('weight')) {
       db.prepare("ALTER TABLE phases ADD COLUMN weight REAL").run();
+    }
+    if (!phaseColNames.has('tagged_users')) {
+      db.prepare("ALTER TABLE phases ADD COLUMN tagged_users TEXT").run();
+    }
+
+    const milestoneColumns = db.prepare("PRAGMA table_info(milestones)").all() as { name: string }[];
+    const milestoneColNames = new Set(milestoneColumns.map((c) => c.name));
+    if (!milestoneColNames.has('tagged_users')) {
+      db.prepare("ALTER TABLE milestones ADD COLUMN tagged_users TEXT").run();
+    }
+
+    const issueColumns = db.prepare("PRAGMA table_info(issues)").all() as { name: string }[];
+    const issueColNames = new Set(issueColumns.map((c) => c.name));
+    if (!issueColNames.has('tagged_users')) {
+      db.prepare("ALTER TABLE issues ADD COLUMN tagged_users TEXT").run();
+    }
+
+    const notificationColumns = db.prepare("PRAGMA table_info(notifications)").all() as { name: string }[];
+    const notificationColNames = new Set(notificationColumns.map((c) => c.name));
+    if (!notificationColNames.has('recipient_id')) {
+      db.prepare("ALTER TABLE notifications ADD COLUMN recipient_id TEXT").run();
     }
 
     // Safe migration of legacy 'Build & install' phase names to 'Execution'

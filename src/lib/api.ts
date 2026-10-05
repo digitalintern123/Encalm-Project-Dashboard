@@ -54,13 +54,37 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export type NotificationItem = {
   id: string;
-  type: 'milestone_overdue' | 'high_issue' | 'approval_required' | 'system';
+  type: 'milestone_overdue' | 'high_issue' | 'approval_required' | 'system' | 'tagged_issue' | 'tagged_task';
   title: string;
   message: string;
   projectId?: string;
   link?: string;
+  recipient_id?: string;
   read: boolean;
   createdAt: string;
+};
+
+export type EmailLogItem = {
+  id: string;
+  recipientEmail: string;
+  recipientName: string | null;
+  subject: string;
+  templateType: string;
+  projectId: string | null;
+  status: 'sent' | 'failed' | 'outbox';
+  htmlContent: string;
+  error: string | null;
+  createdAt: string;
+};
+
+export type EmailSettings = {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  pass?: string;
+  from: string;
+  isConfigured: boolean;
 };
 
 export const api = {
@@ -225,6 +249,31 @@ export const api = {
       request<{ message: string; count: number }>('/api/system/import', {
         method: 'POST',
         body: JSON.stringify(data),
+      }),
+  },
+
+  email: {
+    getLogs: (projectId?: string) =>
+      request<{ logs: EmailLogItem[] }>(`/api/email/logs${projectId ? `?projectId=${encodeURIComponent(projectId)}` : ''}`),
+    getSettings: () => request<{ settings: EmailSettings }>('/api/email/settings'),
+    saveSettings: (settings: Partial<EmailSettings>) =>
+      request<{ message: string; settings: EmailSettings }>('/api/email/settings', {
+        method: 'POST',
+        body: JSON.stringify(settings),
+      }),
+    sendTest: (to?: string, recipientName?: string) =>
+      request<{ success: boolean; message: string; result: any }>('/api/email/test', {
+        method: 'POST',
+        body: JSON.stringify({ to, recipientName }),
+      }),
+    resend: (id: string) =>
+      request<{ success: boolean; status: string; error?: string }>(`/api/email/resend/${id}`, {
+        method: 'POST',
+      }),
+    sendProjectUpdate: (projectId: string, payload: { recipients?: string[]; customNote?: string }) =>
+      request<{ success: boolean; message: string; results: any[] }>('/api/email/send-project-update', {
+        method: 'POST',
+        body: JSON.stringify({ projectId, ...payload }),
       }),
   },
 };

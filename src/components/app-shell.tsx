@@ -30,11 +30,15 @@ import {
   Server,
   Users,
   Camera,
+  Mail,
+  Tag,
+  UserCheck,
 } from 'lucide-react';
 import { useAppState, type AppRole } from '@/state/app-state';
 import { BrandLogo } from './brand-logo';
 import { readItem, writeItem } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
+import { EmailHubModal } from './email-hub-modal';
 
 type AppShellProps = { children: ReactNode };
 
@@ -92,6 +96,7 @@ export function AppShell({ children }: AppShellProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [reminders, setReminders] = useState(() => readItem('encalm-update-reminders') !== 'off');
   const [resetConfirm, setResetConfirm] = useState(false);
+  const [emailHubOpen, setEmailHubOpen] = useState(false);
 
   const {
     role,
@@ -435,6 +440,17 @@ export function AppShell({ children }: AppShellProps) {
               )}
             </button>
 
+            {/* Header Email Hub Button */}
+            <button
+              type="button"
+              aria-label="Open email outbox and settings"
+              onClick={() => setEmailHubOpen(true)}
+              className="rounded-lg border border-border bg-card p-2 text-muted-foreground hover:bg-muted"
+              title="Email Outbox & Delivery Radar"
+            >
+              <Mail size={16} />
+            </button>
+
             {/* Header Settings Button */}
             <button
               type="button"
@@ -545,12 +561,18 @@ export function AppShell({ children }: AppShellProps) {
                                 ? 'bg-[#f8edcf] text-[#9a711f]'
                                 : notif.type === 'high_issue'
                                   ? 'bg-[#fae5e1] text-[#b2473d]'
-                                  : 'bg-[#edf5f0] text-[#2e7c67]'
+                                  : notif.type === 'tagged_issue'
+                                    ? 'bg-[#edf5f0] text-[#2e7c67]'
+                                    : notif.type === 'tagged_task'
+                                      ? 'bg-[#f8edcf] text-[#9a711f]'
+                                      : 'bg-[#edf5f0] text-[#2e7c67]'
                           }`}
                         >
                           {notif.type === 'milestone_overdue' && <AlertTriangle size={14} />}
                           {notif.type === 'approval_required' && <Clock3 size={14} />}
                           {notif.type === 'high_issue' && <ShieldAlert size={14} />}
+                          {notif.type === 'tagged_issue' && <Tag size={14} />}
+                          {notif.type === 'tagged_task' && <UserCheck size={14} />}
                           {notif.type === 'system' && <Activity size={14} />}
                         </span>
 
@@ -735,6 +757,33 @@ export function AppShell({ children }: AppShellProps) {
             </div>
 
             <div className="mt-6 border-t border-border pt-5">
+              <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Communications & Integration</p>
+              <div className="mt-3 rounded-xl border border-border bg-white/70 p-3.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="grid size-7 place-items-center rounded-lg bg-[#edf5f0] text-[#2e7c67]">
+                      <Mail size={14} />
+                    </span>
+                    <div>
+                      <strong className="block text-[11px]">Email Radar & SMTP</strong>
+                      <span className="block text-[9px] text-muted-foreground">Outbox history & server setup</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailHubOpen(true);
+                      closeSettings();
+                    }}
+                    className="rounded-lg border border-[#cbe4d9] bg-[#edf5f0] px-3 py-1.5 text-[10px] font-bold text-[#2e7c67] hover:bg-[#dfeee5]"
+                  >
+                    Manage
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-border pt-5">
               <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Database management & Backup</p>
               
               <input
@@ -819,6 +868,13 @@ export function AppShell({ children }: AppShellProps) {
           </section>
         </div>
       )}
+
+      {/* Global Email Outbox & Settings Hub Modal */}
+      <EmailHubModal
+        isOpen={emailHubOpen}
+        onClose={() => setEmailHubOpen(false)}
+        defaultTab="outbox"
+      />
     </div>
   );
 }

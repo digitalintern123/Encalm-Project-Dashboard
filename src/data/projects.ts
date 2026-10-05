@@ -39,10 +39,12 @@ export type Phase = {
   workCompleted?: string;
   nextAction?: string;
   decisionRequired?: string;
+  taggedUsers?: string[];
   updatedAt?: string;
 };
 
 export type Milestone = {
+  id?: string;
   title: string;
   date: string;
   status: 'complete' | 'upcoming' | 'late';
@@ -51,6 +53,7 @@ export type Milestone = {
   approvalRequired?: boolean;
   approvalStatus?: 'Not required' | 'Pending' | 'Approved' | 'Rejected';
   completedDate?: string;
+  taggedUsers?: string[];
 };
 
 export type ProjectIssue = {
@@ -71,6 +74,7 @@ export type ProjectIssue = {
   impactScope?: string;
   action?: string;
   resolution?: string;
+  taggedUsers?: string[];
 };
 
 export type ProjectUpdate = {

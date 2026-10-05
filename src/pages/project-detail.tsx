@@ -16,6 +16,7 @@ import {
   Clock3,
   FileText,
   Layers3,
+  Mail,
   MapPin,
   MessageSquareText,
   Pencil,
@@ -39,6 +40,8 @@ import { statusTone } from './workspace';
 import { PhotoLightbox } from '@/components/photo-lightbox';
 import { PhotoUploadDialog } from '@/components/photo-upload-dialog';
 import { ProjectAreaProgram } from '@/components/project-area-program';
+import { TagUserPopover } from '@/components/tag-user-popover';
+import { EmailHubModal } from '@/components/email-hub-modal';
 
 const healthStyles: Record<Health, { dot: string; text: string; bg: string; border: string }> = {
   'On track': { dot: 'bg-[#3d9a7e]', text: 'text-[#2e7c67]', bg: 'bg-[#e4f1ec]', border: 'border-[#cbe4d9]' },
@@ -446,6 +449,7 @@ function StageEditorForm({ phase, onCancel, onSave }: { phase: Phase; onCancel: 
 function StageTimelinePanel({
   project,
   editable,
+  canTag = true,
   onSave,
   onAdd,
   onRemove,
@@ -453,6 +457,7 @@ function StageTimelinePanel({
 }: {
   project: Project;
   editable: boolean;
+  canTag?: boolean;
   onSave: (index: number, patch: Partial<Phase>) => void;
   onAdd: (phase: Phase) => void;
   onRemove: (index: number) => void;
@@ -556,6 +561,18 @@ function StageTimelinePanel({
                         )}
                       </div>
                     )}
+
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                        Assigned:
+                      </span>
+                      <TagUserPopover
+                        taggedUsers={phase.taggedUsers}
+                        onChange={(newTagged) => onSave(index, { taggedUsers: newTagged })}
+                        canTag={canTag}
+                        label="Tag Member"
+                      />
+                    </div>
 
                     {editable && (
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -698,8 +715,26 @@ function StageTimelinePanel({
   );
 }
 
-function StageMilestonesPanel({ project, editable, onAdd }: { project: Project; editable: boolean; onAdd: (milestone: { title: string; date: string; status: 'upcoming'; stage: string; owner: string; approvalRequired: boolean; approvalStatus: 'Not required' | 'Pending' }) => void }) {
-  const { approveMilestone, completeMilestone } = useAppState();
+function StageMilestonesPanel({
+  project,
+  editable,
+  canTag = true,
+  onAdd,
+}: {
+  project: Project;
+  editable: boolean;
+  canTag?: boolean;
+  onAdd: (milestone: {
+    title: string;
+    date: string;
+    status: 'upcoming';
+    stage: string;
+    owner: string;
+    approvalRequired: boolean;
+    approvalStatus: 'Not required' | 'Pending';
+  }) => void;
+}) {
+  const { approveMilestone, completeMilestone, updateMilestone } = useAppState();
   const { toast } = useToast();
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState('');
@@ -791,6 +826,18 @@ function StageMilestonesPanel({ project, editable, onAdd }: { project: Project; 
                     Approval · {milestone.approvalStatus ?? 'Pending'}
                   </span>
                 )}
+
+                <div className="mt-3 flex items-center gap-1.5">
+                  <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                    Assigned:
+                  </span>
+                  <TagUserPopover
+                    taggedUsers={milestone.taggedUsers}
+                    onChange={(newTagged) => updateMilestone(project.id, index, { taggedUsers: newTagged })}
+                    canTag={canTag}
+                    label="Tag Member"
+                  />
+                </div>
               </div>
 
               {/* Action Buttons */}
@@ -918,11 +965,13 @@ function StageMilestonesPanel({ project, editable, onAdd }: { project: Project; 
 function StageIssuesPanel({
   project,
   editable,
+  canTag = true,
   onAdd,
   onUpdate,
 }: {
   project: Project;
   editable: boolean;
+  canTag?: boolean;
   onAdd: (issue: ProjectIssue) => void;
   onUpdate: (index: number, patch: Partial<ProjectIssue>) => void;
 }) {
@@ -990,24 +1039,37 @@ function StageIssuesPanel({
                         {issue.impactScope && <p><strong className="text-foreground">Scope / quality impact:</strong> {issue.impactScope}</p>}
                       </div>
                     )}
-                    {editable ? (
-                      <label className="mt-3 flex items-center gap-2 text-[10px] font-bold">
-                        <span>Status</span>
-                        <select
-                          value={issue.status ?? 'Open'}
-                          onChange={(event) => onUpdate(index, { status: event.target.value as IssueStatus })}
-                          className="h-8 rounded-lg border border-border bg-white px-2 text-[10px]"
-                        >
-                          {issueStatuses.map((status) => (
-                            <option key={status}>{status}</option>
-                          ))}
-                        </select>
-                      </label>
-                    ) : (
-                      <span className="mt-3 inline-block font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">
-                        {issue.status ?? 'Open'}
-                      </span>
-                    )}
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#eadcb1]/60 pt-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                          Tagged:
+                        </span>
+                        <TagUserPopover
+                          taggedUsers={issue.taggedUsers}
+                          onChange={(newTagged) => onUpdate(index, { taggedUsers: newTagged })}
+                          canTag={canTag}
+                          label="Tag Member"
+                        />
+                      </div>
+                      {editable ? (
+                        <label className="flex items-center gap-2 text-[10px] font-bold">
+                          <span>Status</span>
+                          <select
+                            value={issue.status ?? 'Open'}
+                            onChange={(event) => onUpdate(index, { status: event.target.value as IssueStatus })}
+                            className="h-8 rounded-lg border border-border bg-white px-2 text-[10px]"
+                          >
+                            {issueStatuses.map((status) => (
+                              <option key={status}>{status}</option>
+                            ))}
+                          </select>
+                        </label>
+                      ) : (
+                        <span className="font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">
+                          {issue.status ?? 'Open'}
+                        </span>
+                      )}
+                    </div>
                   </span>
                 </div>
               </div>
@@ -1341,6 +1403,7 @@ export default function ProjectDetail() {
     removePhase,
     movePhase,
     addMilestone,
+    updateMilestone,
     addIssue,
     updateIssue,
     addUpdate,
@@ -1351,6 +1414,7 @@ export default function ProjectDetail() {
   const [, setLocation] = useLocation();
   const [tab, setTab] = useState<Tab>('overview');
   const [editing, setEditing] = useState(false);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -1360,6 +1424,8 @@ export default function ProjectDetail() {
   const health = healthStyles[project.health];
   const isAllottedToMe = !project.leadId || project.leadId === user?.id;
   const canEdit = role === 'coordinator' || (role === 'lead' && isAllottedToMe);
+  // HOD and leads/coordinators can tag individuals on tasks and issues
+  const canTag = true;
   const activePhase = project.phases.find((phase) => phase.status === 'active')?.name ?? 'planning';
   const saveProgress = (progress: number, comment: string, nextMilestone: string) => {
     if (!canEdit) {
@@ -1458,6 +1524,15 @@ export default function ProjectDetail() {
             <span className={`mt-1 block text-[13px] font-extrabold ${health.text}`}>{project.health}</span>
           </span>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setEmailModalOpen(true)}
+          className="flex items-center gap-2 rounded-xl border border-[#cbe4d9] bg-[#edf5f0] px-3.5 py-3 text-[10px] font-extrabold text-[#2e7c67] hover:bg-[#dfeee5] transition shadow-xs"
+          title="Share executive update email or inspect delivery outbox"
+        >
+          <Mail size={14} /> Email Update
+        </button>
 
         {canEdit ? (
           <div className="flex items-center gap-2">
@@ -1563,8 +1638,8 @@ export default function ProjectDetail() {
         />
       )}
       {tab === 'progress' && <StageProgressPanel project={project} editable={canEdit} onSave={saveProgress} />}
-      {tab === 'timeline' && <StageTimelinePanel project={project} editable={canEdit} onSave={(index, patch) => updatePhase(project.id, index, patch)} onAdd={(phase) => addPhase(project.id, phase)} onRemove={(index) => removePhase(project.id, index)} onMove={(index, direction) => movePhase(project.id, index, direction)} />}
-      {tab === 'milestones' && <StageMilestonesPanel project={project} editable={canEdit} onAdd={(milestone) => addMilestone(project.id, milestone)} />}
+      {tab === 'timeline' && <StageTimelinePanel project={project} editable={canEdit} canTag={canTag} onSave={(index, patch) => updatePhase(project.id, index, patch)} onAdd={(phase) => addPhase(project.id, phase)} onRemove={(index) => removePhase(project.id, index)} onMove={(index, direction) => movePhase(project.id, index, direction)} />}
+      {tab === 'milestones' && <StageMilestonesPanel project={project} editable={canEdit} canTag={canTag} onAdd={(milestone) => addMilestone(project.id, milestone)} />}
       {tab === 'photos' && (
         <StagePhotosPanel
           project={project}
@@ -1582,9 +1657,17 @@ export default function ProjectDetail() {
         />
       )}
       {tab === 'commercial' && <CommercialPanel project={project} editable={canEdit} onSave={(patch) => updateProject(project.id, patch)} />}
-      {tab === 'issues' && <StageIssuesPanel project={project} editable={canEdit} onAdd={(issue) => addIssue(project.id, issue)} onUpdate={(index, patch) => updateIssue(project.id, index, patch)} />}
+      {tab === 'issues' && <StageIssuesPanel project={project} editable={canEdit} canTag={canTag} onAdd={(issue) => addIssue(project.id, issue)} onUpdate={(index, patch) => updateIssue(project.id, index, patch)} />}
       {tab === 'updates' && <StageUpdatesPanel project={project} editable={canEdit} onAdd={(update) => addUpdate(project.id, update)} />}
     </div>
+
+    <EmailHubModal
+      isOpen={emailModalOpen}
+      onClose={() => setEmailModalOpen(false)}
+      projectId={project.id}
+      projectName={project.name}
+      defaultTab="send"
+    />
 
     {showDeleteConfirm && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">

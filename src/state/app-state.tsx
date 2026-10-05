@@ -65,6 +65,7 @@ type AppStateValue = {
   addProject: (project: Project) => Promise<boolean>;
   deleteProject: (id: string) => Promise<boolean>;
   addMilestone: (id: string, milestone: Milestone) => boolean;
+  updateMilestone: (id: string, milestoneIndex: number, patch: Partial<Milestone>) => boolean;
   addIssue: (id: string, issue: ProjectIssue) => boolean;
   updateIssue: (id: string, issueIndex: number, patch: Partial<ProjectIssue>) => boolean;
   addUpdate: (id: string, update: ProjectUpdate) => boolean;
@@ -132,6 +133,7 @@ function normaliseProject(project: Project): Project {
       id: phase.id ?? `${project.id}-phase-${index}`,
       name: normalisedName,
       weight: typeof phase.weight === 'number' ? phase.weight : undefined,
+      taggedUsers: phase.taggedUsers ?? [],
     };
   });
   const calculatedProgress =
@@ -155,6 +157,7 @@ function normaliseProject(project: Project): Project {
       id: (milestone as any).id ?? `${project.id}-milestone-${index}`,
       approvalStatus:
         milestone.approvalStatus ?? (milestone.approvalRequired ? 'Pending' : 'Not required'),
+      taggedUsers: milestone.taggedUsers ?? [],
     })),
     issues: (project.issues ?? []).map((issue, index) => ({
       ...issue,
@@ -165,6 +168,7 @@ function normaliseProject(project: Project): Project {
       issueAriseDate: issue.issueAriseDate ?? issue.dateRaised ?? project.lastUpdated ?? todayLabel(),
       dueDate: issue.dueDate ?? issue.targetClosureDate,
       targetClosureDate: issue.targetClosureDate ?? issue.dueDate,
+      taggedUsers: issue.taggedUsers ?? [],
     })),
     updates: (project.updates ?? []).map((update) => ({
       ...update,
@@ -631,6 +635,35 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [patchById],
   );
 
+  const updateMilestone = useCallback(
+    (id: string, milestoneIndex: number, patch: Partial<Milestone>): boolean => {
+      const targetProject = projectState.find((p) => p.id === id);
+      const milestone = targetProject?.milestones[milestoneIndex];
+      const milestoneId = (milestone as any)?.id || milestone?.title;
+
+      const ok = patchById(id, (project) => {
+        if (milestoneIndex < 0 || milestoneIndex >= project.milestones.length) return project;
+        return {
+          ...project,
+          milestones: project.milestones.map((m, index) =>
+            index === milestoneIndex ? { ...m, ...patch } : m,
+          ),
+          lastUpdated: todayLabel(),
+        };
+      });
+
+      if (ok && milestoneId) {
+        api.milestones.update(id, milestoneId, patch).then((res) => {
+          if (res?.project) {
+            patchById(id, () => normaliseProject(res.project));
+          }
+        }).catch(console.warn);
+      }
+      return ok;
+    },
+    [patchById, projectState],
+  );
+
   const approveMilestone = useCallback(
     async (projectId: string, milestoneId: string, status: 'Approved' | 'Rejected'): Promise<boolean> => {
       // Governance approval is strictly reserved for Coordinator
@@ -912,6 +945,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       addProject,
       deleteProject,
       addMilestone,
+      updateMilestone,
       addIssue,
       updateIssue,
       addUpdate,
@@ -950,6 +984,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       addProject,
       deleteProject,
       addMilestone,
+      updateMilestone,
       addIssue,
       updateIssue,
       addUpdate,

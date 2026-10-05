@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { db } from '../db/database.js';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
-import { fetchFullProject } from './projects.js';
+import { fetchFullProject, parseTaggedUsers } from './projects.js';
 import { saveDatabaseSnapshot } from '../utils/backup.js';
+import { dispatchTagNotifications } from '../services/notifications.js';
 
 const router = Router({ mergeParams: true });
 
@@ -49,7 +50,7 @@ export function recomputeProjectProgress(projectId: string): number {
 }
 
 // POST add phase
-router.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
+router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const project = fetchFullProject(projectId);
   if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -58,16 +59,17 @@ router.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
   const phaseId = body.id || `${projectId}-phase-${Date.now()}`;
   const maxOrder = db.prepare('SELECT MAX(order_index) as max_idx FROM phases WHERE project_id = ?').get(projectId) as { max_idx: number | null };
   const nextOrder = (maxOrder.max_idx ?? -1) + 1;
+  const taggedUsers = Array.isArray(body.taggedUsers) ? body.taggedUsers : [];
 
   db.prepare(`
     INSERT INTO phases (
       id, project_id, name, status, progress, weight, owner, order_index,
       planned_start, planned_finish, actual_finish, work_completed, next_action,
-      decision_required, updated_at
+      decision_required, tagged_users, updated_at
     ) VALUES (
       @id, @project_id, @name, @status, @progress, @weight, @owner, @order_index,
       @planned_start, @planned_finish, @actual_finish, @work_completed, @next_action,
-      @decision_required, @updated_at
+      @decision_required, @tagged_users, @updated_at
     )
   `).run({
     id: phaseId,
@@ -84,8 +86,25 @@ router.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
     work_completed: body.workCompleted || null,
     next_action: body.nextAction || null,
     decision_required: body.decisionRequired || null,
+    tagged_users: JSON.stringify(taggedUsers),
     updated_at: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
   });
+
+  const origin = req.headers.origin || 'http://localhost:5173';
+  const authorName = req.user?.name || body.owner || 'Project Lead';
+
+  if (taggedUsers.length > 0) {
+    await dispatchTagNotifications({
+      taggedUserIds: taggedUsers,
+      taggedBy: authorName,
+      entityType: 'Stage',
+      entityTitle: body.name || 'Stage',
+      entityContext: body.nextAction || body.workCompleted || undefined,
+      projectId,
+      projectName: project.name,
+      origin,
+    });
+  }
 
   recomputeProjectProgress(projectId);
 
@@ -94,12 +113,13 @@ router.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
 });
 
 // PATCH update phase
-router.patch('/:phaseId', optionalAuth, (req: AuthenticatedRequest, res) => {
+router.patch('/:phaseId', optionalAuth, async (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const phaseId = req.params.phaseId as string;
   const phase = db.prepare('SELECT * FROM phases WHERE id = ? AND project_id = ?').get(phaseId, projectId) as any;
   if (!phase) return res.status(404).json({ error: 'Stage not found' });
 
+  const project = fetchFullProject(projectId);
   const patch = req.body;
   const updates: string[] = ['updated_at = ?'];
   const values: any[] = [new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })];
@@ -135,10 +155,36 @@ router.patch('/:phaseId', optionalAuth, (req: AuthenticatedRequest, res) => {
     }
   }
 
+  let newlyTaggedUsers: string[] = [];
+  if (patch.taggedUsers !== undefined) {
+    const updatedTagged: string[] = Array.isArray(patch.taggedUsers) ? patch.taggedUsers : [];
+    const prevTagged = parseTaggedUsers(phase.tagged_users);
+    newlyTaggedUsers = updatedTagged.filter((u) => !prevTagged.includes(u));
+
+    updates.push('tagged_users = ?');
+    values.push(JSON.stringify(updatedTagged));
+  }
+
   values.push(phaseId);
   values.push(projectId);
 
   db.prepare(`UPDATE phases SET ${updates.join(', ')} WHERE id = ? AND project_id = ?`).run(...values);
+
+  const origin = req.headers.origin || 'http://localhost:5173';
+  const authorName = req.user?.name || phase.owner || 'Project Lead';
+
+  if (newlyTaggedUsers.length > 0 && project) {
+    await dispatchTagNotifications({
+      taggedUserIds: newlyTaggedUsers,
+      taggedBy: authorName,
+      entityType: 'Stage',
+      entityTitle: patch.name || phase.name,
+      entityContext: patch.nextAction || patch.workCompleted || phase.work_completed || undefined,
+      projectId,
+      projectName: project.name,
+      origin,
+    });
+  }
 
   recomputeProjectProgress(projectId);
 
@@ -172,26 +218,25 @@ router.delete('/:phaseId', optionalAuth, (req: AuthenticatedRequest, res) => {
   return res.json({ project: updatedProject });
 });
 
-// POST move / reorder phase
+// POST move phase order
 router.post('/move', optionalAuth, (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
-  const { phaseIndex, direction } = req.body; // direction is -1 or 1
+  const { phaseIndex, direction } = req.body;
 
-  const phases = db.prepare('SELECT id, order_index FROM phases WHERE project_id = ? ORDER BY order_index ASC').all(projectId) as any[];
-  if (phaseIndex < 0 || phaseIndex >= phases.length) return res.status(400).json({ error: 'Invalid phase index' });
-  
+  const phases = db.prepare('SELECT * FROM phases WHERE project_id = ? ORDER BY order_index ASC').all(projectId) as any[];
   const targetIndex = phaseIndex + direction;
-  if (targetIndex < 0 || targetIndex >= phases.length) return res.status(400).json({ error: 'Target index out of bounds' });
 
-  const [moved] = phases.splice(phaseIndex, 1);
-  phases.splice(targetIndex, 0, moved);
+  if (phaseIndex < 0 || phaseIndex >= phases.length || targetIndex < 0 || targetIndex >= phases.length) {
+    return res.status(400).json({ error: 'Invalid move target' });
+  }
 
-  const transaction = db.transaction(() => {
-    phases.forEach((ph, idx) => {
-      db.prepare('UPDATE phases SET order_index = ? WHERE id = ?').run(idx, ph.id);
-    });
-  });
-  transaction();
+  const p1 = phases[phaseIndex];
+  const p2 = phases[targetIndex];
+
+  db.transaction(() => {
+    db.prepare('UPDATE phases SET order_index = ? WHERE id = ?').run(targetIndex, p1.id);
+    db.prepare('UPDATE phases SET order_index = ? WHERE id = ?').run(phaseIndex, p2.id);
+  })();
 
   recomputeProjectProgress(projectId);
 
