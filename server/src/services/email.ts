@@ -1,4 +1,3 @@
-import nodemailer, { type Transporter } from 'nodemailer';
 import { randomUUID } from 'node:crypto';
 import { db } from '../db/database.js';
 
@@ -15,19 +14,24 @@ export interface EmailLogEntry {
   createdAt: string;
 }
 
-export interface SmtpConfig {
-  host?: string;
-  port?: number;
-  secure?: boolean;
-  user?: string;
-  pass?: string;
-  from?: string;
+export interface MicrosoftGraphConfig {
+  tenantId?: string;
+  clientId?: string;
+  clientSecret?: string;
+  senderEmail?: string;
+  saveToSentItems?: boolean;
 }
 
+// In-memory token cache for Microsoft Graph OAuth 2.0
+let cachedToken: {
+  accessToken: string;
+  expiresAt: number; // Unix timestamp in ms
+} | null = null;
+
 /**
- * Retrieve SMTP configuration from system_settings table, falling back to environment variables.
+ * Retrieve Microsoft Graph API configuration from system_settings table, falling back to environment variables.
  */
-export function getSmtpConfig(): SmtpConfig {
+export function getGraphConfig(): MicrosoftGraphConfig {
   const getSetting = (key: string): string | undefined => {
     try {
       const row = db.prepare('SELECT value FROM system_settings WHERE key = ?').get(key) as { value: string } | undefined;
@@ -37,27 +41,25 @@ export function getSmtpConfig(): SmtpConfig {
     }
   };
 
-  const host = getSetting('smtp_host') || process.env.SMTP_HOST || '';
-  const portStr = getSetting('smtp_port') || process.env.SMTP_PORT || '587';
-  const secureStr = getSetting('smtp_secure') || process.env.SMTP_SECURE || 'false';
-  const user = getSetting('smtp_user') || process.env.SMTP_USER || '';
-  const pass = getSetting('smtp_pass') || process.env.SMTP_PASS || '';
-  const from = getSetting('smtp_from') || process.env.SMTP_FROM || 'Encalm Projects <notifications@encalm.com>';
+  const tenantId = getSetting('graph_tenant_id') || process.env.AZURE_TENANT_ID || process.env.MS_GRAPH_TENANT_ID || '';
+  const clientId = getSetting('graph_client_id') || process.env.AZURE_CLIENT_ID || process.env.MS_GRAPH_CLIENT_ID || '';
+  const clientSecret = getSetting('graph_client_secret') || process.env.AZURE_CLIENT_SECRET || process.env.MS_GRAPH_CLIENT_SECRET || '';
+  const senderEmail = getSetting('graph_sender_email') || process.env.MS_GRAPH_SENDER_EMAIL || 'notifications@encalm.com';
+  const saveToSentItemsStr = getSetting('graph_save_to_sent_items') || 'true';
 
   return {
-    host: host.trim(),
-    port: parseInt(portStr, 10) || 587,
-    secure: secureStr === 'true' || secureStr === '1',
-    user: user.trim(),
-    pass: pass.trim(),
-    from: from.trim(),
+    tenantId: tenantId.trim(),
+    clientId: clientId.trim(),
+    clientSecret: clientSecret.trim(),
+    senderEmail: senderEmail.trim(),
+    saveToSentItems: saveToSentItemsStr === 'true' || saveToSentItemsStr === '1',
   };
 }
 
 /**
- * Save SMTP settings into SQLite system_settings table
+ * Save Microsoft Graph API configuration into SQLite system_settings table.
  */
-export function saveSmtpConfig(config: Partial<SmtpConfig>): void {
+export function saveGraphConfig(config: Partial<MicrosoftGraphConfig>): void {
   const upsert = db.prepare(`
     INSERT INTO system_settings (key, value, updated_at)
     VALUES (?, ?, datetime('now'))
@@ -65,38 +67,62 @@ export function saveSmtpConfig(config: Partial<SmtpConfig>): void {
   `);
 
   const tx = db.transaction(() => {
-    if (config.host !== undefined) upsert.run('smtp_host', config.host);
-    if (config.port !== undefined) upsert.run('smtp_port', String(config.port));
-    if (config.secure !== undefined) upsert.run('smtp_secure', String(config.secure));
-    if (config.user !== undefined) upsert.run('smtp_user', config.user);
-    if (config.pass !== undefined && config.pass !== '••••••••') upsert.run('smtp_pass', config.pass);
-    if (config.from !== undefined) upsert.run('smtp_from', config.from);
+    if (config.tenantId !== undefined) upsert.run('graph_tenant_id', config.tenantId);
+    if (config.clientId !== undefined) upsert.run('graph_client_id', config.clientId);
+    if (config.clientSecret !== undefined && config.clientSecret !== '••••••••') {
+      upsert.run('graph_client_secret', config.clientSecret);
+    }
+    if (config.senderEmail !== undefined) upsert.run('graph_sender_email', config.senderEmail);
+    if (config.saveToSentItems !== undefined) upsert.run('graph_save_to_sent_items', String(config.saveToSentItems));
   });
 
   tx();
+  // Clear cached token if credentials change
+  cachedToken = null;
 }
 
 /**
- * Construct Nodemailer transport. Returns null if host or user is omitted.
+ * Acquire Microsoft Graph OAuth 2.0 Access Token using Client Credentials Flow.
+ * Endpoint: https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token
  */
-function getTransporter(): Transporter | null {
-  const cfg = getSmtpConfig();
-  if (!cfg.host || !cfg.user) {
-    return null;
+async function acquireGraphAccessToken(cfg: MicrosoftGraphConfig): Promise<string> {
+  if (!cfg.tenantId || !cfg.clientId || !cfg.clientSecret) {
+    throw new Error('Microsoft Graph API is not fully configured (missing Tenant ID, Client ID, or Client Secret)');
   }
 
-  return nodemailer.createTransport({
-    host: cfg.host,
-    port: cfg.port,
-    secure: cfg.secure,
-    auth: {
-      user: cfg.user,
-      pass: cfg.pass,
-    },
-    tls: {
-      rejectUnauthorized: false, // Permit self-signed corporate internal certificates
-    },
+  const now = Date.now();
+  if (cachedToken && cachedToken.expiresAt > now + 60000) {
+    return cachedToken.accessToken;
+  }
+
+  const tokenEndpoint = `https://login.microsoftonline.com/${encodeURIComponent(cfg.tenantId)}/oauth2/v2.0/token`;
+  const bodyParams = new URLSearchParams({
+    client_id: cfg.clientId,
+    client_secret: cfg.clientSecret,
+    scope: 'https://graph.microsoft.com/.default',
+    grant_type: 'client_credentials',
   });
+
+  const res = await fetch(tokenEndpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: bodyParams.toString(),
+  });
+
+  if (!res.ok) {
+    const errorBody = await res.text().catch(() => '');
+    throw new Error(`Azure AD OAuth error (${res.status}): ${errorBody}`);
+  }
+
+  const data = (await res.json()) as { access_token: string; expires_in: number };
+  cachedToken = {
+    accessToken: data.access_token,
+    expiresAt: now + (data.expires_in || 3600) * 1000,
+  };
+
+  return cachedToken.accessToken;
 }
 
 export interface SendEmailOptions {
@@ -109,7 +135,8 @@ export interface SendEmailOptions {
 }
 
 /**
- * Core email dispatcher with automatic in-app Outbox fallback.
+ * Core email dispatcher exclusively using Microsoft Graph API.
+ * Automatically falls back to SQLite in-app Outbox if credentials are not yet configured or during development.
  * Never throws errors to calling controllers; logs delivery status into SQLite.
  */
 export async function sendEmail(options: SendEmailOptions): Promise<{
@@ -118,15 +145,14 @@ export async function sendEmail(options: SendEmailOptions): Promise<{
   error?: string;
 }> {
   const emailId = `eml-${randomUUID()}`;
-  const cfg = getSmtpConfig();
-  const transporter = getTransporter();
+  const cfg = getGraphConfig();
 
-  // If no SMTP host is configured, store directly in outbox for review
-  if (!transporter) {
+  // If Microsoft Graph is not configured, store directly in outbox for review
+  if (!cfg.tenantId || !cfg.clientId || !cfg.clientSecret || !cfg.senderEmail) {
     try {
       db.prepare(`
         INSERT INTO email_logs (id, recipient_email, recipient_name, subject, template_type, project_id, status, html_content, error, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, 'outbox', ?, 'SMTP not configured - Queued in in-app outbox', datetime('now'))
+        VALUES (?, ?, ?, ?, ?, ?, 'outbox', ?, 'Microsoft Graph API not configured - Queued in in-app outbox', datetime('now'))
       `).run(
         emailId,
         options.to,
@@ -137,21 +163,50 @@ export async function sendEmail(options: SendEmailOptions): Promise<{
         options.html
       );
       console.log(`[Email Outbox] Queued email "${options.subject}" to ${options.to}`);
-      return { id: emailId, status: 'outbox', error: 'SMTP not configured' };
+      return { id: emailId, status: 'outbox', error: 'Microsoft Graph API not configured' };
     } catch (err: any) {
       console.error('[Email Outbox Save Error]', err);
       return { id: emailId, status: 'outbox', error: err.message };
     }
   }
 
-  // Attempt real SMTP dispatch
+  // Attempt real Microsoft Graph API dispatch
   try {
-    await transporter.sendMail({
-      from: cfg.from || 'Encalm Projects <notifications@encalm.com>',
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
+    const accessToken = await acquireGraphAccessToken(cfg);
+
+    const sendEndpoint = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(cfg.senderEmail)}/sendMail`;
+    const messagePayload = {
+      message: {
+        subject: options.subject,
+        body: {
+          contentType: 'HTML',
+          content: options.html,
+        },
+        toRecipients: [
+          {
+            emailAddress: {
+              address: options.to,
+              name: options.recipientName || options.to,
+            },
+          },
+        ],
+      },
+      saveToSentItems: cfg.saveToSentItems !== false,
+    };
+
+    const graphRes = await fetch(sendEndpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(messagePayload),
     });
+
+    if (!graphRes.ok && graphRes.status !== 202) {
+      const errText = await graphRes.text().catch(() => '');
+      throw new Error(`Microsoft Graph API failed (${graphRes.status}): ${errText}`);
+    }
 
     db.prepare(`
       INSERT INTO email_logs (id, recipient_email, recipient_name, subject, template_type, project_id, status, html_content, error, created_at)
@@ -166,11 +221,11 @@ export async function sendEmail(options: SendEmailOptions): Promise<{
       options.html
     );
 
-    console.log(`[Email Sent] Delivered "${options.subject}" to ${options.to}`);
+    console.log(`[Microsoft Graph Email Sent] Delivered "${options.subject}" to ${options.to}`);
     return { id: emailId, status: 'sent' };
   } catch (error: any) {
-    const errorMsg = error?.message || 'SMTP delivery failed';
-    console.warn(`[Email Failed] Could not deliver to ${options.to}:`, errorMsg);
+    const errorMsg = error?.message || 'Microsoft Graph API delivery failed';
+    console.warn(`[Microsoft Graph Email Failed] Could not deliver to ${options.to}:`, errorMsg);
 
     db.prepare(`
       INSERT INTO email_logs (id, recipient_email, recipient_name, subject, template_type, project_id, status, html_content, error, created_at)
@@ -191,7 +246,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{
 }
 
 /**
- * Resend an email from the log table
+ * Resend an email from the log table using Microsoft Graph API
  */
 export async function resendEmailLog(id: string): Promise<{ success: boolean; status: string; error?: string }> {
   const row = db.prepare('SELECT * FROM email_logs WHERE id = ?').get(id) as any;
@@ -199,20 +254,47 @@ export async function resendEmailLog(id: string): Promise<{ success: boolean; st
     return { success: false, status: 'not_found', error: 'Email record not found' };
   }
 
-  const transporter = getTransporter();
-  const cfg = getSmtpConfig();
-
-  if (!transporter) {
-    return { success: false, status: 'outbox', error: 'SMTP is not yet configured' };
+  const cfg = getGraphConfig();
+  if (!cfg.tenantId || !cfg.clientId || !cfg.clientSecret || !cfg.senderEmail) {
+    return { success: false, status: 'outbox', error: 'Microsoft Graph API is not yet configured' };
   }
 
   try {
-    await transporter.sendMail({
-      from: cfg.from || 'Encalm Projects <notifications@encalm.com>',
-      to: row.recipient_email,
-      subject: row.subject,
-      html: row.html_content,
+    const accessToken = await acquireGraphAccessToken(cfg);
+
+    const sendEndpoint = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(cfg.senderEmail)}/sendMail`;
+    const messagePayload = {
+      message: {
+        subject: row.subject,
+        body: {
+          contentType: 'HTML',
+          content: row.html_content,
+        },
+        toRecipients: [
+          {
+            emailAddress: {
+              address: row.recipient_email,
+              name: row.recipient_name || row.recipient_email,
+            },
+          },
+        ],
+      },
+      saveToSentItems: cfg.saveToSentItems !== false,
+    };
+
+    const graphRes = await fetch(sendEndpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(messagePayload),
     });
+
+    if (!graphRes.ok && graphRes.status !== 202) {
+      const errText = await graphRes.text().catch(() => '');
+      throw new Error(`Microsoft Graph API resend failed (${graphRes.status}): ${errText}`);
+    }
 
     db.prepare('UPDATE email_logs SET status = "sent", error = null WHERE id = ?').run(id);
     return { success: true, status: 'sent' };
@@ -337,14 +419,15 @@ function baseEmailWrapper(contentHtml: string, previewText: string = 'Encalm Pro
 }
 
 /**
- * Template 1: User Tag Notification
+ * Template 1: User Tag & Comment Notification
  */
 export function buildTagNotificationHtml(data: {
   recipientName: string;
   taggedByName: string;
-  entityType: 'Task' | 'Stage' | 'Milestone' | 'Issue';
+  entityType: 'Task' | 'Stage' | 'Milestone' | 'Issue' | 'Update' | 'General';
   entityTitle: string;
   entityContext?: string;
+  comment?: string;
   projectName: string;
   dashboardUrl: string;
 }): string {
@@ -357,22 +440,35 @@ export function buildTagNotificationHtml(data: {
       <span class="badge badge-teal">${data.projectName}</span>.
     </p>
 
-    <div class="card-box">
+    <div class="card-box" style="border-left: 4px solid #2e7c67;">
       <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #718096; margin-bottom: 6px;">
         Tagged Item (${data.entityType})
       </div>
       <div style="font-size: 16px; font-weight: 700; color: #173e49; margin-bottom: 8px;">
         ${data.entityTitle}
       </div>
-      ${data.entityContext ? `<p style="margin: 0; font-size: 13px; color: #4a5568;">${data.entityContext}</p>` : ''}
+      ${data.entityContext ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #4a5568;">${data.entityContext}</p>` : ''}
+      
+      ${data.comment ? `
+        <div style="margin-top: 12px; padding: 14px 16px; background: #ffffff; border-radius: 8px; border: 1px solid #d4c8af; border-left: 4px solid #d19b35;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <span style="font-size: 11px; font-weight: 700; color: #8c671b; text-transform: uppercase; letter-spacing: 0.5px;">
+              💬 Comment from ${data.taggedByName}:
+            </span>
+          </div>
+          <div style="font-size: 13.5px; line-height: 1.6; color: #1a202c; font-style: normal; white-space: pre-wrap; font-weight: 500;">
+            ${data.comment}
+          </div>
+        </div>
+      ` : ''}
     </div>
 
     <p style="margin-bottom: 0;">
-      Please review the details, take necessary action, or collaborate on this item directly in the dashboard:
+      Please review this item, take necessary action, or reply directly in the dashboard:
     </p>
 
     <div style="text-align: center;">
-      <a href="${data.dashboardUrl}" class="btn" target="_blank">View in Project Dashboard →</a>
+      <a href="${data.dashboardUrl}" class="btn" target="_blank">View & Respond in Dashboard →</a>
     </div>
   `, `Tagged in ${data.projectName}: ${data.entityTitle}`);
 }

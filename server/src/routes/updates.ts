@@ -35,6 +35,18 @@ globalUpdatesRouter.get('/', (req, res) => {
   return res.json({ updates });
 });
 
+// GET updates for a specific project
+projectUpdatesRouter.get('/', (req: any, res) => {
+  const projectId = req.params.id as string;
+  const rows = db.prepare(`
+    SELECT * FROM updates
+    WHERE project_id = ?
+    ORDER BY created_at DESC
+  `).all(projectId) as any[];
+
+  return res.json({ updates: rows });
+});
+
 // POST add update to project
 projectUpdatesRouter.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;

@@ -9,9 +9,10 @@ import {
 interface TagNotificationParams {
   taggedUserIds: string[];
   taggedBy: string;
-  entityType: 'Task' | 'Stage' | 'Milestone' | 'Issue';
+  entityType: 'Task' | 'Stage' | 'Milestone' | 'Issue' | 'Update' | 'General';
   entityTitle: string;
   entityContext?: string;
+  comment?: string;
   projectId: string;
   projectName: string;
   origin?: string;
@@ -27,6 +28,7 @@ export async function dispatchTagNotifications(params: TagNotificationParams): P
     entityType,
     entityTitle,
     entityContext,
+    comment,
     projectId,
     projectName,
     origin = 'http://localhost:5173',
@@ -48,6 +50,10 @@ export async function dispatchTagNotifications(params: TagNotificationParams): P
 
     // 1. Insert in-app notification with recipient_id
     try {
+      const messageBody = comment 
+        ? `${taggedBy} tagged you on ${entityType.toLowerCase()} "${entityTitle}" in ${projectName}: "${comment}"`
+        : `${taggedBy} tagged you on ${entityType.toLowerCase()} "${entityTitle}" in ${projectName}`;
+
       db.prepare(`
         INSERT INTO notifications (id, type, title, message, project_id, link, recipient_id, read, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, 0, datetime('now'))
@@ -55,7 +61,7 @@ export async function dispatchTagNotifications(params: TagNotificationParams): P
         `notif-tag-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         notifType,
         `Tagged on ${entityType}: ${entityTitle}`,
-        `${taggedBy} tagged you on ${entityType.toLowerCase()} "${entityTitle}" in ${projectName}`,
+        messageBody,
         projectId,
         `/project/${projectId}`,
         userId
@@ -72,6 +78,7 @@ export async function dispatchTagNotifications(params: TagNotificationParams): P
         entityType,
         entityTitle,
         entityContext,
+        comment,
         projectName,
         dashboardUrl,
       });

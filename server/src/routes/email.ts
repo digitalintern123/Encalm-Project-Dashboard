@@ -2,12 +2,13 @@ import { Router } from 'express';
 import { db } from '../db/database.js';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import {
-  getSmtpConfig,
-  saveSmtpConfig,
+  getGraphConfig,
+  saveGraphConfig,
   sendEmail,
   resendEmailLog,
   buildTestEmailHtml,
   buildProjectSummaryHtml,
+  buildTagNotificationHtml,
 } from '../services/email.js';
 import { fetchFullProject } from './projects.js';
 
@@ -47,51 +48,54 @@ router.get('/logs', optionalAuth, (req, res) => {
   });
 });
 
-// GET email settings (with masked password)
+// GET Microsoft Graph API email settings (with masked client secret)
 router.get('/settings', optionalAuth, (req, res) => {
-  const config = getSmtpConfig();
+  const config = getGraphConfig();
+  const isConfigured = Boolean(config.tenantId && config.clientId && config.clientSecret && config.senderEmail);
+
   return res.json({
     settings: {
-      host: config.host || '',
-      port: config.port || 587,
-      secure: config.secure || false,
-      user: config.user || '',
-      pass: config.pass ? '••••••••' : '',
-      from: config.from || 'Encalm Projects <notifications@encalm.com>',
-      isConfigured: Boolean(config.host && config.user),
+      provider: 'microsoft_graph',
+      tenantId: config.tenantId || '',
+      clientId: config.clientId || '',
+      clientSecret: config.clientSecret ? '••••••••' : '',
+      senderEmail: config.senderEmail || 'notifications@encalm.com',
+      saveToSentItems: config.saveToSentItems !== false,
+      isConfigured,
     },
   });
 });
 
-// POST save email settings
+// POST save Microsoft Graph API settings
 router.post('/settings', optionalAuth, (req: AuthenticatedRequest, res) => {
-  const { host, port, secure, user, pass, from } = req.body;
+  const { tenantId, clientId, clientSecret, senderEmail, saveToSentItems } = req.body;
 
-  saveSmtpConfig({
-    host,
-    port: port ? Number(port) : undefined,
-    secure: Boolean(secure),
-    user,
-    pass,
-    from,
+  saveGraphConfig({
+    tenantId,
+    clientId,
+    clientSecret,
+    senderEmail,
+    saveToSentItems: saveToSentItems !== undefined ? Boolean(saveToSentItems) : true,
   });
 
-  const updated = getSmtpConfig();
+  const updated = getGraphConfig();
+  const isConfigured = Boolean(updated.tenantId && updated.clientId && updated.clientSecret && updated.senderEmail);
+
   return res.json({
-    message: 'SMTP settings updated successfully',
+    message: 'Microsoft Graph API settings saved successfully',
     settings: {
-      host: updated.host || '',
-      port: updated.port || 587,
-      secure: updated.secure || false,
-      user: updated.user || '',
-      pass: updated.pass ? '••••••••' : '',
-      from: updated.from || 'Encalm Projects <notifications@encalm.com>',
-      isConfigured: Boolean(updated.host && updated.user),
+      provider: 'microsoft_graph',
+      tenantId: updated.tenantId || '',
+      clientId: updated.clientId || '',
+      clientSecret: updated.clientSecret ? '••••••••' : '',
+      senderEmail: updated.senderEmail || 'notifications@encalm.com',
+      saveToSentItems: updated.saveToSentItems !== false,
+      isConfigured,
     },
   });
 });
 
-// POST send test email
+// POST send test email via Microsoft Graph API
 router.post('/test', optionalAuth, async (req: AuthenticatedRequest, res) => {
   const { to, recipientName } = req.body;
   const targetEmail = to || req.user?.email || 'hod@encalm.com';
@@ -101,7 +105,7 @@ router.post('/test', optionalAuth, async (req: AuthenticatedRequest, res) => {
   const result = await sendEmail({
     to: targetEmail,
     recipientName: name,
-    subject: 'Encalm Projects - SMTP Delivery Test',
+    subject: 'Encalm Projects - Microsoft Graph API Delivery Test',
     html,
     templateType: 'test_email',
   });
@@ -111,9 +115,9 @@ router.post('/test', optionalAuth, async (req: AuthenticatedRequest, res) => {
     result,
     message:
       result.status === 'sent'
-        ? `Test email sent successfully to ${targetEmail}`
+        ? `Test email sent successfully via Microsoft Graph API to ${targetEmail}`
         : result.status === 'outbox'
-          ? `SMTP not configured: Email queued in dashboard Outbox`
+          ? `Microsoft Graph API not configured: Email queued in dashboard Outbox`
           : `Failed to deliver email: ${result.error}`,
   });
 });
@@ -186,6 +190,144 @@ router.post('/send-project-update', optionalAuth, async (req: AuthenticatedReque
     success: true,
     message: `Dispatched project summary to ${dispatchResults.length} recipient(s)`,
     results: dispatchResults,
+  });
+});
+
+// POST tag team member(s) with comment & dispatch automated email
+router.post('/tag-and-comment', optionalAuth, async (req: AuthenticatedRequest, res) => {
+  const {
+    projectId,
+    entityType = 'Stage',
+    entityId,
+    entityTitle,
+    entityContext,
+    taggedUserIds = [],
+    comment,
+    authorName,
+  } = req.body;
+
+  if (!projectId) {
+    return res.status(400).json({ error: 'Project ID is required' });
+  }
+
+  if (!Array.isArray(taggedUserIds) || taggedUserIds.length === 0) {
+    return res.status(400).json({ error: 'At least one user must be tagged' });
+  }
+
+  const project = fetchFullProject(projectId);
+  const projectName = project ? project.name : projectId;
+  const sender = authorName || req.user?.name || 'Encalm Team';
+  const origin = req.headers.origin || 'http://localhost:5173';
+  const dashboardUrl = `${origin}/project/${projectId}`;
+
+  const dispatchResults: Array<{
+    userId: string;
+    userName: string;
+    email: string;
+    status: string;
+    id?: string;
+    error?: string;
+  }> = [];
+
+  for (const userId of taggedUserIds) {
+    if (!userId) continue;
+
+    // Lookup user details from DB
+    const userRow = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(userId) as
+      | { id: string; name: string; email: string }
+      | undefined;
+
+    const recipientName = userRow?.name || userId;
+    const recipientEmail = userRow?.email;
+
+    // 1. Insert in-app notification
+    const notifTitle = `Tagged on ${entityType}: ${entityTitle || 'Project Item'}`;
+    const notifMessage = comment
+      ? `${sender} tagged you on ${entityType.toLowerCase()} "${entityTitle || 'item'}" in ${projectName}: "${comment}"`
+      : `${sender} tagged you on ${entityType.toLowerCase()} "${entityTitle || 'item'}" in ${projectName}`;
+
+    try {
+      db.prepare(`
+        INSERT INTO notifications (id, type, title, message, project_id, link, recipient_id, read, created_at)
+        VALUES (?, 'tagged_task', ?, ?, ?, ?, ?, 0, datetime('now'))
+      `).run(
+        `notif-tag-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        notifTitle,
+        notifMessage,
+        projectId,
+        `/project/${projectId}`,
+        userId
+      );
+    } catch (err) {
+      console.warn('[Tag Notification Insert Error]', err);
+    }
+
+    // 2. Dispatch email notification
+    if (recipientEmail) {
+      const html = buildTagNotificationHtml({
+        recipientName,
+        taggedByName: sender,
+        entityType,
+        entityTitle: entityTitle || `${entityType} in ${projectName}`,
+        entityContext,
+        comment,
+        projectName,
+        dashboardUrl,
+      });
+
+      const emailRes = await sendEmail({
+        to: recipientEmail,
+        recipientName,
+        subject: `[Encalm] Tagged on ${entityType}: ${entityTitle || projectName}`,
+        html,
+        templateType: 'tag_notification',
+        projectId,
+      });
+
+      dispatchResults.push({
+        userId,
+        userName: recipientName,
+        email: recipientEmail,
+        status: emailRes.status,
+        id: emailRes.id,
+        error: emailRes.error,
+      });
+    } else {
+      dispatchResults.push({
+        userId,
+        userName: recipientName,
+        email: 'no-email-found',
+        status: 'skipped',
+        error: 'User has no registered email',
+      });
+    }
+  }
+
+  // 3. If there is a comment, also append it to project updates feed so activity is preserved
+  if (comment && comment.trim() && project) {
+    try {
+      const updateId = `upd-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+      const taggedNames = dispatchResults.map((d) => d.userName).join(', ');
+      db.prepare(`
+        INSERT INTO updates (id, project_id, author, role, date, stage, kind, text, created_at)
+        VALUES (?, ?, ?, ?, date('now'), ?, 'Progress', ?, datetime('now'))
+      `).run(
+        updateId,
+        projectId,
+        sender,
+        req.user?.title || 'Team Member',
+        entityTitle || entityType,
+        `[Tagged ${taggedNames}]: ${comment.trim()}`
+      );
+    } catch (err) {
+      console.warn('[Activity Log Append Error]', err);
+    }
+  }
+
+  return res.json({
+    success: true,
+    message: `Dispatched notification email to ${dispatchResults.filter((r) => r.status !== 'skipped').length} recipient(s)`,
+    recipients: dispatchResults,
   });
 });
 

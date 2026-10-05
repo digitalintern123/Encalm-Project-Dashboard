@@ -78,12 +78,12 @@ export type EmailLogItem = {
 };
 
 export type EmailSettings = {
-  host: string;
-  port: number;
-  secure: boolean;
-  user: string;
-  pass?: string;
-  from: string;
+  provider: 'microsoft_graph';
+  tenantId: string;
+  clientId: string;
+  clientSecret?: string;
+  senderEmail: string;
+  saveToSentItems: boolean;
   isConfigured: boolean;
 };
 
@@ -287,6 +287,31 @@ export const api = {
       request<{ success: boolean; message: string; results: any[] }>('/api/email/send-project-update', {
         method: 'POST',
         body: JSON.stringify({ projectId, ...payload }),
+      }),
+    tagAndComment: (payload: {
+      projectId: string;
+      entityType?: 'Task' | 'Stage' | 'Milestone' | 'Issue' | 'Update' | 'General';
+      entityId?: string;
+      entityTitle?: string;
+      entityContext?: string;
+      taggedUserIds: string[];
+      comment?: string;
+      authorName?: string;
+    }) =>
+      request<{
+        success: boolean;
+        message: string;
+        recipients: Array<{
+          userId: string;
+          userName: string;
+          email: string;
+          status: string;
+          id?: string;
+          error?: string;
+        }>;
+      }>('/api/email/tag-and-comment', {
+        method: 'POST',
+        body: JSON.stringify(payload),
       }),
   },
 };

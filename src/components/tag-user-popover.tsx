@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Tag, UserCheck, X, Check, Users } from 'lucide-react';
+import { Tag, X, Check, Users, Send, Mail, Loader2, MessageSquare } from 'lucide-react';
 import { users as defaultUsers, getUserById, type User } from '@/data/users';
 import { useAppState } from '@/state/app-state';
+import { useToast } from '@/hooks/use-toast';
+import { api } from '@/lib/api';
 
 interface TagUserPopoverProps {
   taggedUsers?: string[];
@@ -9,6 +11,11 @@ interface TagUserPopoverProps {
   canTag?: boolean;
   compact?: boolean;
   label?: string;
+  projectId?: string;
+  entityType?: 'Task' | 'Stage' | 'Milestone' | 'Issue' | 'Update' | 'General';
+  entityId?: string;
+  entityTitle?: string;
+  entityContext?: string;
 }
 
 export function TagUserPopover({
@@ -17,10 +24,18 @@ export function TagUserPopover({
   canTag = true,
   compact = false,
   label = 'Tag',
+  projectId,
+  entityType = 'Stage',
+  entityId,
+  entityTitle,
+  entityContext,
 }: TagUserPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [comment, setComment] = useState('');
+  const [sending, setSending] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { leads } = useAppState();
+  const { leads, user: currentUser } = useAppState();
+  const { toast } = useToast();
 
   // Merge default users with any dynamically registered leads
   const availableUsers: User[] = React.useMemo(() => {
@@ -63,6 +78,70 @@ export function TagUserPopover({
     onChange(taggedUsers.filter((id) => id !== userId));
   };
 
+  const handleSendMail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (taggedUsers.length === 0) {
+      toast({
+        title: 'Select a team member',
+        description: 'Please select at least one team member to tag.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!projectId) {
+      // If no projectId is passed, we simply close with local tagging updated
+      toast({
+        title: 'Members tagged',
+        description: 'Tagged team members updated successfully.',
+      });
+      setIsOpen(false);
+      setComment('');
+      return;
+    }
+
+    setSending(true);
+    try {
+      const res = await api.email.tagAndComment({
+        projectId,
+        entityType,
+        entityId,
+        entityTitle: entityTitle || entityType,
+        entityContext,
+        taggedUserIds: taggedUsers,
+        comment: comment.trim() || undefined,
+        authorName: currentUser?.name || 'Project Lead',
+      });
+
+      const recipientNames = res.recipients
+        .filter((r) => r.status !== 'skipped')
+        .map((r) => r.userName || r.email)
+        .join(', ');
+
+      const outboxCount = res.recipients.filter((r) => r.status === 'outbox').length;
+      const sentCount = res.recipients.filter((r) => r.status === 'sent').length;
+
+      toast({
+        title: sentCount > 0 ? '✓ Email Sent Successfully' : '✓ Notification Logged in Outbox',
+        description:
+          sentCount > 0
+            ? `Dispatched email notification to ${recipientNames}.`
+            : `Notification queued for ${recipientNames} (view in Email Hub).`,
+      });
+
+      setComment('');
+      setIsOpen(false);
+    } catch (err: any) {
+      toast({
+        title: 'Notification Error',
+        description: err?.message || 'Could not dispatch email notification.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <div className="relative inline-flex items-center gap-1.5" ref={containerRef}>
       {/* Existing Tag Chips */}
@@ -75,7 +154,7 @@ export function TagUserPopover({
           <span
             key={userId}
             className="inline-flex items-center gap-1 rounded-full border border-[#eadcb1] bg-[#fdf8ec] px-2 py-0.5 text-[10px] font-semibold text-[#8c671b] shadow-xs transition hover:border-[#d19b35]"
-            title={`Tagged: ${name} (${u?.title || u?.role || 'Member'})`}
+            title={`Tagged: ${name} (${u?.title || u?.role || 'Member'}) - ${u?.email || 'No email'}`}
           >
             <span className="grid size-3.5 place-items-center rounded-full bg-[#d19b35] text-[8px] font-bold text-white">
               {initials}
@@ -105,7 +184,7 @@ export function TagUserPopover({
               ? 'border-border/60 bg-white/70 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground'
               : 'border-dashed border-border bg-[#faf8f3] px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:border-[#2e7c67] hover:bg-[#edf5f0] hover:text-[#2e7c67]'
           }`}
-          title="Tag individuals to assign ownership & dispatch email alerts"
+          title="Tag individuals to assign ownership & send email comments"
         >
           {taggedUsers.length === 0 ? (
             <>
@@ -123,22 +202,29 @@ export function TagUserPopover({
 
       {/* Dropdown Popover */}
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-border bg-white p-2 shadow-xl shadow-[#173e49]/10 animate-in fade-in zoom-in-95">
-          <div className="flex items-center justify-between border-b border-border/70 pb-2 px-1">
+        <div className="absolute left-0 top-full z-50 mt-1.5 w-80 rounded-xl border border-border bg-white p-3 shadow-xl shadow-[#173e49]/15 animate-in fade-in zoom-in-95">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-border/70 pb-2">
             <div className="flex items-center gap-1.5">
-              <Users size={13} className="text-[#2e7c67]" />
-              <span className="text-[11px] font-bold text-[#173e49]">Tag Individuals</span>
+              <Users size={14} className="text-[#2e7c67]" />
+              <span className="text-[12px] font-bold text-[#173e49]">
+                Tag & Send Email
+              </span>
             </div>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               className="rounded-md p-1 text-muted-foreground hover:bg-muted"
             >
-              <X size={12} />
+              <X size={13} />
             </button>
           </div>
 
-          <div className="mt-1.5 max-h-48 space-y-1 overflow-y-auto py-1">
+          {/* User Selection List */}
+          <div className="mt-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            Select Member(s):
+          </div>
+          <div className="mt-1 max-h-36 space-y-1 overflow-y-auto pr-1">
             {availableUsers.map((user) => {
               const isSelected = taggedUsers.includes(user.id);
               return (
@@ -159,8 +245,10 @@ export function TagUserPopover({
                       {user.initials}
                     </span>
                     <div className="min-w-0">
-                      <div className="truncate">{user.name}</div>
-                      <div className="text-[9px] text-muted-foreground truncate">{user.title}</div>
+                      <div className="truncate font-semibold">{user.name}</div>
+                      <div className="text-[9px] text-muted-foreground truncate">
+                        {user.email || user.title}
+                      </div>
                     </div>
                   </div>
 
@@ -176,9 +264,44 @@ export function TagUserPopover({
             })}
           </div>
 
-          <div className="mt-2 border-t border-border/70 pt-2 px-1 text-[9px] text-muted-foreground">
-            Tagged users receive an in-app notice and an automated email alert.
-          </div>
+          {/* Comment & Mail Form */}
+          <form onSubmit={handleSendMail} className="mt-3 border-t border-border/70 pt-2.5">
+            <label className="block text-[10px] font-bold text-[#173e49] mb-1">
+              Add Message / Comment:
+            </label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Type instructions or comment to send via email..."
+              rows={2}
+              className="w-full rounded-lg border border-border bg-[#faf8f3] px-2.5 py-1.5 text-[11px] outline-none focus:border-[#2e7c67] focus:bg-white transition resize-none"
+            />
+
+            <div className="mt-2.5 flex items-center justify-between gap-2">
+              <span className="text-[9px] text-muted-foreground flex items-center gap-1">
+                <Mail size={11} className="text-[#3d9a7e]" />
+                Sends to tagged email
+              </span>
+
+              <button
+                type="submit"
+                disabled={sending || taggedUsers.length === 0}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#173e49] px-3 py-1.5 text-[10px] font-bold text-white shadow-xs transition hover:bg-[#205160] disabled:opacity-40"
+              >
+                {sending ? (
+                  <>
+                    <Loader2 size={12} className="animate-spin" />
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send size={11} />
+                    <span>Tag & Send Mail</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>
