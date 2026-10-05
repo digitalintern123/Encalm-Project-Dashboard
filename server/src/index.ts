@@ -24,7 +24,7 @@ import { uploadsDir } from './db/database.js';
 dotenv.config();
 
 const app = express();
-const PORT = Number(process.env.PORT || process.env.API_PORT || process.env.BACKEND_PORT || 5000);
+const PORT = Number(process.env.API_PORT || process.env.BACKEND_PORT || (process.env.NODE_ENV === 'production' && process.env.PORT && process.env.PORT !== '5173' ? process.env.PORT : 5000));
 
 // Middleware
 app.use(cors({ origin: true, credentials: true }));
