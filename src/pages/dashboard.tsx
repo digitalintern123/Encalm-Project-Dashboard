@@ -2,6 +2,7 @@ import { useMemo, useState, type CSSProperties } from 'react';
 import { Link } from 'wouter';
 import { Activity, TriangleAlert as AlertTriangle, ArrowUpRight, ChartBar as BarChart3, CalendarDays, CircleCheck as CheckCircle2, CircleDollarSign, Clock3, ListFilter as Filter, MapPin, Search, SlidersHorizontal, Maximize2, Minimize2, Target, TrendingUp, X } from 'lucide-react';
 import { categories, formatCrore, healthOptions, locations, projectStatuses, type Category, type Health, type Location, type Project, type ProjectStatus } from '@/data/projects';
+import { sortProjectsIncompleteFirst } from '@/lib/calculations';
 import { useAppState } from '@/state/app-state';
 import { greetingForNow, parseIsoDate, todayLongLabel } from '@/lib/date';
 import { initialsOf, leadName } from '@/data/users';
@@ -105,18 +106,21 @@ export default function Dashboard() {
 
   // `projects` was missing from these deps, so newly created or edited
   // projects never appeared until a full remount.
-  const filteredProjects = useMemo(() => projects.filter((project) => {
-    // Search covers name, location, category, code and lead — matching the
-    // same fields the portfolio table under "All projects" searches.
-    const haystack = `${project.name} ${project.location} ${project.category} ${project.code} ${leadName(project.leadId)}`.toLowerCase();
-    return (
-      haystack.includes(query.trim().toLowerCase()) &&
-      (location === 'All' || project.location === location) &&
-      (category === 'All' || project.category === category) &&
-      (health === 'All' || project.health === health) &&
-      (status === 'All' || (project.status || 'Yet to start') === status)
-    );
-  }), [projects, query, location, category, health, status]);
+  const filteredProjects = useMemo(() => {
+    const list = projects.filter((project) => {
+      // Search covers name, location, category, code and lead — matching the
+      // same fields the portfolio table under "All projects" searches.
+      const haystack = `${project.name} ${project.location} ${project.category} ${project.code} ${leadName(project.leadId)}`.toLowerCase();
+      return (
+        haystack.includes(query.trim().toLowerCase()) &&
+        (location === 'All' || project.location === location) &&
+        (category === 'All' || project.category === category) &&
+        (health === 'All' || project.health === health) &&
+        (status === 'All' || (project.status || 'Yet to start') === status)
+      );
+    });
+    return sortProjectsIncompleteFirst(list);
+  }, [projects, query, location, category, health, status]);
 
   const stats = useMemo(() => {
     const total = projects.length;

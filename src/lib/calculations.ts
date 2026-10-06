@@ -274,3 +274,53 @@ export function getPortfolioCommercialSummary(projects: Project[]): PortfolioCom
 export function formatRatio(pct: number | null, digits = 1): string {
   return pct === null ? '—' : `${pct.toFixed(digits)}%`;
 }
+
+// ---------------------------------------------------------------------------
+// Project Prioritization (Incomplete / Active Projects First)
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true if a project is incomplete (progress < 100 and status != 'Operational').
+ */
+export function isProjectIncomplete(project: Project): boolean {
+  return (project.progress ?? 0) < 100 && project.status !== 'Operational';
+}
+
+/**
+ * Sorts projects so that incomplete and active facilities appear first,
+ * ranked by urgency/health, followed by 100% completed/operational projects alphabetically.
+ */
+export function sortProjectsIncompleteFirst(projects: Project[]): Project[] {
+  const healthWeight: Record<string, number> = {
+    'Delayed': 3,
+    'At risk': 2,
+    'On track': 1,
+    'Not started': 0,
+  };
+
+  return [...projects].sort((a, b) => {
+    const aIncomplete = isProjectIncomplete(a);
+    const bIncomplete = isProjectIncomplete(b);
+
+    // Incomplete projects always precede completed ones
+    if (aIncomplete && !bIncomplete) return -1;
+    if (!aIncomplete && bIncomplete) return 1;
+
+    // Both are incomplete: rank by health risk, then by progress, then alphabetically
+    if (aIncomplete && bIncomplete) {
+      const aWeight = healthWeight[a.health] ?? 0;
+      const bWeight = healthWeight[b.health] ?? 0;
+      if (bWeight !== aWeight) {
+        return bWeight - aWeight; // Delayed & At risk first
+      }
+      if ((a.progress ?? 0) !== (b.progress ?? 0)) {
+        return (a.progress ?? 0) - (b.progress ?? 0);
+      }
+      return a.name.localeCompare(b.name);
+    }
+
+    // Both are complete: rank alphabetically by facility name
+    return a.name.localeCompare(b.name);
+  });
+}
+

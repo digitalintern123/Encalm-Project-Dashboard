@@ -128,7 +128,19 @@ export function fetchFullProject(projectId: string) {
 
 // GET all projects
 router.get('/', optionalAuth, (req, res) => {
-  const rows = db.prepare('SELECT id FROM projects ORDER BY name ASC').all() as { id: string }[];
+  const rows = db.prepare(`
+    SELECT id FROM projects 
+    ORDER BY 
+      CASE WHEN (status != 'Operational' AND COALESCE(progress, 0) < 100) THEN 0 ELSE 1 END ASC,
+      CASE health 
+        WHEN 'Delayed' THEN 0 
+        WHEN 'At risk' THEN 1 
+        WHEN 'On track' THEN 2 
+        ELSE 3 
+      END ASC,
+      COALESCE(progress, 0) ASC,
+      name ASC
+  `).all() as { id: string }[];
   const projects = rows.map((r) => fetchFullProject(r.id)).filter(Boolean);
   return res.json({ projects });
 });

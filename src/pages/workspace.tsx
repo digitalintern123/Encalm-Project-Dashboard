@@ -38,7 +38,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CRORE } from '@/data/projects';
 import { formatFullDate, isValidIsoDate, todayIso, todayLabel } from '@/lib/date';
 import { initialsOf, leadName } from '@/data/users';
-import { formatRatio, getCommercialSummary, getPortfolioCommercialSummary } from '@/lib/calculations';
+import { formatRatio, getCommercialSummary, getPortfolioCommercialSummary, sortProjectsIncompleteFirst } from '@/lib/calculations';
 import { PhotoLightbox } from '@/components/photo-lightbox';
 import { PhotoUploadDialog } from '@/components/photo-upload-dialog';
 
@@ -206,7 +206,7 @@ function ProjectsView({ mine = false }: { mine?: boolean }) {
 
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return projects.filter((project) => {
+    const filtered = projects.filter((project) => {
       if (mine && project.leadId !== user?.id) return false;
       const haystack = `${project.name} ${project.code} ${project.category} ${project.location} ${leadName(project.leadId)}`.toLowerCase();
       if (term && !haystack.includes(term)) return false;
@@ -216,6 +216,7 @@ function ProjectsView({ mine = false }: { mine?: boolean }) {
       if (status !== 'All' && (project.status || 'Yet to start') !== status) return false;
       return true;
     });
+    return sortProjectsIncompleteFirst(filtered);
   }, [projects, mine, user?.id, search, health, location, category, status]);
 
   const hasFilters = Boolean(search) || health !== 'All' || location !== 'All' || category !== 'All' || status !== 'All';
@@ -289,13 +290,14 @@ function TimelineView() {
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return projects.filter((p) => {
+    const result = projects.filter((p) => {
       const haystack = `${p.name} ${p.code} ${p.location} ${p.category} ${leadName(p.leadId)}`.toLowerCase();
       if (term && !haystack.includes(term)) return false;
       if (location !== 'All' && p.location !== location) return false;
       if (category !== 'All' && p.category !== category) return false;
       return true;
     });
+    return sortProjectsIncompleteFirst(result);
   }, [projects, search, location, category]);
 
   return (
@@ -770,9 +772,9 @@ function IssuesView() {
     return { total, critical, open, resolved, projectsWithIssues };
   }, [projects]);
 
-  // Filter project cards to display
+  // Filter and sort project cards to display (incomplete facilities with issues first)
   const displayedProjects = useMemo(() => {
-    return projectIssueData.filter((item) => {
+    const list = projectIssueData.filter((item) => {
       if (search.trim()) {
         return item.projectMatchesSearch || item.filteredIssues.length > 0;
       }
@@ -780,6 +782,25 @@ function IssuesView() {
         return item.filteredIssues.length > 0;
       }
       return true;
+    });
+
+    return [...list].sort((a, b) => {
+      // 1. Projects with matching issues come before projects with none
+      if (a.filteredIssues.length > 0 && b.filteredIssues.length === 0) return -1;
+      if (a.filteredIssues.length === 0 && b.filteredIssues.length > 0) return 1;
+
+      // 2. Incomplete projects come before completed ones
+      const aIncomplete = (a.project.progress ?? 0) < 100 && a.project.status !== 'Operational';
+      const bIncomplete = (b.project.progress ?? 0) < 100 && b.project.status !== 'Operational';
+      if (aIncomplete && !bIncomplete) return -1;
+      if (!aIncomplete && bIncomplete) return 1;
+
+      // 3. Higher critical count first
+      if (b.criticalCount !== a.criticalCount) {
+        return b.criticalCount - a.criticalCount;
+      }
+
+      return a.project.name.localeCompare(b.project.name);
     });
   }, [projectIssueData, search, scope]);
 
@@ -1504,7 +1525,7 @@ function CommercialView() {
         {projects.length === 0 && (
           <p className="px-5 py-10 text-center text-[12px] text-muted-foreground">No projects found. Create a project to view commercials.</p>
         )}
-        {projects.map((project) => {
+        {sortProjectsIncompleteFirst(projects).map((project) => {
           const commercial = getCommercialSummary(project);
           return (
             <div

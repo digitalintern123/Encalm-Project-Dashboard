@@ -22,7 +22,7 @@ import { readJson, removeItem, writeJson } from '@/lib/storage';
 import { todayLabel } from '@/lib/date';
 import { DEFAULT_HOD_ID, DEFAULT_LEAD_ID, DEFAULT_COORDINATOR_ID, getUserById, type User } from '@/data/users';
 import { api, getStoredToken, setStoredToken, type NotificationItem } from '@/lib/api';
-import { calculateWeightedProgress } from '@/lib/calculations';
+import { calculateWeightedProgress, sortProjectsIncompleteFirst } from '@/lib/calculations';
 import portfolioFallback from '@/data/portfolio-fallback.json';
 
 export type AppRole = 'hod' | 'lead' | 'coordinator';
@@ -195,14 +195,14 @@ function isProjectLike(value: unknown): value is Project {
 
 function seedState(): Project[] {
   if (Array.isArray(portfolioFallback?.projects) && portfolioFallback.projects.length > 0) {
-    return (portfolioFallback.projects as unknown as Project[]).map(normaliseProject);
+    return sortProjectsIncompleteFirst((portfolioFallback.projects as unknown as Project[]).map(normaliseProject));
   }
   return [];
 }
 
 function hydrateProjects(): Project[] {
   if (Array.isArray(portfolioFallback?.projects) && portfolioFallback.projects.length > 0) {
-    return (portfolioFallback.projects as unknown as Project[]).map(normaliseProject);
+    return sortProjectsIncompleteFirst((portfolioFallback.projects as unknown as Project[]).map(normaliseProject));
   }
   return [];
 }

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exportedAt": "2026-10-05T17:04:32.919Z",
+  "exportedAt": "2026-10-06T05:13:31.176Z",
   "projectCount": 68,
   "projects": [
     {
@@ -383,6 +383,15 @@
         }
       ],
       "updates": [
+        {
+          "id": "upd-1791219878412-s01m",
+          "date": "2026-10-05",
+          "author": "Audit System",
+          "role": "Team Member",
+          "text": "[Tagged Ruchika Chauhan]: Audit comment: Please verify and sign off the drawings.",
+          "stage": "Stage 1: Concept & Planning",
+          "kind": "Progress"
+        },
         {
           "id": "delhi-1st-class-lounge-inl-07-07a-xenia-update-1791219872850",
           "date": "05 Oct 2026",
@@ -1228,7 +1237,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T10:03:39.278Z",
+      "lastUpdated": "06 Oct 2026",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1326,6 +1335,22 @@
           "weight": null,
           "taggedUsers": [],
           "updatedAt": null
+        },
+        {
+          "id": "delhi-cip-delhi-phase-1791263610937",
+          "name": "Diagnostic Test Phase",
+          "status": "upcoming",
+          "progress": 0,
+          "owner": "Quality Assurance",
+          "plannedStart": null,
+          "plannedFinish": null,
+          "actualFinish": null,
+          "workCompleted": null,
+          "nextAction": null,
+          "decisionRequired": null,
+          "weight": null,
+          "taggedUsers": [],
+          "updatedAt": "06 Oct 2026"
         }
       ],
       "milestones": [
@@ -1352,10 +1377,51 @@
           "approvalStatus": "Not required",
           "completedDate": null,
           "taggedUsers": []
+        },
+        {
+          "id": "delhi-cip-delhi-milestone-1791263611046",
+          "title": "Diagnostic Test Milestone",
+          "date": "2026-12-31",
+          "status": "upcoming",
+          "stage": "Planning",
+          "owner": "QA Lead",
+          "approvalRequired": false,
+          "approvalStatus": "Not required",
+          "completedDate": null,
+          "taggedUsers": []
         }
       ],
-      "issues": [],
-      "updates": [],
+      "issues": [
+        {
+          "id": "delhi-cip-delhi-issue-1791263611090",
+          "title": "Diagnostic Test Issue",
+          "detail": "Verification of issue creation pipeline.",
+          "severity": "Low",
+          "owner": "Project Lead",
+          "category": "Operational",
+          "status": "Open",
+          "stage": "Planning",
+          "dateRaised": "06 Oct 2026",
+          "dueDate": null,
+          "impactCost": null,
+          "impactSchedule": null,
+          "impactScope": null,
+          "action": null,
+          "resolution": null,
+          "taggedUsers": []
+        }
+      ],
+      "updates": [
+        {
+          "id": "delhi-cip-delhi-update-1791263611143",
+          "date": "06 Oct 2026",
+          "author": "Audit Runner",
+          "role": "Quality Assurance",
+          "text": "Automated test update note verification.",
+          "stage": "Planning",
+          "kind": "Progress"
+        }
+      ],
       "photos": []
     },
     {
@@ -11153,6 +11219,17 @@
     }
   ],
   "notifications": [
+    {
+      "id": "notif-tag-1791219873074-8rtmp",
+      "type": "tagged_task",
+      "title": "Tagged on Stage: Stage 1: Concept & Planning",
+      "message": "Audit System tagged you on stage \"Stage 1: Concept & Planning\" in 1st Class Lounge - INL 07&07A (Xenia): \"Audit comment: Please verify and sign off the drawings.\"",
+      "project_id": "delhi-1st-class-lounge-inl-07-07a-xenia",
+      "link": "/project/delhi-1st-class-lounge-inl-07-07a-xenia",
+      "read": 0,
+      "created_at": "2026-10-05 17:04:33",
+      "recipient_id": "user-ruchika-chauhan"
+    },
     {
       "id": "notif-tag-1791217322354-iyb3j",
       "type": "tagged_task",
