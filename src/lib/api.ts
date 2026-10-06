@@ -292,10 +292,10 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(settings),
       }),
-    sendTest: (to?: string, recipientName?: string) =>
+    sendTest: (to?: string, recipientName?: string, payload?: { provider?: string; smtp?: any; graph?: any }) =>
       request<{ success: boolean; message: string; result: any }>('/api/email/test', {
         method: 'POST',
-        body: JSON.stringify({ to, recipientName }),
+        body: JSON.stringify({ to, recipientName, ...payload }),
       }),
     resend: (id: string) =>
       request<{ success: boolean; status: string; error?: string }>(`/api/email/resend/${id}`, {

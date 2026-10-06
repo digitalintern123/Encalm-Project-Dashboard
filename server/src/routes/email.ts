@@ -172,7 +172,34 @@ router.post('/settings', optionalAuth, (req: AuthenticatedRequest, res) => {
 
 // POST send test email via active provider (SMTP or Microsoft Graph)
 router.post('/test', optionalAuth, async (req: AuthenticatedRequest, res) => {
-  const { to, recipientName } = req.body;
+  const { to, recipientName, provider: reqProvider, smtp, graph } = req.body;
+
+  if (reqProvider === 'smtp' || reqProvider === 'microsoft_graph') {
+    saveActiveEmailProvider(reqProvider);
+  }
+
+  if (smtp && typeof smtp === 'object') {
+    saveSmtpConfig({
+      host: smtp.host,
+      port: smtp.port !== undefined ? Number(smtp.port) : undefined,
+      secure: smtp.secure !== undefined ? Boolean(smtp.secure) : undefined,
+      user: smtp.user,
+      pass: smtp.pass,
+      fromName: smtp.fromName,
+      fromEmail: smtp.fromEmail,
+    });
+  }
+
+  if (graph && typeof graph === 'object') {
+    saveGraphConfig({
+      tenantId: graph.tenantId,
+      clientId: graph.clientId,
+      clientSecret: graph.clientSecret,
+      senderEmail: graph.senderEmail,
+      saveToSentItems: graph.saveToSentItems !== undefined ? Boolean(graph.saveToSentItems) : true,
+    });
+  }
+
   const targetEmail = to || req.user?.email || 'hod@encalm.com';
   const name = recipientName || req.user?.name || 'Encalm User';
   const provider = getActiveEmailProvider();

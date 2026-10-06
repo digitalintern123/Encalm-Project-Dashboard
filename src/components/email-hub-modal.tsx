@@ -163,9 +163,18 @@ export function EmailHubModal({
   const handleSendTest = async () => {
     setSendingTest(true);
     try {
-      const res = await api.email.sendTest(testEmailAddress || undefined);
+      const res = await api.email.sendTest(testEmailAddress || undefined, undefined, {
+        provider,
+        smtp: smtpForm,
+        graph: graphForm,
+      });
       const isSuccess = Boolean(res.success || res.result?.status === 'sent');
       const isFailed = res.result?.status === 'failed';
+
+      let desc = res.message || (isFailed ? res.result?.error : undefined);
+      if (isFailed && (res.result?.error?.includes('5.7.139') || res.result?.error?.includes('SmtpClientAuthentication is disabled'))) {
+        desc = 'Office 365 Tenant Alert: Microsoft has disabled basic SMTP authentication for your Encalm tenant. Please switch to "Microsoft Graph API (Azure AD)" tab or ask your M365 Admin to enable Authenticated SMTP.';
+      }
 
       toast({
         title: isSuccess
@@ -173,10 +182,11 @@ export function EmailHubModal({
           : isFailed
             ? 'Test Email Failed'
             : 'Queued in Outbox',
-        description: res.message || (isFailed ? res.result?.error : undefined),
+        description: desc,
         variant: isFailed ? 'destructive' : 'default',
       });
       loadLogs();
+      loadSettings();
     } catch (err: any) {
       toast({
         title: 'Test Failed',
@@ -642,17 +652,33 @@ export function EmailHubModal({
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="sm:col-span-2">
-                        <label className="block text-[11px] font-bold text-foreground">
-                          SMTP Server (Host)
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="block text-[11px] font-bold text-foreground">
+                            SMTP Server (Host)
+                          </label>
+                          {smtpForm.user.includes('@encalm.com') && smtpForm.host !== 'smtp.office365.com' && (
+                            <button
+                              type="button"
+                              onClick={() => setSmtpForm((prev) => ({ ...prev, host: 'smtp.office365.com' }))}
+                              className="text-[10px] font-bold text-[#b87a14] underline hover:text-[#8a5b0e]"
+                            >
+                              ⚡ Switch to Office 365 Host
+                            </button>
+                          )}
+                        </div>
                         <input
                           type="text"
                           value={smtpForm.host}
                           onChange={(e) => setSmtpForm({ ...smtpForm, host: e.target.value })}
-                          placeholder="smtp-mail.outlook.com"
+                          placeholder="smtp.office365.com"
                           required
                           className="mt-1 w-full rounded-lg border border-border bg-[#faf8f3] px-3 py-2 text-[12px] font-mono focus:outline-hidden focus:ring-1 focus:ring-[#2e7c67]"
                         />
+                        {smtpForm.user.includes('@encalm.com') && smtpForm.host === 'smtp-mail.outlook.com' && (
+                          <p className="mt-1 text-[10px] text-[#b87a14]">
+                            ⚠️ For corporate <strong>@encalm.com</strong> accounts, use <strong>smtp.office365.com</strong> (smtp-mail.outlook.com is for consumer accounts only).
+                          </p>
+                        )}
                       </div>
 
                       <div>
