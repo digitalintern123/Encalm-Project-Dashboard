@@ -682,7 +682,7 @@ function IssuesView() {
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'All' | 'Critical' | 'Open' | 'Resolved'>('All');
-  const [scope, setScope] = useState<'with-issues' | 'all'>('all');
+  const [scope, setScope] = useState<'with-issues' | 'all'>('with-issues');
   const [userToggled, setUserToggled] = useState<Record<string, boolean>>({});
   const [addingForProjectId, setAddingForProjectId] = useState<string | null>(null);
 

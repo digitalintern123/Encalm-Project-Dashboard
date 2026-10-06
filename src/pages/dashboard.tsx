@@ -138,7 +138,7 @@ export default function Dashboard() {
     return { total, onTrackCount, atRiskCount, delayedCount, notStartedCount, totalAop, averageProgress, locationCount, highPriorityCount };
   }, [projects]);
 
-  const atRisk = useMemo(() => projects.filter((project) => project.health !== 'On track'), [projects]);
+  const atRisk = useMemo(() => projects.filter((project) => project.health === 'At risk' || project.health === 'Delayed'), [projects]);
   const upcoming = useMemo(
     () =>
       [...projects]
