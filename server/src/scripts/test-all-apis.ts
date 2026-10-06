@@ -238,12 +238,27 @@ async function runTestSuite() {
     return Array.isArray(d.notifications);
   });
 
-  // --- Email & Tagging APIs (Microsoft Graph API) ---
-  await testApi('Get Microsoft Graph Email Settings', 'Email', 'GET', '/api/email/settings', undefined, 200, (d) => {
-    return d.settings && d.settings.provider === 'microsoft_graph' && typeof d.settings.isConfigured === 'boolean';
+  // --- Email & Tagging APIs (SMTP & Microsoft Graph API) ---
+  await testApi('Get Email Settings', 'Email', 'GET', '/api/email/settings', undefined, 200, (d) => {
+    return d.settings && (d.settings.provider === 'smtp' || d.settings.provider === 'microsoft_graph') && typeof d.settings.isConfigured === 'boolean';
+  });
+
+  await testApi('Save Outlook SMTP Settings', 'Email', 'POST', '/api/email/settings', {
+    provider: 'smtp',
+    smtp: {
+      host: 'smtp-mail.outlook.com',
+      port: 587,
+      secure: false,
+      user: 'notifications@outlook.com',
+      pass: 'test-app-password-16ch',
+      fromName: 'Encalm Audit',
+    },
+  }, 200, (d) => {
+    return d.settings?.provider === 'smtp' && d.settings?.smtp?.isConfigured === true && d.settings?.smtp?.host === 'smtp-mail.outlook.com';
   });
 
   await testApi('Save Microsoft Graph Settings', 'Email', 'POST', '/api/email/settings', {
+    provider: 'microsoft_graph',
     tenantId: 'test-azure-tenant-id-84a7e930',
     clientId: 'test-azure-client-id-3df2a510',
     clientSecret: 'test-secret-value-12345',

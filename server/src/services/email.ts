@@ -1,5 +1,8 @@
 import { randomUUID } from 'node:crypto';
+import nodemailer from 'nodemailer';
 import { db } from '../db/database.js';
+
+export type EmailProvider = 'smtp' | 'microsoft_graph';
 
 export interface EmailLogEntry {
   id: string;
@@ -14,12 +17,105 @@ export interface EmailLogEntry {
   createdAt: string;
 }
 
+export interface SmtpConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  pass?: string;
+  fromName?: string;
+  fromEmail?: string;
+}
+
 export interface MicrosoftGraphConfig {
   tenantId?: string;
   clientId?: string;
   clientSecret?: string;
   senderEmail?: string;
   saveToSentItems?: boolean;
+}
+
+/**
+ * Retrieve the active email provider ('smtp' or 'microsoft_graph').
+ * Defaults to 'smtp' (compatible with Outlook.com and Office 365).
+ */
+export function getActiveEmailProvider(): EmailProvider {
+  try {
+    const row = db.prepare('SELECT value FROM system_settings WHERE key = ?').get('email_provider') as { value: string } | undefined;
+    if (row && (row.value === 'smtp' || row.value === 'microsoft_graph')) {
+      return row.value as EmailProvider;
+    }
+  } catch {}
+  return 'smtp';
+}
+
+/**
+ * Set the active email provider ('smtp' or 'microsoft_graph').
+ */
+export function saveActiveEmailProvider(provider: EmailProvider): void {
+  db.prepare(`
+    INSERT INTO system_settings (key, value, updated_at)
+    VALUES ('email_provider', ?, datetime('now'))
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
+  `).run(provider);
+}
+
+/**
+ * Retrieve SMTP configuration from system_settings table, falling back to environment variables.
+ * Default settings pre-configured for Outlook.com / Office 365 (smtp-mail.outlook.com:587 STARTTLS).
+ */
+export function getSmtpConfig(): SmtpConfig {
+  const getSetting = (key: string): string | undefined => {
+    try {
+      const row = db.prepare('SELECT value FROM system_settings WHERE key = ?').get(key) as { value: string } | undefined;
+      return row ? row.value : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const host = getSetting('smtp_host') || process.env.SMTP_HOST || 'smtp-mail.outlook.com';
+  const portStr = getSetting('smtp_port') || process.env.SMTP_PORT || '587';
+  const secureStr = getSetting('smtp_secure') || process.env.SMTP_SECURE || 'false';
+  const user = getSetting('smtp_user') || process.env.SMTP_USER || '';
+  const pass = getSetting('smtp_pass') || process.env.SMTP_PASS || '';
+  const fromName = getSetting('smtp_from_name') || process.env.SMTP_FROM_NAME || 'Encalm Project Dashboard';
+  const fromEmail = getSetting('smtp_from_email') || process.env.SMTP_FROM_EMAIL || user || 'notifications@encalm.com';
+
+  return {
+    host: host.trim(),
+    port: parseInt(portStr, 10) || 587,
+    secure: secureStr === 'true' || secureStr === '1',
+    user: user.trim(),
+    pass: pass.trim(),
+    fromName: fromName.trim(),
+    fromEmail: fromEmail.trim(),
+  };
+}
+
+/**
+ * Save SMTP configuration into SQLite system_settings table.
+ */
+export function saveSmtpConfig(config: Partial<SmtpConfig>): void {
+  const upsert = db.prepare(`
+    INSERT INTO system_settings (key, value, updated_at)
+    VALUES (?, ?, datetime('now'))
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
+  `);
+
+  const tx = db.transaction(() => {
+    if (config.host !== undefined) upsert.run('smtp_host', config.host);
+    if (config.port !== undefined) upsert.run('smtp_port', String(config.port));
+    if (config.secure !== undefined) upsert.run('smtp_secure', String(config.secure));
+    if (config.user !== undefined) upsert.run('smtp_user', config.user);
+    if (config.pass !== undefined && config.pass !== '••••••••') {
+      upsert.run('smtp_pass', config.pass);
+    }
+    if (config.fromName !== undefined) upsert.run('smtp_from_name', config.fromName);
+    if (config.fromEmail !== undefined) upsert.run('smtp_from_email', config.fromEmail);
+  });
+
+  tx();
 }
 
 // In-memory token cache for Microsoft Graph OAuth 2.0
@@ -135,9 +231,10 @@ export interface SendEmailOptions {
 }
 
 /**
- * Core email dispatcher exclusively using Microsoft Graph API.
+ * Core email dispatcher supporting both standard SMTP (Outlook.com, Office 365, Custom)
+ * and Microsoft Graph API (Azure AD OAuth).
  * Automatically falls back to SQLite in-app Outbox if credentials are not yet configured or during development.
- * Never throws errors to calling controllers; logs delivery status into SQLite.
+ * Never throws unhandled errors to calling controllers; logs delivery status into SQLite.
  */
 export async function sendEmail(options: SendEmailOptions): Promise<{
   id: string;
@@ -145,6 +242,101 @@ export async function sendEmail(options: SendEmailOptions): Promise<{
   error?: string;
 }> {
   const emailId = `eml-${randomUUID()}`;
+  const provider = getActiveEmailProvider();
+
+  // Provider 1: Standard SMTP (Outlook.com / Office 365 / Custom SMTP)
+  if (provider === 'smtp') {
+    const smtpCfg = getSmtpConfig();
+    const isConfigured = Boolean(smtpCfg.host && smtpCfg.user && smtpCfg.pass);
+
+    // If SMTP is not configured, store in outbox for review
+    if (!isConfigured) {
+      try {
+        db.prepare(`
+          INSERT INTO email_logs (id, recipient_email, recipient_name, subject, template_type, project_id, status, html_content, error, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, 'outbox', ?, 'SMTP not configured - Queued in in-app outbox', datetime('now'))
+        `).run(
+          emailId,
+          options.to,
+          options.recipientName || null,
+          options.subject,
+          options.templateType,
+          options.projectId || null,
+          options.html
+        );
+        console.log(`[Email Outbox] Queued email "${options.subject}" to ${options.to} (SMTP not configured)`);
+        return { id: emailId, status: 'outbox', error: 'SMTP not configured' };
+      } catch (err: any) {
+        console.error('[Email Outbox Save Error]', err);
+        return { id: emailId, status: 'outbox', error: err.message };
+      }
+    }
+
+    // Attempt real SMTP dispatch via nodemailer
+    try {
+      const transporter = nodemailer.createTransport({
+        host: smtpCfg.host,
+        port: smtpCfg.port,
+        secure: smtpCfg.secure,
+        auth: {
+          user: smtpCfg.user,
+          pass: smtpCfg.pass,
+        },
+        tls: {
+          ciphers: 'SSLv3',
+          rejectUnauthorized: false,
+        },
+      });
+
+      const fromAddress = smtpCfg.fromName
+        ? `"${smtpCfg.fromName}" <${smtpCfg.fromEmail || smtpCfg.user}>`
+        : smtpCfg.fromEmail || smtpCfg.user;
+
+      await transporter.sendMail({
+        from: fromAddress,
+        to: options.recipientName ? `"${options.recipientName}" <${options.to}>` : options.to,
+        subject: options.subject,
+        html: options.html,
+      });
+
+      db.prepare(`
+        INSERT INTO email_logs (id, recipient_email, recipient_name, subject, template_type, project_id, status, html_content, error, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, 'sent', ?, null, datetime('now'))
+      `).run(
+        emailId,
+        options.to,
+        options.recipientName || null,
+        options.subject,
+        options.templateType,
+        options.projectId || null,
+        options.html
+      );
+
+      console.log(`[SMTP Email Sent] Delivered "${options.subject}" to ${options.to} via ${smtpCfg.host}:${smtpCfg.port}`);
+      return { id: emailId, status: 'sent' };
+    } catch (error: any) {
+      const errorMsg = error?.message || 'SMTP delivery failed';
+      console.warn(`[SMTP Email Failed] Could not deliver to ${options.to}:`, errorMsg);
+
+      db.prepare(`
+        INSERT INTO email_logs (id, recipient_email, recipient_name, subject, template_type, project_id, status, html_content, error, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, 'failed', ?, ?, datetime('now'))
+      `).run(
+        emailId,
+        options.to,
+        options.recipientName || null,
+        options.subject,
+        options.templateType,
+        options.projectId || null,
+        options.html,
+        errorMsg
+      );
+
+      return { id: emailId, status: 'failed', error: errorMsg };
+    }
+  }
+
+  // Provider 2: Microsoft Graph API (Azure AD OAuth 2.0)
   const cfg = getGraphConfig();
 
   // If Microsoft Graph is not configured, store directly in outbox for review
@@ -246,7 +438,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{
 }
 
 /**
- * Resend an email from the log table using Microsoft Graph API
+ * Resend an email from the log table using the active provider (SMTP or Microsoft Graph)
  */
 export async function resendEmailLog(id: string): Promise<{ success: boolean; status: string; error?: string }> {
   const row = db.prepare('SELECT * FROM email_logs WHERE id = ?').get(id) as any;
@@ -254,6 +446,50 @@ export async function resendEmailLog(id: string): Promise<{ success: boolean; st
     return { success: false, status: 'not_found', error: 'Email record not found' };
   }
 
+  const provider = getActiveEmailProvider();
+
+  if (provider === 'smtp') {
+    const smtpCfg = getSmtpConfig();
+    if (!smtpCfg.host || !smtpCfg.user || !smtpCfg.pass) {
+      return { success: false, status: 'outbox', error: 'SMTP is not yet configured' };
+    }
+
+    try {
+      const transporter = nodemailer.createTransport({
+        host: smtpCfg.host,
+        port: smtpCfg.port,
+        secure: smtpCfg.secure,
+        auth: {
+          user: smtpCfg.user,
+          pass: smtpCfg.pass,
+        },
+        tls: {
+          ciphers: 'SSLv3',
+          rejectUnauthorized: false,
+        },
+      });
+
+      const fromAddress = smtpCfg.fromName
+        ? `"${smtpCfg.fromName}" <${smtpCfg.fromEmail || smtpCfg.user}>`
+        : smtpCfg.fromEmail || smtpCfg.user;
+
+      await transporter.sendMail({
+        from: fromAddress,
+        to: row.recipient_name ? `"${row.recipient_name}" <${row.recipient_email}>` : row.recipient_email,
+        subject: row.subject,
+        html: row.html_content,
+      });
+
+      db.prepare('UPDATE email_logs SET status = "sent", error = null WHERE id = ?').run(id);
+      return { success: true, status: 'sent' };
+    } catch (err: any) {
+      const errorMsg = err.message || 'SMTP resend failed';
+      db.prepare('UPDATE email_logs SET status = "failed", error = ? WHERE id = ?').run(errorMsg, id);
+      return { success: false, status: 'failed', error: errorMsg };
+    }
+  }
+
+  // Provider: Microsoft Graph API
   const cfg = getGraphConfig();
   if (!cfg.tenantId || !cfg.clientId || !cfg.clientSecret || !cfg.senderEmail) {
     return { success: false, status: 'outbox', error: 'Microsoft Graph API is not yet configured' };

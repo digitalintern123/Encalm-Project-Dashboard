@@ -2,6 +2,10 @@ import { Router } from 'express';
 import { db } from '../db/database.js';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import {
+  getActiveEmailProvider,
+  saveActiveEmailProvider,
+  getSmtpConfig,
+  saveSmtpConfig,
   getGraphConfig,
   saveGraphConfig,
   sendEmail,
@@ -48,76 +52,150 @@ router.get('/logs', optionalAuth, (req, res) => {
   });
 });
 
-// GET Microsoft Graph API email settings (with masked client secret)
+// GET email settings (supports SMTP & Microsoft Graph API with masked passwords)
 router.get('/settings', optionalAuth, (req, res) => {
-  const config = getGraphConfig();
-  const isConfigured = Boolean(config.tenantId && config.clientId && config.clientSecret && config.senderEmail);
+  const provider = getActiveEmailProvider();
+  const smtpConfig = getSmtpConfig();
+  const graphConfig = getGraphConfig();
+
+  const isSmtpConfigured = Boolean(smtpConfig.host && smtpConfig.user && smtpConfig.pass);
+  const isGraphConfigured = Boolean(graphConfig.tenantId && graphConfig.clientId && graphConfig.clientSecret && graphConfig.senderEmail);
 
   return res.json({
     settings: {
-      provider: 'microsoft_graph',
-      tenantId: config.tenantId || '',
-      clientId: config.clientId || '',
-      clientSecret: config.clientSecret ? '••••••••' : '',
-      senderEmail: config.senderEmail || 'notifications@encalm.com',
-      saveToSentItems: config.saveToSentItems !== false,
-      isConfigured,
+      provider,
+      smtp: {
+        host: smtpConfig.host || 'smtp-mail.outlook.com',
+        port: smtpConfig.port || 587,
+        secure: Boolean(smtpConfig.secure),
+        user: smtpConfig.user || '',
+        pass: smtpConfig.pass ? '••••••••' : '',
+        fromName: smtpConfig.fromName || 'Encalm Project Dashboard',
+        fromEmail: smtpConfig.fromEmail || smtpConfig.user || 'notifications@encalm.com',
+        isConfigured: isSmtpConfigured,
+      },
+      graph: {
+        tenantId: graphConfig.tenantId || '',
+        clientId: graphConfig.clientId || '',
+        clientSecret: graphConfig.clientSecret ? '••••••••' : '',
+        senderEmail: graphConfig.senderEmail || 'notifications@encalm.com',
+        saveToSentItems: graphConfig.saveToSentItems !== false,
+        isConfigured: isGraphConfigured,
+      },
+      // Backwards-compatible convenience fields:
+      tenantId: graphConfig.tenantId || '',
+      clientId: graphConfig.clientId || '',
+      clientSecret: graphConfig.clientSecret ? '••••••••' : '',
+      senderEmail: graphConfig.senderEmail || 'notifications@encalm.com',
+      saveToSentItems: graphConfig.saveToSentItems !== false,
+      isConfigured: provider === 'smtp' ? isSmtpConfigured : isGraphConfigured,
     },
   });
 });
 
-// POST save Microsoft Graph API settings
+// POST save email settings (SMTP and/or Microsoft Graph API)
 router.post('/settings', optionalAuth, (req: AuthenticatedRequest, res) => {
-  const { tenantId, clientId, clientSecret, senderEmail, saveToSentItems } = req.body;
+  const { provider, smtp, graph, tenantId, clientId, clientSecret, senderEmail, saveToSentItems } = req.body;
 
-  saveGraphConfig({
-    tenantId,
-    clientId,
-    clientSecret,
-    senderEmail,
-    saveToSentItems: saveToSentItems !== undefined ? Boolean(saveToSentItems) : true,
-  });
+  if (provider === 'smtp' || provider === 'microsoft_graph') {
+    saveActiveEmailProvider(provider);
+  }
 
-  const updated = getGraphConfig();
-  const isConfigured = Boolean(updated.tenantId && updated.clientId && updated.clientSecret && updated.senderEmail);
+  // Save SMTP settings if provided
+  if (smtp && typeof smtp === 'object') {
+    saveSmtpConfig({
+      host: smtp.host,
+      port: smtp.port !== undefined ? Number(smtp.port) : undefined,
+      secure: smtp.secure !== undefined ? Boolean(smtp.secure) : undefined,
+      user: smtp.user,
+      pass: smtp.pass,
+      fromName: smtp.fromName,
+      fromEmail: smtp.fromEmail,
+    });
+  }
+
+  // Save Graph settings if provided (either in graph object or root)
+  const gTenantId = graph?.tenantId ?? tenantId;
+  const gClientId = graph?.clientId ?? clientId;
+  const gClientSecret = graph?.clientSecret ?? clientSecret;
+  const gSenderEmail = graph?.senderEmail ?? senderEmail;
+  const gSaveToSent = graph?.saveToSentItems ?? saveToSentItems;
+
+  if (gTenantId !== undefined || gClientId !== undefined || gClientSecret !== undefined || gSenderEmail !== undefined) {
+    saveGraphConfig({
+      tenantId: gTenantId,
+      clientId: gClientId,
+      clientSecret: gClientSecret,
+      senderEmail: gSenderEmail,
+      saveToSentItems: gSaveToSent !== undefined ? Boolean(gSaveToSent) : true,
+    });
+  }
+
+  const activeProvider = getActiveEmailProvider();
+  const updatedSmtp = getSmtpConfig();
+  const updatedGraph = getGraphConfig();
+
+  const isSmtpConfigured = Boolean(updatedSmtp.host && updatedSmtp.user && updatedSmtp.pass);
+  const isGraphConfigured = Boolean(updatedGraph.tenantId && updatedGraph.clientId && updatedGraph.clientSecret && updatedGraph.senderEmail);
 
   return res.json({
-    message: 'Microsoft Graph API settings saved successfully',
+    message: 'Email settings saved successfully',
     settings: {
-      provider: 'microsoft_graph',
-      tenantId: updated.tenantId || '',
-      clientId: updated.clientId || '',
-      clientSecret: updated.clientSecret ? '••••••••' : '',
-      senderEmail: updated.senderEmail || 'notifications@encalm.com',
-      saveToSentItems: updated.saveToSentItems !== false,
-      isConfigured,
+      provider: activeProvider,
+      smtp: {
+        host: updatedSmtp.host || 'smtp-mail.outlook.com',
+        port: updatedSmtp.port || 587,
+        secure: Boolean(updatedSmtp.secure),
+        user: updatedSmtp.user || '',
+        pass: updatedSmtp.pass ? '••••••••' : '',
+        fromName: updatedSmtp.fromName || 'Encalm Project Dashboard',
+        fromEmail: updatedSmtp.fromEmail || updatedSmtp.user || 'notifications@encalm.com',
+        isConfigured: isSmtpConfigured,
+      },
+      graph: {
+        tenantId: updatedGraph.tenantId || '',
+        clientId: updatedGraph.clientId || '',
+        clientSecret: updatedGraph.clientSecret ? '••••••••' : '',
+        senderEmail: updatedGraph.senderEmail || 'notifications@encalm.com',
+        saveToSentItems: updatedGraph.saveToSentItems !== false,
+        isConfigured: isGraphConfigured,
+      },
+      tenantId: updatedGraph.tenantId || '',
+      clientId: updatedGraph.clientId || '',
+      clientSecret: updatedGraph.clientSecret ? '••••••••' : '',
+      senderEmail: updatedGraph.senderEmail || 'notifications@encalm.com',
+      saveToSentItems: updatedGraph.saveToSentItems !== false,
+      isConfigured: activeProvider === 'smtp' ? isSmtpConfigured : isGraphConfigured,
     },
   });
 });
 
-// POST send test email via Microsoft Graph API
+// POST send test email via active provider (SMTP or Microsoft Graph)
 router.post('/test', optionalAuth, async (req: AuthenticatedRequest, res) => {
   const { to, recipientName } = req.body;
   const targetEmail = to || req.user?.email || 'hod@encalm.com';
   const name = recipientName || req.user?.name || 'Encalm User';
+  const provider = getActiveEmailProvider();
 
   const html = buildTestEmailHtml(name);
   const result = await sendEmail({
     to: targetEmail,
     recipientName: name,
-    subject: 'Encalm Projects - Microsoft Graph API Delivery Test',
+    subject: `Encalm Projects - ${provider === 'smtp' ? 'SMTP' : 'Microsoft Graph'} Delivery Test`,
     html,
     templateType: 'test_email',
   });
+
+  const providerLabel = provider === 'smtp' ? 'SMTP (Outlook/Office 365)' : 'Microsoft Graph API';
 
   return res.json({
     success: result.status === 'sent',
     result,
     message:
       result.status === 'sent'
-        ? `Test email sent successfully via Microsoft Graph API to ${targetEmail}`
+        ? `Test email sent successfully via ${providerLabel} to ${targetEmail}`
         : result.status === 'outbox'
-          ? `Microsoft Graph API not configured: Email queued in dashboard Outbox`
+          ? `${providerLabel} not configured: Email queued in dashboard Outbox`
           : `Failed to deliver email: ${result.error}`,
   });
 });

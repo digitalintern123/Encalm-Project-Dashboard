@@ -78,12 +78,30 @@ export type EmailLogItem = {
 };
 
 export type EmailSettings = {
-  provider: 'microsoft_graph';
-  tenantId: string;
-  clientId: string;
+  provider: 'smtp' | 'microsoft_graph';
+  smtp?: {
+    host: string;
+    port: number;
+    secure: boolean;
+    user: string;
+    pass?: string;
+    fromName?: string;
+    fromEmail?: string;
+    isConfigured?: boolean;
+  };
+  graph?: {
+    tenantId: string;
+    clientId: string;
+    clientSecret?: string;
+    senderEmail: string;
+    saveToSentItems: boolean;
+    isConfigured?: boolean;
+  };
+  tenantId?: string;
+  clientId?: string;
   clientSecret?: string;
-  senderEmail: string;
-  saveToSentItems: boolean;
+  senderEmail?: string;
+  saveToSentItems?: boolean;
   isConfigured: boolean;
 };
 
