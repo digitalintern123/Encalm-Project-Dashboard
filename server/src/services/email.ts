@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import nodemailer from 'nodemailer';
+import dns from 'node:dns';
+import nodemailer, { type Transporter } from 'nodemailer';
 import { db } from '../db/database.js';
 
 export type EmailProvider = 'smtp' | 'microsoft_graph';
@@ -116,6 +117,55 @@ export function saveSmtpConfig(config: Partial<SmtpConfig>): void {
   });
 
   tx();
+}
+
+/**
+ * Shared helper to create an IPv4-enforced nodemailer Transporter.
+ * Resolves SMTP host to IPv4 using dns.promises.resolve4 to prevent
+ * "connect ENETUNREACH" errors caused by nodemailer picking unreachable IPv6 addresses for smtp.office365.com.
+ * Sets tls.servername to original host for SNI / TLS certificate validation.
+ * Sets tls.rejectUnauthorized to true (allowing false only when env SMTP_ALLOW_SELF_SIGNED=true).
+ * Sets requireTLS to true when not using port 465.
+ * Preserves standard connection and socket timeouts.
+ */
+async function createSmtpTransporter(smtpCfg: SmtpConfig): Promise<Transporter> {
+  const originalHost = smtpCfg.host;
+  let resolvedHost = originalHost;
+
+  try {
+    const isIpv4 = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(originalHost);
+    if (!isIpv4) {
+      const addresses = await dns.promises.resolve4(originalHost);
+      if (addresses && addresses.length > 0) {
+        resolvedHost = addresses[0];
+      }
+    }
+  } catch (err: any) {
+    console.warn(`[SMTP DNS] Failed to resolve IPv4 for ${originalHost}, falling back to hostname:`, err.message);
+    resolvedHost = originalHost;
+  }
+
+  const isImplicitTls = smtpCfg.secure || smtpCfg.port === 465;
+  const allowSelfSigned = process.env.SMTP_ALLOW_SELF_SIGNED === 'true';
+
+  return nodemailer.createTransport({
+    host: resolvedHost,
+    port: smtpCfg.port,
+    secure: isImplicitTls,
+    requireTLS: !isImplicitTls,
+    auth: {
+      user: smtpCfg.user,
+      pass: smtpCfg.pass,
+    },
+    tls: {
+      servername: originalHost,
+      rejectUnauthorized: !allowSelfSigned,
+      minVersion: 'TLSv1.2',
+    },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
+  });
 }
 
 // In-memory token cache for Microsoft Graph OAuth 2.0
@@ -274,22 +324,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{
 
     // Attempt real SMTP dispatch via nodemailer
     try {
-      const transporter = nodemailer.createTransport({
-        host: smtpCfg.host,
-        port: smtpCfg.port,
-        secure: smtpCfg.secure || smtpCfg.port === 465,
-        auth: {
-          user: smtpCfg.user,
-          pass: smtpCfg.pass,
-        },
-        tls: {
-          rejectUnauthorized: false,
-          minVersion: 'TLSv1.2',
-        },
-        connectionTimeout: 15000,
-        greetingTimeout: 15000,
-        socketTimeout: 20000,
-      });
+      const transporter = await createSmtpTransporter(smtpCfg);
 
       const fromAddress = smtpCfg.fromName
         ? `"${smtpCfg.fromName}" <${smtpCfg.fromEmail || smtpCfg.user}>`
@@ -458,22 +493,7 @@ export async function resendEmailLog(id: string): Promise<{ success: boolean; st
     }
 
     try {
-      const transporter = nodemailer.createTransport({
-        host: smtpCfg.host,
-        port: smtpCfg.port,
-        secure: smtpCfg.secure || smtpCfg.port === 465,
-        auth: {
-          user: smtpCfg.user,
-          pass: smtpCfg.pass,
-        },
-        tls: {
-          rejectUnauthorized: false,
-          minVersion: 'TLSv1.2',
-        },
-        connectionTimeout: 15000,
-        greetingTimeout: 15000,
-        socketTimeout: 20000,
-      });
+      const transporter = await createSmtpTransporter(smtpCfg);
 
       const fromAddress = smtpCfg.fromName
         ? `"${smtpCfg.fromName}" <${smtpCfg.fromEmail || smtpCfg.user}>`
