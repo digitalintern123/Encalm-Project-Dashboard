@@ -277,15 +277,18 @@ export async function sendEmail(options: SendEmailOptions): Promise<{
       const transporter = nodemailer.createTransport({
         host: smtpCfg.host,
         port: smtpCfg.port,
-        secure: smtpCfg.secure,
+        secure: smtpCfg.secure || smtpCfg.port === 465,
         auth: {
           user: smtpCfg.user,
           pass: smtpCfg.pass,
         },
         tls: {
-          ciphers: 'SSLv3',
           rejectUnauthorized: false,
+          minVersion: 'TLSv1.2',
         },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000,
       });
 
       const fromAddress = smtpCfg.fromName
@@ -458,15 +461,18 @@ export async function resendEmailLog(id: string): Promise<{ success: boolean; st
       const transporter = nodemailer.createTransport({
         host: smtpCfg.host,
         port: smtpCfg.port,
-        secure: smtpCfg.secure,
+        secure: smtpCfg.secure || smtpCfg.port === 465,
         auth: {
           user: smtpCfg.user,
           pass: smtpCfg.pass,
         },
         tls: {
-          ciphers: 'SSLv3',
           rejectUnauthorized: false,
+          minVersion: 'TLSv1.2',
         },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000,
       });
 
       const fromAddress = smtpCfg.fromName

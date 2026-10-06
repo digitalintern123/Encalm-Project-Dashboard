@@ -164,9 +164,17 @@ export function EmailHubModal({
     setSendingTest(true);
     try {
       const res = await api.email.sendTest(testEmailAddress || undefined);
+      const isSuccess = Boolean(res.success || res.result?.status === 'sent');
+      const isFailed = res.result?.status === 'failed';
+
       toast({
-        title: res.success ? `✓ Test Email Sent (${provider === 'smtp' ? 'SMTP' : 'Graph'})` : 'Queued in Outbox',
-        description: res.message,
+        title: isSuccess
+          ? `✓ Test Email Sent (${provider === 'smtp' ? 'SMTP' : 'Graph'})`
+          : isFailed
+            ? 'Test Email Failed'
+            : 'Queued in Outbox',
+        description: res.message || (isFailed ? res.result?.error : undefined),
+        variant: isFailed ? 'destructive' : 'default',
       });
       loadLogs();
     } catch (err: any) {
