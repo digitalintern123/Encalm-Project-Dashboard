@@ -14,7 +14,7 @@ export type User = {
 };
 
 export const DEFAULT_HOD_ID = 'user-ruchika-chauhan';
-export const DEFAULT_COORDINATOR_ID = 'user-rajesh-sharma';
+export const DEFAULT_COORDINATOR_ID = 'user-praveen-pal';
 export const DEFAULT_LEAD_ID = 'user-chinmay-saxena';
 
 // Backward compatibility aliases
@@ -33,11 +33,11 @@ export const users: User[] = [
   },
   {
     id: DEFAULT_COORDINATOR_ID,
-    name: 'Rajesh Sharma',
-    email: 'coordinator@encalm.com',
+    name: 'Praveen Pal',
+    email: 'digital.intern@encalm.com',
     role: 'coordinator',
     title: 'Project Coordinator',
-    initials: 'RS',
+    initials: 'PP',
   },
   {
     id: DEFAULT_LEAD_ID,
