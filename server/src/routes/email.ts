@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db/database.js';
-import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { requireAuth, optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import {
   getActiveEmailProvider,
   saveActiveEmailProvider,
@@ -249,10 +249,14 @@ router.post('/resend/:id', optionalAuth, async (req, res) => {
 });
 
 // POST send executive project update to stakeholders
-router.post('/send-project-update', optionalAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/send-project-update', requireAuth, async (req: AuthenticatedRequest, res) => {
   const { projectId, recipients, customNote } = req.body;
   if (!projectId) {
     return res.status(400).json({ error: 'Project ID is required' });
+  }
+
+  if (!req.user || !req.user.email) {
+    return res.status(401).json({ error: 'Unauthorized: Valid authenticated session is required to dispatch project updates' });
   }
 
   const project = fetchFullProject(projectId);
@@ -260,7 +264,9 @@ router.post('/send-project-update', optionalAuth, async (req: AuthenticatedReque
     return res.status(404).json({ error: 'Project not found' });
   }
 
-  const senderName = req.user?.name || 'Project Lead';
+  // Anti-Spoofing: Bind sender strictly to authenticated session
+  const senderName = req.user.name;
+  const senderEmail = req.user.email;
   const targetRecipients: { email: string; name: string }[] = [];
 
   if (Array.isArray(recipients) && recipients.length > 0) {
@@ -296,6 +302,7 @@ router.post('/send-project-update', optionalAuth, async (req: AuthenticatedReque
     const result = await sendEmail({
       to: rc.email,
       recipientName: rc.name,
+      replyTo: senderEmail,
       subject: `Project Update: ${project.name} (${project.progress}% Complete)`,
       html,
       templateType: 'project_summary',
@@ -313,7 +320,7 @@ router.post('/send-project-update', optionalAuth, async (req: AuthenticatedReque
 });
 
 // POST tag team member(s) with comment & dispatch automated email
-router.post('/tag-and-comment', optionalAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/tag-and-comment', requireAuth, async (req: AuthenticatedRequest, res) => {
   const {
     projectId,
     entityType = 'Stage',
@@ -322,12 +329,15 @@ router.post('/tag-and-comment', optionalAuth, async (req: AuthenticatedRequest, 
     entityContext,
     taggedUserIds = [],
     comment,
-    authorName,
-    authorEmail,
   } = req.body;
 
   if (!projectId) {
     return res.status(400).json({ error: 'Project ID is required' });
+  }
+
+  // Security check: Verify authenticated user
+  if (!req.user || !req.user.email) {
+    return res.status(401).json({ error: 'Unauthorized: Valid authenticated session is required to tag members and send email' });
   }
 
   // Auto-discover any @mentions directly written in the comment text
@@ -374,19 +384,9 @@ router.post('/tag-and-comment', optionalAuth, async (req: AuthenticatedRequest, 
     'Active Delivery';
   const targetDate = project?.targetDate || entityContext;
 
-  // Resolve sender name and email for Reply-To
-  let senderEmail = authorEmail || req.user?.email;
-  if (!senderEmail && authorName) {
-    const found = db.prepare('SELECT email FROM users WHERE name = ? COLLATE NOCASE').get(authorName) as
-      | { email: string }
-      | undefined;
-    if (found?.email) senderEmail = found.email;
-  }
-  if (!senderEmail) {
-    senderEmail = 'chinmay.saxena@encalm.com';
-  }
-
-  const sender = authorName || req.user?.name || 'Project Lead';
+  // Anti-Spoofing Security: Strictly bind sender identity to the authenticated user from JWT token
+  const sender = req.user.name;
+  const senderEmail = req.user.email;
   const origin = req.headers.origin || 'http://localhost:5173';
   const dashboardUrl = `${origin}/project/${projectId}`;
 
