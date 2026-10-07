@@ -39,7 +39,7 @@ export function TagUserPopover({
   const { leads, user: currentUser } = useAppState();
   const { toast } = useToast();
 
-  // Merge default users with any dynamically registered leads and Azure directory users
+  // Merge default users with leads and Azure directory users, sorting selected members to the top
   const availableUsers: User[] = React.useMemo(() => {
     const combined = [...defaultUsers];
     if (Array.isArray(leads)) {
@@ -54,8 +54,14 @@ export function TagUserPopover({
         combined.push(eu);
       }
     });
-    return combined;
-  }, [leads, externalMentionedUsers]);
+
+    // Sort: selected users appear at the top
+    return combined.sort((a, b) => {
+      const aSelected = taggedUsers.includes(a.id) ? 1 : 0;
+      const bSelected = taggedUsers.includes(b.id) ? 1 : 0;
+      return bSelected - aSelected;
+    });
+  }, [leads, externalMentionedUsers, taggedUsers]);
 
 
   // Close on outside click
@@ -250,8 +256,13 @@ export function TagUserPopover({
           </div>
 
           {/* User Selection List */}
-          <div className="mt-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-            Select Member(s):
+          <div className="mt-2 flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            <span>Select Member(s):</span>
+            {taggedUsers.length > 0 && (
+              <span className="font-mono text-[#2e7c67] font-bold lowercase">
+                {taggedUsers.length} selected
+              </span>
+            )}
           </div>
           <div className="mt-1 max-h-36 space-y-1 overflow-y-auto pr-1">
             {availableUsers.map((user) => {
