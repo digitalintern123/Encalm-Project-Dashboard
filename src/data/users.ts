@@ -47,6 +47,14 @@ export const users: User[] = [
     title: 'Project Lead',
     initials: 'CS',
   },
+  {
+    id: 'user-saharsh-tandon',
+    name: 'Saharsh Tandon',
+    email: 'saharsh.tandon@encalm.com',
+    role: 'lead',
+    title: 'Project Lead',
+    initials: 'ST',
+  },
 ];
 
 export function getUserById(id: string | undefined | null): User | undefined {
