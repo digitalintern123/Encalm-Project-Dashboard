@@ -42,7 +42,7 @@ export const users: User[] = [
   {
     id: DEFAULT_LEAD_ID,
     name: 'Chinmay Saxena',
-    email: 'lead@encalm.com',
+    email: 'chinmay.saxena@encalm.com',
     role: 'lead',
     title: 'Project Lead',
     initials: 'CS',

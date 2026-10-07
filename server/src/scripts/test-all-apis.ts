@@ -151,10 +151,10 @@ async function runTestSuite() {
   });
 
   await testApi('Login with Lead Account', 'Auth', 'POST', '/api/auth/login', {
-    email: 'lead@encalm.com',
+    email: 'chinmay.saxena@encalm.com',
     password: 'encalm',
   }, 200, (d) => {
-    return Boolean(d.token && d.user?.email === 'lead@encalm.com');
+    return Boolean(d.token && d.user?.email === 'chinmay.saxena@encalm.com');
   });
 
   // --- Projects APIs ---

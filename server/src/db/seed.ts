@@ -7,8 +7,13 @@ export function ensureUsersSeeded() {
   initDatabase();
 
   const insertUser = db.prepare(`
-    INSERT OR IGNORE INTO users (id, name, email, password_hash, role, title, initials)
+    INSERT INTO users (id, name, email, password_hash, role, title, initials)
     VALUES (@id, @name, @email, @password_hash, @role, @title, @initials)
+    ON CONFLICT(id) DO UPDATE SET
+      email = excluded.email,
+      name = excluded.name,
+      title = excluded.title,
+      initials = excluded.initials
   `);
 
   const defaultPasswordHash = bcrypt.hashSync('encalm', 10);
