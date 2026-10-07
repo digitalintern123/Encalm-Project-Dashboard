@@ -301,7 +301,10 @@ export const api = {
       request<{ success: boolean; status: string; error?: string }>(`/api/email/resend/${id}`, {
         method: 'POST',
       }),
-    sendProjectUpdate: (projectId: string, payload: { recipients?: string[]; customNote?: string }) =>
+    sendProjectUpdate: (
+      projectId: string,
+      payload: { recipients?: (string | { email: string; name?: string })[]; customNote?: string }
+    ) =>
       request<{ success: boolean; message: string; results: any[] }>('/api/email/send-project-update', {
         method: 'POST',
         body: JSON.stringify({ projectId, ...payload }),

@@ -269,18 +269,20 @@ router.post('/send-project-update', requireAuth, async (req: AuthenticatedReques
   const senderEmail = req.user.email;
   const targetRecipients: { email: string; name: string }[] = [];
 
-  if (Array.isArray(recipients) && recipients.length > 0) {
-    recipients.forEach((r: any) => {
-      if (typeof r === 'string' && r.includes('@')) {
-        targetRecipients.push({ email: r, name: r.split('@')[0] });
-      } else if (r && typeof r === 'object' && r.email) {
-        targetRecipients.push({ email: r.email, name: r.name || r.email });
-      }
-    });
-  } else {
-    // Default to authentic system users
-    const allUsers = db.prepare('SELECT email, name FROM users').all() as { email: string; name: string }[];
-    targetRecipients.push(...allUsers.filter((u) => u.email));
+  if (!Array.isArray(recipients) || recipients.length === 0) {
+    return res.status(400).json({ error: 'Please select at least one recipient using @mention to dispatch the update.' });
+  }
+
+  recipients.forEach((r: any) => {
+    if (typeof r === 'string' && r.includes('@')) {
+      targetRecipients.push({ email: r.trim(), name: r.split('@')[0] });
+    } else if (r && typeof r === 'object' && r.email) {
+      targetRecipients.push({ email: r.email.trim(), name: r.name || r.email });
+    }
+  });
+
+  if (targetRecipients.length === 0) {
+    return res.status(400).json({ error: 'No valid recipient email addresses provided.' });
   }
 
   const origin = req.headers.origin || 'http://localhost:5173';

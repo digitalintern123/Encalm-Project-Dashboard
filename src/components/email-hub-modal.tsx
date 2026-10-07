@@ -18,6 +18,9 @@ import {
 } from 'lucide-react';
 import { api, type EmailLogItem, type EmailSettings } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { users as defaultUsers, type User } from '@/data/users';
+import { useAppState } from '@/state/app-state';
+import { MentionTextarea } from './mention-textarea';
 
 interface EmailHubModalProps {
   isOpen: boolean;
@@ -65,10 +68,25 @@ export function EmailHubModal({
 
   // Send Project Update State
   const [customNote, setCustomNote] = useState('');
-  const [recipientInput, setRecipientInput] = useState('');
+  const [selectedRecipients, setSelectedRecipients] = useState<User[]>([]);
+  const [recipientMentionText, setRecipientMentionText] = useState('');
   const [sendingUpdate, setSendingUpdate] = useState(false);
 
+  const { leads } = useAppState();
   const { toast } = useToast();
+
+  // Merge default users with leads
+  const availableUsers: User[] = React.useMemo(() => {
+    const combined = [...defaultUsers];
+    if (Array.isArray(leads)) {
+      leads.forEach((l) => {
+        if (!combined.some((u) => u.id === l.id || u.email?.toLowerCase() === l.email?.toLowerCase())) {
+          combined.push(l);
+        }
+      });
+    }
+    return combined;
+  }, [leads]);
 
   useEffect(() => {
     setActiveTab(defaultTab);
@@ -227,15 +245,26 @@ export function EmailHubModal({
     e.preventDefault();
     if (!projectId) return;
 
+    if (selectedRecipients.length === 0) {
+      toast({
+        title: 'Recipient Required',
+        description: 'Please tag at least one recipient using @name before sending.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setSendingUpdate(true);
     try {
-      const recipients = recipientInput
-        .split(',')
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0 && s.includes('@'));
+      const recipients = selectedRecipients
+        .filter((u) => u.email && u.email.includes('@'))
+        .map((u) => ({
+          email: u.email!,
+          name: u.name,
+        }));
 
       const res = await api.email.sendProjectUpdate(projectId, {
-        recipients: recipients.length > 0 ? recipients : undefined,
+        recipients,
         customNote: customNote.trim() || undefined,
       });
 
@@ -244,7 +273,8 @@ export function EmailHubModal({
         description: res.message,
       });
       setCustomNote('');
-      setRecipientInput('');
+      setSelectedRecipients([]);
+      setRecipientMentionText('');
       setActiveTab('outbox');
       loadLogs();
     } catch (err: any) {
@@ -256,6 +286,20 @@ export function EmailHubModal({
     } finally {
       setSendingUpdate(false);
     }
+  };
+
+  const handleAddRecipientMention = (user: User) => {
+    setSelectedRecipients((prev) => {
+      if (!prev.some((u) => u.id === user.id || u.email?.toLowerCase() === user.email?.toLowerCase())) {
+        return [...prev, user];
+      }
+      return prev;
+    });
+    setRecipientMentionText('');
+  };
+
+  const handleRemoveRecipient = (userId: string) => {
+    setSelectedRecipients((prev) => prev.filter((u) => u.id !== userId));
   };
 
   if (!isOpen) return null;
@@ -465,18 +509,55 @@ export function EmailHubModal({
 
               <div className="rounded-xl border border-border bg-white p-4 space-y-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-foreground">
-                    Recipients (comma separated emails)
-                  </label>
-                  <input
-                    type="text"
-                    value={recipientInput}
-                    onChange={(e) => setRecipientInput(e.target.value)}
-                    placeholder="hod@encalm.com, lead@encalm.com, coordinator@encalm.com"
-                    className="mt-1 w-full rounded-lg border border-border bg-[#faf8f3] px-3 py-2 text-[12px] focus:outline-hidden focus:ring-1 focus:ring-[#2e7c67]"
-                  />
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[11px] font-bold text-foreground">
+                      Executive Recipients (@mention to add)
+                    </label>
+                    <span className="text-[10px] font-mono text-[#2e7c67] font-semibold">
+                      {selectedRecipients.length} recipient{selectedRecipients.length !== 1 ? 's' : ''} tagged
+                    </span>
+                  </div>
+
+                  {/* Selected Recipient Chips / Pills */}
+                  {selectedRecipients.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5 p-2 rounded-lg border border-[#cbe4d9] bg-[#edf5f0]/50 max-h-32 overflow-y-auto">
+                      {selectedRecipients.map((rec) => (
+                        <span
+                          key={rec.id}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#cbe4d9] px-2.5 py-1 text-[11px] font-semibold text-[#173e49] shadow-2xs"
+                        >
+                          <span className="grid size-4.5 place-items-center rounded-full bg-[#2e7c67] text-[8px] font-bold text-white">
+                            {rec.initials}
+                          </span>
+                          <span>{rec.name}</span>
+                          <span className="text-[9px] text-muted-foreground font-mono">({rec.email})</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveRecipient(rec.id)}
+                            className="rounded-full p-0.5 text-muted-foreground hover:bg-[#fae5e1] hover:text-[#b2473d] transition-colors"
+                            title="Remove recipient"
+                          >
+                            <X size={11} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* @mention Autocomplete Input */}
+                  <div className="mt-2">
+                    <MentionTextarea
+                      rows={1}
+                      value={recipientMentionText}
+                      onChange={(val) => setRecipientMentionText(val)}
+                      users={availableUsers}
+                      onMentionSelect={handleAddRecipientMention}
+                      placeholder="Type @ followed by colleague name (e.g. @Ruchika, @Chinmay, or Azure directory)..."
+                      className="w-full rounded-lg border border-border bg-[#faf8f3] px-3 py-2 text-[12px] focus:outline-hidden focus:ring-1 focus:ring-[#2e7c67]"
+                    />
+                  </div>
                   <p className="mt-1 text-[10px] text-muted-foreground">
-                    Leave blank to dispatch to all authentic Encalm leadership accounts (HOD, Lead, Coordinator).
+                    Type <code className="bg-muted px-1 rounded font-mono text-[9px]">@name</code> above to search the live Encalm corporate directory or core team members.
                   </p>
                 </div>
 
@@ -496,8 +577,9 @@ export function EmailHubModal({
                 <div className="flex items-center justify-end">
                   <button
                     type="submit"
-                    disabled={sendingUpdate}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#2e7c67] px-4 py-2 text-[12px] font-bold text-white shadow-xs hover:bg-[#256654] disabled:opacity-50"
+                    disabled={sendingUpdate || selectedRecipients.length === 0}
+                    className="flex items-center gap-1.5 rounded-lg bg-[#2e7c67] px-4 py-2 text-[12px] font-bold text-white shadow-xs hover:bg-[#256654] disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    title={selectedRecipients.length === 0 ? 'Please tag at least one recipient with @name' : 'Dispatch Executive Report'}
                   >
                     <Send size={13} />
                     <span>{sendingUpdate ? 'Dispatching...' : 'Send Branded Update Email'}</span>
