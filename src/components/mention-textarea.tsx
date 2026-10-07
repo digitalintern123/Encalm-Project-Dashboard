@@ -6,6 +6,7 @@ interface MentionTextareaProps extends Omit<React.TextareaHTMLAttributes<HTMLTex
   onChange: (value: string) => void;
   users: User[];
   onMentionSelect?: (user: User) => void;
+  dropdownDirection?: 'auto' | 'top' | 'bottom';
 }
 
 /**
@@ -49,6 +50,7 @@ export function MentionTextarea({
   onChange,
   users,
   onMentionSelect,
+  dropdownDirection = 'auto',
   placeholder = 'Type comments or instructions (use @name to tag)...',
   className = '',
   rows = 3,
@@ -58,6 +60,7 @@ export function MentionTextarea({
   const [mentionIndex, setMentionIndex] = useState<number>(-1);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [effectiveDirection, setEffectiveDirection] = useState<'top' | 'bottom'>('top');
   const [azureUsers, setAzureUsers] = useState<User[]>([]);
   const [searchingAzure, setSearchingAzure] = useState<boolean>(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -136,6 +139,20 @@ export function MentionTextarea({
       setMentionQuery(query);
       setMentionIndex(atSymbolIndex);
       setSelectedIndex(0);
+
+      // Determine vertical direction (top vs bottom)
+      if (dropdownDirection === 'top' || dropdownDirection === 'bottom') {
+        setEffectiveDirection(dropdownDirection);
+      } else if (textareaRef.current) {
+        const rect = textareaRef.current.getBoundingClientRect();
+        // If there isn't enough space above (less than 220px to top of viewport/container), open downward
+        if (rect.top < 220) {
+          setEffectiveDirection('bottom');
+        } else {
+          setEffectiveDirection('top');
+        }
+      }
+
       setShowDropdown(true);
     } else {
       setShowDropdown(false);
@@ -233,7 +250,11 @@ export function MentionTextarea({
       {showDropdown && filteredUsers.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute left-0 bottom-full z-60 mb-1.5 w-72 max-h-48 overflow-y-auto rounded-xl border border-border bg-white p-1.5 shadow-xl shadow-[#173e49]/15 animate-in fade-in slide-in-from-bottom-2"
+          className={`absolute left-0 z-70 w-80 max-h-56 overflow-y-auto rounded-xl border border-border bg-white p-1.5 shadow-2xl shadow-[#173e49]/20 animate-in fade-in ${
+            effectiveDirection === 'bottom'
+              ? 'top-full mt-1.5 slide-in-from-top-2'
+              : 'bottom-full mb-1.5 slide-in-from-bottom-2'
+          }`}
         >
           <div className="px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/50 mb-1 flex items-center justify-between">
             <span className="flex items-center gap-1.5">

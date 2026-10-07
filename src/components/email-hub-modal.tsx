@@ -552,6 +552,7 @@ export function EmailHubModal({
                       onChange={(val) => setRecipientMentionText(val)}
                       users={availableUsers}
                       onMentionSelect={handleAddRecipientMention}
+                      dropdownDirection="bottom"
                       placeholder="Type @ followed by colleague name (e.g. @Ruchika, @Chinmay, or Azure directory)..."
                       className="w-full rounded-lg border border-border bg-[#faf8f3] px-3 py-2 text-[12px] focus:outline-hidden focus:ring-1 focus:ring-[#2e7c67]"
                     />
