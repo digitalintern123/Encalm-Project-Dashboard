@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exportedAt": "2026-10-06T06:51:17.861Z",
+  "exportedAt": "2026-10-07T04:54:07.890Z",
   "projectCount": 68,
   "projects": [
     {
@@ -1235,9 +1235,9 @@
       "paxKeys": "20,767 SQ.FT.",
       "nextMilestone": "Brief Ratification",
       "nextMilestoneDate": "2026-04-30",
-      "leadId": "user-chinmay-saxena",
+      "leadId": "user-saharsh-tandon",
       "startDate": "2025-01-15",
-      "lastUpdated": "06 Oct 2026",
+      "lastUpdated": "07 Oct 2026",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1458,6 +1458,15 @@
         }
       ],
       "updates": [
+        {
+          "id": "upd-1791269478245-z9uy",
+          "date": "2026-10-06",
+          "author": "Audit System",
+          "role": "Team Member",
+          "text": "[Tagged Ruchika Chauhan]: Audit comment: Please verify and sign off the drawings.",
+          "stage": "Stage 1: Concept & Planning",
+          "kind": "Progress"
+        },
         {
           "id": "delhi-cip-delhi-update-1791269477829",
           "date": "06 Oct 2026",
@@ -9643,7 +9652,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-chinmay-saxena",
       "startDate": "2025-01-15",
-      "lastUpdated": "2026-10-05T10:03:39.276Z",
+      "lastUpdated": "07 Oct 2026",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -9675,8 +9684,10 @@
           "nextAction": null,
           "decisionRequired": null,
           "weight": null,
-          "taggedUsers": [],
-          "updatedAt": null
+          "taggedUsers": [
+            "user-saharsh-tandon"
+          ],
+          "updatedAt": "07 Oct 2026"
         },
         {
           "id": "delhi-t3-domestic-departure-old-costa-lounge-phase-2",
@@ -9752,7 +9763,7 @@
           "stage": "Procurement",
           "owner": "Projects",
           "approvalRequired": true,
-          "approvalStatus": "Pending",
+          "approvalStatus": "Approved",
           "completedDate": null,
           "taggedUsers": []
         },
@@ -11284,6 +11295,39 @@
   ],
   "notifications": [
     {
+      "id": "notif-tag-1791348779943-7ec74",
+      "type": "tagged_task",
+      "title": "Tagged on Stage: Concept & Brief",
+      "message": "Rajesh Sharma tagged you on stage \"Concept & Brief\" in T3 Domestic Departure-Old Costa lounge",
+      "project_id": "delhi-t3-domestic-departure-old-costa-lounge",
+      "link": "/project/delhi-t3-domestic-departure-old-costa-lounge",
+      "read": 0,
+      "created_at": "2026-10-07 04:52:59",
+      "recipient_id": "user-saharsh-tandon"
+    },
+    {
+      "id": "notif-allot-delhi-cip-delhi-1791348721794",
+      "type": "system",
+      "title": "Project Allotted: CIP Delhi",
+      "message": "CIP Delhi has been assigned to Saharsh Tandon by Rajesh Sharma.",
+      "project_id": "delhi-cip-delhi",
+      "link": "/project/delhi-cip-delhi",
+      "read": 0,
+      "created_at": "2026-10-07 04:52:01",
+      "recipient_id": null
+    },
+    {
+      "id": "notif-tag-1791269477949-ay5eu",
+      "type": "tagged_task",
+      "title": "Tagged on Stage: Stage 1: Concept & Planning",
+      "message": "Audit System tagged you on stage \"Stage 1: Concept & Planning\" in CIP Delhi: \"Audit comment: Please verify and sign off the drawings.\"",
+      "project_id": "delhi-cip-delhi",
+      "link": "/project/delhi-cip-delhi",
+      "read": 0,
+      "created_at": "2026-10-06 06:51:17",
+      "recipient_id": "user-ruchika-chauhan"
+    },
+    {
       "id": "notif-tag-1791263611211-wlnj6",
       "type": "tagged_task",
       "title": "Tagged on Stage: Stage 1: Concept & Planning",
@@ -11323,7 +11367,7 @@
       "message": "Audit System tagged you on stage \"Stage 1: Concept & Planning\" in 1st Class Lounge - INL 07&07A (Xenia): \"Audit comment: Please verify and sign off the drawings.\"",
       "project_id": "delhi-1st-class-lounge-inl-07-07a-xenia",
       "link": "/project/delhi-1st-class-lounge-inl-07-07a-xenia",
-      "read": 0,
+      "read": 1,
       "created_at": "2026-10-05 12:08:19",
       "recipient_id": "user-ruchika-chauhan"
     },

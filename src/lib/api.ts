@@ -315,6 +315,7 @@ export const api = {
       taggedUserIds: string[];
       comment?: string;
       authorName?: string;
+      authorEmail?: string;
     }) =>
       request<{
         success: boolean;

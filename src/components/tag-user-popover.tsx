@@ -111,6 +111,7 @@ export function TagUserPopover({
         taggedUserIds: taggedUsers,
         comment: comment.trim() || undefined,
         authorName: currentUser?.name || 'Project Lead',
+        authorEmail: currentUser?.email || undefined,
       });
 
       const recipientNames = res.recipients

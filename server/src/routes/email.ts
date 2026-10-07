@@ -309,6 +309,7 @@ router.post('/tag-and-comment', optionalAuth, async (req: AuthenticatedRequest, 
     taggedUserIds = [],
     comment,
     authorName,
+    authorEmail,
   } = req.body;
 
   if (!projectId) {
@@ -321,7 +322,27 @@ router.post('/tag-and-comment', optionalAuth, async (req: AuthenticatedRequest, 
 
   const project = fetchFullProject(projectId);
   const projectName = project ? project.name : projectId;
-  const sender = authorName || req.user?.name || 'Encalm Team';
+  const projectCode = project?.code;
+  const projectLocation = project?.location;
+  const currentStage =
+    (project?.phases && Array.isArray(project.phases) && project.phases.find((p: any) => p.status === 'In Progress')?.name) ||
+    project?.status ||
+    'Active Delivery';
+  const targetDate = project?.targetDate || entityContext;
+
+  // Resolve sender name and email for Reply-To
+  let senderEmail = authorEmail || req.user?.email;
+  if (!senderEmail && authorName) {
+    const found = db.prepare('SELECT email FROM users WHERE name = ? COLLATE NOCASE').get(authorName) as
+      | { email: string }
+      | undefined;
+    if (found?.email) senderEmail = found.email;
+  }
+  if (!senderEmail) {
+    senderEmail = 'chinmay.saxena@encalm.com';
+  }
+
+  const sender = authorName || req.user?.name || 'Project Lead';
   const origin = req.headers.origin || 'http://localhost:5173';
   const dashboardUrl = `${origin}/project/${projectId}`;
 
@@ -372,18 +393,24 @@ router.post('/tag-and-comment', optionalAuth, async (req: AuthenticatedRequest, 
       const html = buildTagNotificationHtml({
         recipientName,
         taggedByName: sender,
+        senderEmail,
         entityType,
         entityTitle: entityTitle || `${entityType} in ${projectName}`,
         entityContext,
         comment,
         projectName,
+        projectCode,
+        projectLocation,
+        currentStage,
+        targetDate,
         dashboardUrl,
       });
 
       const emailRes = await sendEmail({
         to: recipientEmail,
         recipientName,
-        subject: `[Encalm] Tagged on ${entityType}: ${entityTitle || projectName}`,
+        replyTo: senderEmail,
+        subject: `[Encalm - ${projectCode || 'ACTION'}] Action Required: ${entityTitle || projectName}`,
         html,
         templateType: 'tag_notification',
         projectId,

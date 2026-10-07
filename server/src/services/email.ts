@@ -274,6 +274,7 @@ async function acquireGraphAccessToken(cfg: MicrosoftGraphConfig): Promise<strin
 export interface SendEmailOptions {
   to: string;
   recipientName?: string;
+  replyTo?: string;
   subject: string;
   html: string;
   templateType: 'tag_notification' | 'critical_issue' | 'milestone_approval' | 'project_summary' | 'test_email';
@@ -333,6 +334,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{
       await transporter.sendMail({
         from: fromAddress,
         to: options.recipientName ? `"${options.recipientName}" <${options.to}>` : options.to,
+        replyTo: options.replyTo,
         subject: options.subject,
         html: options.html,
       });
@@ -420,6 +422,17 @@ export async function sendEmail(options: SendEmailOptions): Promise<{
             },
           },
         ],
+        ...(options.replyTo
+          ? {
+              replyTo: [
+                {
+                  emailAddress: {
+                    address: options.replyTo,
+                  },
+                },
+              ],
+            }
+          : {}),
       },
       saveToSentItems: cfg.saveToSentItems !== false,
     };
@@ -681,58 +694,90 @@ function baseEmailWrapper(contentHtml: string, previewText: string = 'Encalm Pro
 }
 
 /**
- * Template 1: User Tag & Comment Notification
+ * Template 1: User Tag & Comment Notification (Self-Contained Executive Email)
  */
 export function buildTagNotificationHtml(data: {
   recipientName: string;
   taggedByName: string;
+  senderEmail?: string;
   entityType: 'Task' | 'Stage' | 'Milestone' | 'Issue' | 'Update' | 'General';
   entityTitle: string;
   entityContext?: string;
   comment?: string;
   projectName: string;
+  projectCode?: string;
+  projectLocation?: string;
+  currentStage?: string;
+  targetDate?: string;
   dashboardUrl: string;
 }): string {
   return baseEmailWrapper(`
-    <p style="font-size: 16px; font-weight: 700; color: #173e49; margin-top: 0;">
-      Hello ${data.recipientName},
-    </p>
-    <p>
-      <strong>${data.taggedByName}</strong> tagged you on a <strong>${data.entityType}</strong> in the project 
-      <span class="badge badge-teal">${data.projectName}</span>.
-    </p>
+    <div style="margin-bottom: 20px;">
+      <p style="font-size: 16px; font-weight: 700; color: #173e49; margin: 0 0 6px 0;">
+        Hello ${data.recipientName},
+      </p>
+      <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #2d3748;">
+        <strong>${data.taggedByName}</strong> from the Project Delivery Team has tagged you on a <strong>${data.entityType}</strong> in:
+      </p>
+      <p style="margin: 6px 0 0 0; font-size: 17px; font-weight: 800; color: #173e49;">
+        ${data.projectName} ${data.projectCode ? `<span style="font-size: 12px; font-weight: 600; color: #2e7c67; background: #edf5f0; padding: 2px 7px; border-radius: 4px; margin-left: 6px; border: 1px solid #cbe4d9;">${data.projectCode}</span>` : ''}
+      </p>
+    </div>
 
-    <div class="card-box" style="border-left: 4px solid #2e7c67;">
-      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #718096; margin-bottom: 6px;">
-        Tagged Item (${data.entityType})
-      </div>
-      <div style="font-size: 16px; font-weight: 700; color: #173e49; margin-bottom: 8px;">
-        ${data.entityTitle}
-      </div>
-      ${data.entityContext ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #4a5568;">${data.entityContext}</p>` : ''}
-      
-      ${data.comment ? `
-        <div style="margin-top: 12px; padding: 14px 16px; background: #ffffff; border-radius: 8px; border: 1px solid #d4c8af; border-left: 4px solid #d19b35;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-            <span style="font-size: 11px; font-weight: 700; color: #8c671b; text-transform: uppercase; letter-spacing: 0.5px;">
-              💬 Comment from ${data.taggedByName}:
-            </span>
-          </div>
-          <div style="font-size: 13.5px; line-height: 1.6; color: #1a202c; font-style: normal; white-space: pre-wrap; font-weight: 500;">
-            ${data.comment}
-          </div>
+    <!-- Executive Project Context Grid -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 22px; background: #faf8f3; border: 1px solid #e8e3d5; border-radius: 8px; overflow: hidden; font-size: 12.5px;">
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee8db;">
+          <td style="padding: 10px 14px; color: #718096; font-weight: 600; width: 35%;">Facility / Location:</td>
+          <td style="padding: 10px 14px; color: #173e49; font-weight: 700;">${data.projectLocation || 'Encalm Airport Facility'}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #eee8db;">
+          <td style="padding: 10px 14px; color: #718096; font-weight: 600;">Current Project Stage:</td>
+          <td style="padding: 10px 14px; color: #2e7c67; font-weight: 700;">${data.currentStage || 'Active Delivery'}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #eee8db;">
+          <td style="padding: 10px 14px; color: #718096; font-weight: 600;">Tagged Item (${data.entityType}):</td>
+          <td style="padding: 10px 14px; color: #173e49; font-weight: 700;">${data.entityTitle}</td>
+        </tr>
+        ${data.targetDate || data.entityContext ? `
+        <tr>
+          <td style="padding: 10px 14px; color: #718096; font-weight: 600;">Timeline / Target Date:</td>
+          <td style="padding: 10px 14px; color: #d19b35; font-weight: 700;">${data.targetDate || data.entityContext}</td>
+        </tr>` : ''}
+      </tbody>
+    </table>
+
+    <!-- Prominently Highlighted Comment / Action Required Card -->
+    ${data.comment ? `
+      <div style="background: #fffdf5; border: 2px solid #d19b35; border-radius: 10px; padding: 18px 20px; margin: 22px 0; box-shadow: 0 2px 8px rgba(209, 155, 53, 0.08);">
+        <div style="margin-bottom: 8px;">
+          <span style="font-size: 11px; font-weight: 800; color: #8c671b; text-transform: uppercase; letter-spacing: 0.8px;">
+            🚨 ACTION REQUIRED / COMMENT FROM ${data.taggedByName.toUpperCase()}:
+          </span>
         </div>
-      ` : ''}
+        <div style="font-size: 15px; font-weight: 600; color: #173e49; line-height: 1.6; white-space: pre-wrap;">
+          "${data.comment}"
+        </div>
+      </div>
+    ` : ''}
+
+    <!-- Zero-Login Reply Banner -->
+    <div style="background: #edf5f0; border: 1.5px solid #2e7c67; border-radius: 8px; padding: 16px 18px; margin: 22px 0; text-align: left;">
+      <div style="font-size: 13.5px; font-weight: 700; color: #173e49; margin-bottom: 4px;">
+        ✉️ Zero-Login Required — Simply Hit "Reply" in Outlook
+      </div>
+      <div style="font-size: 12.5px; color: #235445; line-height: 1.5;">
+        You do not need to create an account or log into the dashboard. When you reply directly to this email in Outlook, your response will be delivered straight to <strong>${data.taggedByName}</strong> at <a href="mailto:${data.senderEmail || 'chinmay.saxena@encalm.com'}" style="color: #173e49; font-weight: 700;">${data.senderEmail || 'chinmay.saxena@encalm.com'}</a>.
+      </div>
     </div>
 
-    <p style="margin-bottom: 0;">
-      Please review this item, take necessary action, or reply directly in the dashboard:
-    </p>
-
-    <div style="text-align: center;">
-      <a href="${data.dashboardUrl}" class="btn" target="_blank">View & Respond in Dashboard →</a>
+    <!-- Optional Dashboard Link -->
+    <div style="text-align: center; margin-top: 18px;">
+      <a href="${data.dashboardUrl}" style="color: #718096; font-size: 12px; text-decoration: underline;" target="_blank">
+        (Optional) Open Project Workspace in Dashboard →
+      </a>
     </div>
-  `, `Tagged in ${data.projectName}: ${data.entityTitle}`);
+  `, `Action Required in ${data.projectName}: ${data.entityTitle}`);
 }
 
 /**
