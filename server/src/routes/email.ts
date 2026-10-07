@@ -316,8 +316,38 @@ router.post('/tag-and-comment', optionalAuth, async (req: AuthenticatedRequest, 
     return res.status(400).json({ error: 'Project ID is required' });
   }
 
-  if (!Array.isArray(taggedUserIds) || taggedUserIds.length === 0) {
-    return res.status(400).json({ error: 'At least one user must be tagged' });
+  // Auto-discover any @mentions directly written in the comment text
+  const combinedUserIds = new Set<string>(Array.isArray(taggedUserIds) ? taggedUserIds.filter(Boolean) : []);
+
+  if (comment && typeof comment === 'string') {
+    const allUsers = db.prepare('SELECT id, name, email FROM users').all() as Array<{ id: string; name: string; email: string }>;
+    const mentionRegex = /@([a-zA-Z0-9._-]+(?:\s+[a-zA-Z0-9._-]+)?)/g;
+    let match: RegExpExecArray | null;
+    while ((match = mentionRegex.exec(comment)) !== null) {
+      const q = match[1].trim().toLowerCase();
+      const matchedUser = allUsers.find((u) => {
+        const fullName = u.name.toLowerCase();
+        const firstName = u.name.split(' ')[0].toLowerCase();
+        const emailPrefix = (u.email || '').split('@')[0].toLowerCase();
+        const idPrefix = u.id.replace('user-', '').replace(/-/g, ' ').toLowerCase();
+        return (
+          fullName === q ||
+          firstName === q ||
+          fullName.startsWith(q) ||
+          emailPrefix === q ||
+          idPrefix === q
+        );
+      });
+      if (matchedUser) {
+        combinedUserIds.add(matchedUser.id);
+      }
+    }
+  }
+
+  const finalUserIds = Array.from(combinedUserIds);
+
+  if (finalUserIds.length === 0) {
+    return res.status(400).json({ error: 'At least one user must be tagged or @mentioned' });
   }
 
   const project = fetchFullProject(projectId);
@@ -355,7 +385,7 @@ router.post('/tag-and-comment', optionalAuth, async (req: AuthenticatedRequest, 
     error?: string;
   }> = [];
 
-  for (const userId of taggedUserIds) {
+  for (const userId of finalUserIds) {
     if (!userId) continue;
 
     // Lookup user details from DB

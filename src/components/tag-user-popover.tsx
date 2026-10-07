@@ -4,6 +4,7 @@ import { users as defaultUsers, getUserById, type User } from '@/data/users';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
+import { MentionTextarea, extractMentionedUserIds } from './mention-textarea';
 
 interface TagUserPopoverProps {
   taggedUsers?: string[];
@@ -78,15 +79,31 @@ export function TagUserPopover({
     onChange(taggedUsers.filter((id) => id !== userId));
   };
 
+  const handleMentionSelect = (user: User) => {
+    if (!taggedUsers.includes(user.id)) {
+      onChange([...taggedUsers, user.id]);
+    }
+  };
+
   const handleSendMail = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (taggedUsers.length === 0) {
+
+    // Auto-discover any @mentions written in the comment text and merge with taggedUsers
+    const mentionedFromText = extractMentionedUserIds(comment, availableUsers);
+    const allRecipientIds = Array.from(new Set([...taggedUsers, ...mentionedFromText]));
+
+    if (allRecipientIds.length === 0) {
       toast({
         title: 'Select a team member',
-        description: 'Please select at least one team member to tag.',
+        description: 'Please select a team member or type @name in the comment.',
         variant: 'destructive',
       });
       return;
+    }
+
+    // Keep parent state updated with newly discovered @mentions
+    if (allRecipientIds.length !== taggedUsers.length) {
+      onChange(allRecipientIds);
     }
 
     if (!projectId) {
@@ -108,7 +125,7 @@ export function TagUserPopover({
         entityId,
         entityTitle: entityTitle || entityType,
         entityContext,
-        taggedUserIds: taggedUsers,
+        taggedUserIds: allRecipientIds,
         comment: comment.trim() || undefined,
         authorName: currentUser?.name || 'Project Lead',
         authorEmail: currentUser?.email || undefined,
@@ -267,13 +284,20 @@ export function TagUserPopover({
 
           {/* Comment & Mail Form */}
           <form onSubmit={handleSendMail} className="mt-3 border-t border-border/70 pt-2.5">
-            <label className="block text-[10px] font-bold text-[#173e49] mb-1">
-              Add Message / Comment:
-            </label>
-            <textarea
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[10px] font-bold text-[#173e49]">
+                Add Message / Comment:
+              </label>
+              <span className="text-[9px] text-[#2e7c67] font-semibold">
+                Type @ to tag recipient
+              </span>
+            </div>
+            <MentionTextarea
               value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Type instructions or comment to send via email..."
+              onChange={setComment}
+              users={availableUsers}
+              onMentionSelect={handleMentionSelect}
+              placeholder="Type message (e.g. @ruchika or @saharsh to auto-tag)..."
               rows={2}
               className="w-full rounded-lg border border-border bg-[#faf8f3] px-2.5 py-1.5 text-[11px] outline-none focus:border-[#2e7c67] focus:bg-white transition resize-none"
             />
@@ -286,7 +310,10 @@ export function TagUserPopover({
 
               <button
                 type="submit"
-                disabled={sending || taggedUsers.length === 0}
+                disabled={
+                  sending ||
+                  (taggedUsers.length === 0 && extractMentionedUserIds(comment, availableUsers).length === 0)
+                }
                 className="inline-flex items-center gap-1.5 rounded-lg bg-[#173e49] px-3 py-1.5 text-[10px] font-bold text-white shadow-xs transition hover:bg-[#205160] disabled:opacity-40"
               >
                 {sending ? (

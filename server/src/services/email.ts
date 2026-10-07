@@ -756,7 +756,7 @@ export function buildTagNotificationHtml(data: {
           </span>
         </div>
         <div style="font-size: 15px; font-weight: 600; color: #173e49; line-height: 1.6; white-space: pre-wrap;">
-          "${data.comment}"
+          "${data.comment.replace(/@([a-zA-Z0-9._-]+(?:\s+[a-zA-Z0-9._-]+)?)/g, '<span style="color: #2e7c67; font-weight: 700; background: #edf5f0; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbe4d9;">@$1</span>')}"
         </div>
       </div>
     ` : ''}
