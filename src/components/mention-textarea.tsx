@@ -58,22 +58,65 @@ export function MentionTextarea({
   const [mentionIndex, setMentionIndex] = useState<number>(-1);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [azureUsers, setAzureUsers] = useState<User[]>([]);
+  const [searchingAzure, setSearchingAzure] = useState<boolean>(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Filter users based on mention query
+  // Debounced search for Encalm corporate directory via /api/email/directory
+  useEffect(() => {
+    if (mentionQuery === null) {
+      setAzureUsers([]);
+      setSearchingAzure(false);
+      return;
+    }
+
+    const q = mentionQuery.trim();
+    const timer = setTimeout(async () => {
+      try {
+        setSearchingAzure(true);
+        const res = await fetch(`/api/email/directory?q=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.users)) {
+            setAzureUsers(data.users);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to query Encalm directory:', err);
+      } finally {
+        setSearchingAzure(false);
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [mentionQuery]);
+
+  // Merge local users and live Azure directory users
   const filteredUsers = React.useMemo(() => {
     if (mentionQuery === null) return [];
     const q = mentionQuery.toLowerCase().trim();
-    if (!q) return users;
 
-    return users.filter((u) => {
-      const name = u.name.toLowerCase();
-      const email = (u.email || '').toLowerCase();
-      const title = (u.title || '').toLowerCase();
-      return name.includes(q) || email.includes(q) || title.includes(q);
+    // Start with local users matching the query
+    const matchedLocal = q
+      ? users.filter((u) => {
+          const name = u.name.toLowerCase();
+          const email = (u.email || '').toLowerCase();
+          const title = (u.title || '').toLowerCase();
+          return name.includes(q) || email.includes(q) || title.includes(q);
+        })
+      : users;
+
+    // Combine with Azure users avoiding duplicates by email
+    const combined: User[] = [...matchedLocal];
+    azureUsers.forEach((au) => {
+      if (!combined.some((cu) => cu.email?.toLowerCase() === au.email?.toLowerCase())) {
+        combined.push(au);
+      }
     });
-  }, [mentionQuery, users]);
+
+    return combined.slice(0, 15);
+  }, [mentionQuery, users, azureUsers]);
 
   // Handle textarea change and detect @
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -82,6 +125,7 @@ export function MentionTextarea({
 
     const cursorPos = e.target.selectionStart;
     const textBeforeCursor = newValue.slice(0, cursorPos);
+
 
     // Look for @ followed by word characters up to cursor
     const lastAtMatch = /(?:^|\s)@([a-zA-Z0-9._-]*)$/.exec(textBeforeCursor);
@@ -192,7 +236,10 @@ export function MentionTextarea({
           className="absolute left-0 bottom-full z-60 mb-1.5 w-72 max-h-48 overflow-y-auto rounded-xl border border-border bg-white p-1.5 shadow-xl shadow-[#173e49]/15 animate-in fade-in slide-in-from-bottom-2"
         >
           <div className="px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/50 mb-1 flex items-center justify-between">
-            <span>Tag Colleague (@)</span>
+            <span className="flex items-center gap-1.5">
+              <span>Encalm Directory (@)</span>
+              {searchingAzure && <span className="inline-block size-2 animate-spin rounded-full border border-primary border-t-transparent" />}
+            </span>
             <span className="text-[8px] font-normal text-muted-foreground">↑↓ to navigate • ↵ to select</span>
           </div>
 

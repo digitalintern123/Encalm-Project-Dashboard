@@ -231,7 +231,7 @@ export function saveGraphConfig(config: Partial<MicrosoftGraphConfig>): void {
  * Acquire Microsoft Graph OAuth 2.0 Access Token using Client Credentials Flow.
  * Endpoint: https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token
  */
-async function acquireGraphAccessToken(cfg: MicrosoftGraphConfig): Promise<string> {
+export async function acquireGraphAccessToken(cfg: MicrosoftGraphConfig): Promise<string> {
   if (!cfg.tenantId || !cfg.clientId || !cfg.clientSecret) {
     throw new Error('Microsoft Graph API is not fully configured (missing Tenant ID, Client ID, or Client Secret)');
   }
@@ -941,3 +941,80 @@ export function buildTestEmailHtml(recipientName: string): string {
     </div>
   `, 'Encalm Projects SMTP Test Email');
 }
+
+export interface DirectoryUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  title: string;
+  department?: string;
+  initials: string;
+}
+
+/**
+ * Searches the Encalm corporate directory via Microsoft Graph API.
+ * Uses User.Read.All permission to fetch live employees.
+ */
+export async function searchEncalmDirectory(searchQuery: string = ''): Promise<DirectoryUser[]> {
+  const cfg = getGraphConfig();
+  if (!cfg.tenantId || !cfg.clientId || !cfg.clientSecret) {
+    return [];
+  }
+
+  try {
+    const accessToken = await acquireGraphAccessToken(cfg);
+    const cleanQuery = searchQuery.trim().replace(/['"]/g, '');
+
+    let url = 'https://graph.microsoft.com/v1.0/users?$top=30&$select=id,displayName,mail,userPrincipalName,jobTitle,department';
+    if (cleanQuery) {
+      url += `&$filter=startswith(displayName,'${encodeURIComponent(cleanQuery)}') or startswith(mail,'${encodeURIComponent(cleanQuery)}') or startswith(userPrincipalName,'${encodeURIComponent(cleanQuery)}')`;
+    }
+
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.warn(`[Microsoft Graph Directory] Query failed (${res.status}): ${errText}`);
+      return [];
+    }
+
+    const data = (await res.json()) as { value?: any[] };
+    const items = data.value || [];
+
+    return items
+      .filter((u) => u.displayName && (u.mail || u.userPrincipalName))
+      .map((u) => {
+        const email = (u.mail || u.userPrincipalName || '').toLowerCase().trim();
+        const name = (u.displayName || '').trim();
+        const parts = name.split(/\s+/);
+        const initials = (
+          (parts[0]?.[0] || '') + (parts[parts.length - 1]?.[0] || '')
+        ).toUpperCase() || 'U';
+
+        let role = 'stakeholder';
+        const titleLower = (u.jobTitle || '').toLowerCase();
+        if (titleLower.includes('hod') || titleLower.includes('head')) role = 'hod';
+        else if (titleLower.includes('lead') || titleLower.includes('manager')) role = 'lead';
+        else if (titleLower.includes('coordinator')) role = 'coordinator';
+
+        return {
+          id: `azure-${u.id}`,
+          name,
+          email,
+          role,
+          title: u.jobTitle || u.department || 'Encalm Team',
+          department: u.department || undefined,
+          initials,
+        };
+      });
+  } catch (err: any) {
+    console.error('[Microsoft Graph Directory Error]', err.message);
+    return [];
+  }
+}
+

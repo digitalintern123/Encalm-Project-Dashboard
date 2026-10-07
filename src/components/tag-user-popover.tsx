@@ -34,22 +34,29 @@ export function TagUserPopover({
   const [isOpen, setIsOpen] = useState(false);
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
+  const [externalMentionedUsers, setExternalMentionedUsers] = useState<User[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const { leads, user: currentUser } = useAppState();
   const { toast } = useToast();
 
-  // Merge default users with any dynamically registered leads
+  // Merge default users with any dynamically registered leads and Azure directory users
   const availableUsers: User[] = React.useMemo(() => {
     const combined = [...defaultUsers];
     if (Array.isArray(leads)) {
       leads.forEach((l) => {
-        if (!combined.some((u) => u.id === l.id || u.email === l.email)) {
+        if (!combined.some((u) => u.id === l.id || u.email?.toLowerCase() === l.email?.toLowerCase())) {
           combined.push(l);
         }
       });
     }
+    externalMentionedUsers.forEach((eu) => {
+      if (!combined.some((u) => u.id === eu.id || u.email?.toLowerCase() === eu.email?.toLowerCase())) {
+        combined.push(eu);
+      }
+    });
     return combined;
-  }, [leads]);
+  }, [leads, externalMentionedUsers]);
+
 
   // Close on outside click
   useEffect(() => {
@@ -80,6 +87,12 @@ export function TagUserPopover({
   };
 
   const handleMentionSelect = (user: User) => {
+    setExternalMentionedUsers((prev) => {
+      if (!prev.some((u) => u.id === user.id || u.email?.toLowerCase() === user.email?.toLowerCase())) {
+        return [...prev, user];
+      }
+      return prev;
+    });
     if (!taggedUsers.includes(user.id)) {
       onChange([...taggedUsers, user.id]);
     }

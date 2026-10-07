@@ -13,10 +13,24 @@ import {
   buildTestEmailHtml,
   buildProjectSummaryHtml,
   buildTagNotificationHtml,
+  searchEncalmDirectory,
 } from '../services/email.js';
 import { fetchFullProject } from './projects.js';
 
 const router = Router();
+
+// GET live Encalm corporate directory search via Microsoft Graph API
+router.get('/directory', optionalAuth, async (req, res) => {
+  try {
+    const query = ((req.query.q as string) || '').trim();
+    const directoryUsers = await searchEncalmDirectory(query);
+    return res.json({ users: directoryUsers });
+  } catch (err: any) {
+    console.error('[Directory Search Route Error]', err.message);
+    return res.status(500).json({ error: 'Failed to search directory', users: [] });
+  }
+});
+
 
 // GET email logs / outbox
 router.get('/logs', optionalAuth, (req, res) => {
@@ -389,12 +403,39 @@ router.post('/tag-and-comment', optionalAuth, async (req: AuthenticatedRequest, 
     if (!userId) continue;
 
     // Lookup user details from DB
-    const userRow = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(userId) as
+    let userRow = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(userId) as
       | { id: string; name: string; email: string }
       | undefined;
 
+    // If user is from Azure Directory (e.g. azure-guid) or not in local DB
+    if (!userRow && userId.startsWith('azure-')) {
+      try {
+        const azureUsers = await searchEncalmDirectory();
+        const foundAzure = azureUsers.find((au) => au.id === userId);
+        if (foundAzure) {
+          // Auto-insert into local users table so foreign keys and future tags work seamlessly
+          db.prepare(`
+            INSERT INTO users (id, name, email, role, title, initials, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+            ON CONFLICT(id) DO UPDATE SET name = excluded.name, email = excluded.email
+          `).run(
+            foundAzure.id,
+            foundAzure.name,
+            foundAzure.email,
+            foundAzure.role,
+            foundAzure.title,
+            foundAzure.initials
+          );
+          userRow = { id: foundAzure.id, name: foundAzure.name, email: foundAzure.email };
+        }
+      } catch (err: any) {
+        console.warn('[Azure User Auto-Register Error]', err.message);
+      }
+    }
+
     const recipientName = userRow?.name || userId;
     const recipientEmail = userRow?.email;
+
 
     // 1. Insert in-app notification
     const notifTitle = `Tagged on ${entityType}: ${entityTitle || 'Project Item'}`;
