@@ -13,10 +13,57 @@ interface MentionTextareaProps extends Omit<React.TextareaHTMLAttributes<HTMLTex
  * Parses text for any @mentions matching available users by first name, last name, or full name.
  */
 export function extractMentionedUserIds(text: string, users: User[]): string[] {
-  if (!text || !users.length) return [];
+  if (!text || !users || !users.length) return [];
   const mentionedIds = new Set<string>();
+  const lowerText = text.toLowerCase();
 
-  // Matches @Word or @"Full Name" or @First Last
+  // 1. Direct scan for all users in the provided directory
+  for (const u of users) {
+    if (!u || !u.name) continue;
+    const lowerName = u.name.toLowerCase().trim();
+    const lowerEmail = (u.email || '').toLowerCase().trim();
+    const firstName = lowerName.split(' ')[0];
+
+    // Match exact full name (e.g. "@praveen pal")
+    if (lowerName && lowerText.includes(`@${lowerName}`)) {
+      mentionedIds.add(u.id);
+      continue;
+    }
+
+    // Match exact email (e.g. "@digital.intern@encalm.com")
+    if (lowerEmail && lowerText.includes(`@${lowerEmail}`)) {
+      mentionedIds.add(u.id);
+      continue;
+    }
+
+    // Match email username prefix (e.g. "@digital.intern")
+    if (lowerEmail) {
+      const emailPrefix = lowerEmail.split('@')[0];
+      if (emailPrefix.length >= 3 && lowerText.includes(`@${emailPrefix}`)) {
+        mentionedIds.add(u.id);
+        continue;
+      }
+    }
+
+    // Match first name with word boundary (e.g. "@praveen please" or "@praveen,")
+    if (firstName && firstName.length >= 3) {
+      const escapedFirst = firstName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`@${escapedFirst}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+      if (regex.test(text)) {
+        mentionedIds.add(u.id);
+        continue;
+      }
+    }
+
+    // Match user id slug (e.g. "@praveen pal" from "user-praveen-pal")
+    const idSlug = u.id.replace('user-', '').replace(/-/g, ' ').toLowerCase();
+    if (idSlug.length >= 3 && lowerText.includes(`@${idSlug}`)) {
+      mentionedIds.add(u.id);
+      continue;
+    }
+  }
+
+  // 2. Fallback regex to capture any token-based mentions
   const mentionRegex = /@([a-zA-Z0-9._-]+(?:\s+[a-zA-Z0-9._-]+)?)/g;
   let match: RegExpExecArray | null;
 

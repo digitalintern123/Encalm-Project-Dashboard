@@ -347,6 +347,46 @@ router.post('/tag-and-comment', requireAuth, async (req: AuthenticatedRequest, r
 
   if (comment && typeof comment === 'string') {
     const allUsers = db.prepare('SELECT id, name, email FROM users').all() as Array<{ id: string; name: string; email: string }>;
+    const lowerComment = comment.toLowerCase();
+
+    // 1. Direct scan against all registered users
+    for (const u of allUsers) {
+      if (!u || !u.name) continue;
+      const lowerName = u.name.toLowerCase().trim();
+      const lowerEmail = (u.email || '').toLowerCase().trim();
+      const firstName = lowerName.split(' ')[0];
+
+      if (lowerName && lowerComment.includes(`@${lowerName}`)) {
+        combinedUserIds.add(u.id);
+        continue;
+      }
+      if (lowerEmail && lowerComment.includes(`@${lowerEmail}`)) {
+        combinedUserIds.add(u.id);
+        continue;
+      }
+      if (lowerEmail) {
+        const prefix = lowerEmail.split('@')[0];
+        if (prefix.length >= 3 && lowerComment.includes(`@${prefix}`)) {
+          combinedUserIds.add(u.id);
+          continue;
+        }
+      }
+      if (firstName && firstName.length >= 3) {
+        const escapedFirst = firstName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`@${escapedFirst}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+        if (regex.test(comment)) {
+          combinedUserIds.add(u.id);
+          continue;
+        }
+      }
+      const idSlug = u.id.replace('user-', '').replace(/-/g, ' ').toLowerCase();
+      if (idSlug.length >= 3 && lowerComment.includes(`@${idSlug}`)) {
+        combinedUserIds.add(u.id);
+        continue;
+      }
+    }
+
+    // 2. Fallback regex to capture any token-based mentions
     const mentionRegex = /@([a-zA-Z0-9._-]+(?:\s+[a-zA-Z0-9._-]+)?)/g;
     let match: RegExpExecArray | null;
     while ((match = mentionRegex.exec(comment)) !== null) {
@@ -355,13 +395,11 @@ router.post('/tag-and-comment', requireAuth, async (req: AuthenticatedRequest, r
         const fullName = u.name.toLowerCase();
         const firstName = u.name.split(' ')[0].toLowerCase();
         const emailPrefix = (u.email || '').split('@')[0].toLowerCase();
-        const idPrefix = u.id.replace('user-', '').replace(/-/g, ' ').toLowerCase();
         return (
           fullName === q ||
           firstName === q ||
           fullName.startsWith(q) ||
-          emailPrefix === q ||
-          idPrefix === q
+          emailPrefix === q
         );
       });
       if (matchedUser) {

@@ -39,8 +39,8 @@ export function TagUserPopover({
   const { leads, user: currentUser } = useAppState();
   const { toast } = useToast();
 
-  // Merge default users with leads and Azure directory users, sorting selected members to the top
-  const availableUsers: User[] = React.useMemo(() => {
+  // Merge default users with leads and Azure directory users
+  const baseUsers: User[] = React.useMemo(() => {
     const combined = [...defaultUsers];
     if (Array.isArray(leads)) {
       leads.forEach((l) => {
@@ -54,15 +54,27 @@ export function TagUserPopover({
         combined.push(eu);
       }
     });
+    return combined;
+  }, [leads, externalMentionedUsers]);
 
-    // Sort: selected users appear at the top
-    return combined.sort((a, b) => {
-      const aSelected = taggedUsers.includes(a.id) ? 1 : 0;
-      const bSelected = taggedUsers.includes(b.id) ? 1 : 0;
+  // Real-time detection of @mentions directly from the comment input
+  const mentionedFromComment = React.useMemo(() => {
+    return extractMentionedUserIds(comment, baseUsers);
+  }, [comment, baseUsers]);
+
+  // Combined selected IDs: explicitly checked + mentioned via @name in comment
+  const effectiveSelectedIds = React.useMemo(() => {
+    return Array.from(new Set([...(taggedUsers || []), ...mentionedFromComment]));
+  }, [taggedUsers, mentionedFromComment]);
+
+  // Sort available users: currently selected/tagged users always appear at the top
+  const availableUsers: User[] = React.useMemo(() => {
+    return [...baseUsers].sort((a, b) => {
+      const aSelected = effectiveSelectedIds.includes(a.id) ? 1 : 0;
+      const bSelected = effectiveSelectedIds.includes(b.id) ? 1 : 0;
       return bSelected - aSelected;
     });
-  }, [leads, externalMentionedUsers, taggedUsers]);
-
+  }, [baseUsers, effectiveSelectedIds]);
 
   // Close on outside click
   useEffect(() => {
@@ -81,15 +93,30 @@ export function TagUserPopover({
 
   const toggleUser = (userId: string) => {
     if (!canTag) return;
-    const exists = taggedUsers.includes(userId);
-    const updated = exists ? taggedUsers.filter((id) => id !== userId) : [...taggedUsers, userId];
-    onChange(updated);
+    const isAlreadySelected = effectiveSelectedIds.includes(userId);
+    if (isAlreadySelected) {
+      const updated = (taggedUsers || []).filter((id) => id !== userId);
+      onChange(updated);
+
+      // If user was also mentioned in comment, clear their @mention so it doesn't immediately re-check
+      const targetUser = baseUsers.find((u) => u.id === userId);
+      if (targetUser && comment) {
+        const cleanedComment = comment
+          .replace(new RegExp(`@${targetUser.name}\\s*`, 'gi'), '')
+          .replace(new RegExp(`@${targetUser.email}\\s*`, 'gi'), '')
+          .trim();
+        setComment(cleanedComment);
+      }
+    } else {
+      const updated = Array.from(new Set([...(taggedUsers || []), userId]));
+      onChange(updated);
+    }
   };
 
   const removeTag = (e: React.MouseEvent, userId: string) => {
     e.stopPropagation();
     if (!canTag) return;
-    onChange(taggedUsers.filter((id) => id !== userId));
+    onChange((taggedUsers || []).filter((id) => id !== userId));
   };
 
   const handleMentionSelect = (user: User) => {
@@ -99,17 +126,15 @@ export function TagUserPopover({
       }
       return prev;
     });
-    if (!taggedUsers.includes(user.id)) {
-      onChange([...taggedUsers, user.id]);
+    if (!(taggedUsers || []).includes(user.id)) {
+      onChange([...(taggedUsers || []), user.id]);
     }
   };
 
   const handleSendMail = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Auto-discover any @mentions written in the comment text and merge with taggedUsers
-    const mentionedFromText = extractMentionedUserIds(comment, availableUsers);
-    const allRecipientIds = Array.from(new Set([...taggedUsers, ...mentionedFromText]));
+    const allRecipientIds = effectiveSelectedIds;
 
     if (allRecipientIds.length === 0) {
       toast({
@@ -121,9 +146,7 @@ export function TagUserPopover({
     }
 
     // Keep parent state updated with newly discovered @mentions
-    if (allRecipientIds.length !== taggedUsers.length) {
-      onChange(allRecipientIds);
-    }
+    onChange(allRecipientIds);
 
     if (!projectId) {
       // If no projectId is passed, we simply close with local tagging updated
@@ -258,15 +281,15 @@ export function TagUserPopover({
           {/* User Selection List */}
           <div className="mt-2 flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             <span>Select Member(s):</span>
-            {taggedUsers.length > 0 && (
+            {effectiveSelectedIds.length > 0 && (
               <span className="font-mono text-[#2e7c67] font-bold lowercase">
-                {taggedUsers.length} selected
+                {effectiveSelectedIds.length} selected
               </span>
             )}
           </div>
           <div className="mt-1 max-h-36 space-y-1 overflow-y-auto pr-1">
             {availableUsers.map((user) => {
-              const isSelected = taggedUsers.includes(user.id);
+              const isSelected = effectiveSelectedIds.includes(user.id);
               return (
                 <button
                   key={user.id}
@@ -286,7 +309,7 @@ export function TagUserPopover({
                     </span>
                     <div className="min-w-0">
                       <div className="truncate font-semibold">{user.name}</div>
-                      <div className="text-[9px] text-muted-foreground truncate">
+                      <div className="text-[9px] text-muted-foreground truncate font-mono">
                         {user.email || user.title}
                       </div>
                     </div>
@@ -319,7 +342,7 @@ export function TagUserPopover({
               onChange={setComment}
               users={availableUsers}
               onMentionSelect={handleMentionSelect}
-              placeholder="Type message (e.g. @ruchika or @saharsh to auto-tag)..."
+              placeholder="Type @person to tag, then write message..."
               rows={2}
               className="w-full rounded-lg border border-border bg-[#faf8f3] px-2.5 py-1.5 text-[11px] outline-none focus:border-[#2e7c67] focus:bg-white transition resize-none"
             />
@@ -332,10 +355,7 @@ export function TagUserPopover({
 
               <button
                 type="submit"
-                disabled={
-                  sending ||
-                  (taggedUsers.length === 0 && extractMentionedUserIds(comment, availableUsers).length === 0)
-                }
+                disabled={sending || effectiveSelectedIds.length === 0}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-[#173e49] px-3 py-1.5 text-[10px] font-bold text-white shadow-xs transition hover:bg-[#205160] disabled:opacity-40"
               >
                 {sending ? (
