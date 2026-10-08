@@ -12,7 +12,10 @@ router.post('/login', (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
+  let normalizedEmail = email.trim().toLowerCase();
+  if (normalizedEmail === 'coordinator@encalm.com' || normalizedEmail === 'coordinator') {
+    normalizedEmail = 'digital.intern@encalm.com';
+  }
   const user = db.prepare('SELECT * FROM users WHERE LOWER(email) = ?').get(normalizedEmail) as any;
 
   if (!user) {

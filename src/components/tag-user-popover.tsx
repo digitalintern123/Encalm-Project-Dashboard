@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Tag, X, Check, Users, Send, Mail, Loader2, MessageSquare } from 'lucide-react';
-import { users as defaultUsers, getUserById, type User } from '@/data/users';
+import { users as defaultUsers, getUserById, initialsOf, type User } from '@/data/users';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
@@ -36,26 +36,22 @@ export function TagUserPopover({
   const [sending, setSending] = useState(false);
   const [externalMentionedUsers, setExternalMentionedUsers] = useState<User[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { leads, user: currentUser } = useAppState();
+  const { leads, users: contextUsers, resolveUser, user: currentUser } = useAppState();
   const { toast } = useToast();
 
-  // Merge default users with leads and Azure directory users
+  // Merge default users, context directory users, leads, and dynamically fetched Azure users
   const baseUsers: User[] = React.useMemo(() => {
-    const combined = [...defaultUsers];
-    if (Array.isArray(leads)) {
-      leads.forEach((l) => {
-        if (!combined.some((u) => u.id === l.id || u.email?.toLowerCase() === l.email?.toLowerCase())) {
-          combined.push(l);
-        }
-      });
+    const map = new Map<string, User>();
+    defaultUsers.forEach((u) => map.set(u.id, u));
+    if (Array.isArray(contextUsers)) {
+      contextUsers.forEach((u) => map.set(u.id, { ...map.get(u.id), ...u }));
     }
-    externalMentionedUsers.forEach((eu) => {
-      if (!combined.some((u) => u.id === eu.id || u.email?.toLowerCase() === eu.email?.toLowerCase())) {
-        combined.push(eu);
-      }
-    });
-    return combined;
-  }, [leads, externalMentionedUsers]);
+    if (Array.isArray(leads)) {
+      leads.forEach((l) => map.set(l.id, { ...map.get(l.id), ...l }));
+    }
+    externalMentionedUsers.forEach((eu) => map.set(eu.id, { ...map.get(eu.id), ...eu }));
+    return Array.from(map.values());
+  }, [leads, contextUsers, externalMentionedUsers]);
 
   // Real-time detection of @mentions directly from the comment input
   const mentionedFromComment = React.useMemo(() => {
@@ -204,9 +200,9 @@ export function TagUserPopover({
     <div className="relative inline-flex items-center gap-1.5" ref={containerRef}>
       {/* Existing Tag Chips */}
       {taggedUsers.map((userId) => {
-        const u = getUserById(userId) || availableUsers.find((user) => user.id === userId);
+        const u = (resolveUser ? resolveUser(userId) : undefined) || availableUsers.find((user) => user.id === userId) || getUserById(userId);
         const name = u?.name || userId;
-        const initials = u?.initials || name.slice(0, 2).toUpperCase();
+        const initials = u?.initials || (u?.name ? initialsOf(u.name) : name.slice(0, 2).toUpperCase());
 
         return (
           <span

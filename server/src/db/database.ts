@@ -41,8 +41,8 @@ export function initDatabase() {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       email TEXT UNIQUE,
-      password_hash TEXT NOT NULL,
-      role TEXT NOT NULL CHECK(role IN ('hod', 'lead', 'coordinator')),
+      password_hash TEXT DEFAULT '',
+      role TEXT NOT NULL CHECK(role IN ('hod', 'lead', 'coordinator', 'stakeholder')),
       title TEXT NOT NULL,
       initials TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -238,9 +238,9 @@ export function initDatabase() {
     // Safe migration of legacy 'Build & install' phase names to 'Execution'
     db.prepare("UPDATE phases SET name = 'Execution' WHERE name IN ('Build & install', 'Build and install', 'Build & installation')").run();
 
-    // Safe migration for users table CHECK constraint to support coordinator role
+    // Safe migration for users table CHECK constraint to support coordinator and stakeholder roles
     const userTableInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get() as { sql?: string } | undefined;
-    if (userTableInfo?.sql && !userTableInfo.sql.includes('coordinator')) {
+    if (userTableInfo?.sql && (!userTableInfo.sql.includes('stakeholder') || !userTableInfo.sql.includes('coordinator'))) {
       db.exec(`
         ALTER TABLE users RENAME TO users_old;
 
@@ -248,8 +248,8 @@ export function initDatabase() {
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           email TEXT UNIQUE,
-          password_hash TEXT NOT NULL,
-          role TEXT NOT NULL CHECK(role IN ('hod', 'lead', 'coordinator')),
+          password_hash TEXT DEFAULT '',
+          role TEXT NOT NULL CHECK(role IN ('hod', 'lead', 'coordinator', 'stakeholder')),
           title TEXT NOT NULL,
           initials TEXT NOT NULL,
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -260,7 +260,7 @@ export function initDatabase() {
 
         DROP TABLE users_old;
       `);
-      console.log('✓ Migrated users table schema to support coordinator role.');
+      console.log('✓ Migrated users table schema to support coordinator and stakeholder roles.');
     }
   } catch (err) {
     console.warn('Column migration note:', err);

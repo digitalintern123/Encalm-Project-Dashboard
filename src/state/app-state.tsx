@@ -20,7 +20,7 @@ import {
 } from '@/data/projects';
 import { readJson, removeItem, writeJson } from '@/lib/storage';
 import { todayLabel } from '@/lib/date';
-import { DEFAULT_HOD_ID, DEFAULT_LEAD_ID, DEFAULT_COORDINATOR_ID, getUserById, type User } from '@/data/users';
+import { DEFAULT_HOD_ID, DEFAULT_LEAD_ID, DEFAULT_COORDINATOR_ID, getUserById, users as defaultUsers, type User } from '@/data/users';
 import { api, getStoredToken, setStoredToken, type NotificationItem } from '@/lib/api';
 import { calculateWeightedProgress, sortProjectsIncompleteFirst } from '@/lib/calculations';
 import portfolioFallback from '@/data/portfolio-fallback.json';
@@ -47,6 +47,9 @@ type AppStateValue = {
   notifications: NotificationItem[];
   unreadNotifCount: number;
   leads: User[];
+  users: User[];
+  resolveUser: (id: string | undefined | null) => User | undefined;
+  refreshUsers: () => Promise<void>;
   refreshLeads: () => Promise<void>;
   createLead: (data: { name: string; email: string; password: string; title?: string }) => Promise<{ success: boolean; error?: string; lead?: User }>;
   allotProject: (projectId: string, leadId: string) => Promise<{ success: boolean; error?: string }>;
@@ -223,6 +226,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
   const [leads, setLeads] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>(() => [...defaultUsers]);
 
   useEffect(() => {
     if (role) writeJson(ROLE_KEY, role);
@@ -288,17 +292,52 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Fetch complete directory users from backend (local accounts + directory stakeholders)
+  const refreshUsers = useCallback(async () => {
+    try {
+      const data = await api.auth.getUsers();
+      if (Array.isArray(data.users) && data.users.length > 0) {
+        setAllUsers((prev) => {
+          const map = new Map<string, User>();
+          defaultUsers.forEach((u) => map.set(u.id, u));
+          prev.forEach((u) => map.set(u.id, u));
+          data.users.forEach((u) => {
+            const existing = map.get(u.id);
+            map.set(u.id, existing ? { ...existing, ...u } : u);
+          });
+          return Array.from(map.values());
+        });
+      }
+    } catch {
+      // Offline fallback
+    }
+  }, []);
+
+  // Fast resolver for any userId (handles local, leads, and azure- IDs)
+  const resolveUser = useCallback(
+    (id: string | undefined | null): User | undefined => {
+      if (!id) return undefined;
+      return (
+        allUsers.find((u) => u.id === id) ||
+        getUserById(id) ||
+        leads.find((l) => l.id === id)
+      );
+    },
+    [allUsers, leads],
+  );
+
   const createLead = useCallback(
     async (data: { name: string; email: string; password: string; title?: string }) => {
       try {
         const res = await api.auth.createLead(data);
         await refreshLeads();
+        await refreshUsers();
         return { success: true, lead: res.lead };
       } catch (err: any) {
         return { success: false, error: err.message || 'Failed to create lead' };
       }
     },
-    [refreshLeads],
+    [refreshLeads, refreshUsers],
   );
 
   const allotProject = useCallback(
@@ -319,7 +358,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   // Initial load & authentication check
   useEffect(() => {
     const initAuthAndData = async () => {
-      const token = getStoredToken();
+      let token = getStoredToken();
       if (token) {
         try {
           const authData = await api.auth.me();
@@ -329,6 +368,28 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           }
         } catch {
           // Token expired or invalid
+          token = null;
+          setStoredToken(null);
+        }
+      }
+
+      // Seamless Auto-Authentication: acquire fresh session token for the active role if token is missing
+      if (!token && role) {
+        const loginEmail =
+          role === 'hod'
+            ? 'hod@encalm.com'
+            : role === 'lead'
+              ? 'chinmay.saxena@encalm.com'
+              : 'digital.intern@encalm.com';
+        try {
+          const authRes = await api.auth.login(loginEmail, 'encalm');
+          setStoredToken(authRes.token);
+          setUser(authRes.user);
+          setRole(authRes.user.role);
+        } catch {
+          // If auto-login fails, clear invalid role to prompt clean login
+          setRole(null);
+          setUser(null);
           setStoredToken(null);
         }
       }
@@ -336,6 +397,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       await refreshProjects();
       await refreshNotifications();
       await refreshLeads();
+      await refreshUsers();
     };
 
     initAuthAndData();
@@ -345,10 +407,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       refreshProjects();
       refreshNotifications();
       refreshLeads();
+      refreshUsers();
     }, 15000);
 
     return () => clearInterval(interval);
-  }, [refreshProjects, refreshNotifications, refreshLeads]);
+  }, [role, refreshProjects, refreshNotifications, refreshLeads, refreshUsers]);
 
   const canEdit = role !== null && EDITOR_ROLES.includes(role);
 
@@ -375,7 +438,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       let email = roleOrEmail.trim().toLowerCase();
       if (email === 'hod') email = 'hod@encalm.com';
       if (email === 'lead') email = 'lead@encalm.com';
-      if (email === 'coordinator') email = 'coordinator@encalm.com';
+      if (email === 'coordinator' || email === 'coordinator@encalm.com') email = 'digital.intern@encalm.com';
 
       try {
         const result = await api.auth.login(email, password);
@@ -386,13 +449,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         refreshProjects();
         refreshNotifications();
         refreshLeads();
+        refreshUsers();
         return { success: true };
       } catch (err: any) {
         // Fallback for offline mode
         const targetRole: AppRole | null =
           email === 'hod@encalm.com' ? 'hod'
           : email === 'lead@encalm.com' ? 'lead'
-          : email === 'coordinator@encalm.com' ? 'coordinator'
+          : (email === 'coordinator@encalm.com' || email === 'digital.intern@encalm.com') ? 'coordinator'
           : null;
         if (targetRole) {
           setRole(targetRole);
@@ -402,7 +466,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return { success: false, error: err.message || 'Login failed' };
       }
     },
-    [refreshProjects, refreshNotifications, refreshLeads],
+    [refreshProjects, refreshNotifications, refreshLeads, refreshUsers],
   );
 
   const logout = useCallback(() => {
@@ -968,6 +1032,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       notifications,
       unreadNotifCount,
       leads,
+      users: allUsers,
+      resolveUser,
+      refreshUsers,
       refreshLeads,
       createLead,
       allotProject,
@@ -1008,6 +1075,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       notifications,
       unreadNotifCount,
       leads,
+      allUsers,
+      resolveUser,
+      refreshUsers,
       refreshLeads,
       createLead,
       allotProject,

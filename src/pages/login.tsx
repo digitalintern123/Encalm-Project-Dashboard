@@ -167,11 +167,11 @@ export default function Login() {
                 <button
                   type="button"
                   disabled={loading}
-                  onClick={() => selectDemoAccount('coordinator@encalm.com')}
+                  onClick={() => selectDemoAccount('digital.intern@encalm.com')}
                   className="rounded-xl border border-[#d6a95d]/60 bg-[#fffcf5] p-3 text-left transition hover:border-[#c9a04e] hover:bg-[#fff9eb]"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="block text-[11px] font-bold text-[#173e49]">Rajesh Sharma</span>
+                    <span className="block text-[11px] font-bold text-[#173e49]">Praveen Pal</span>
                     <span className="rounded bg-[#ebdcb9] px-1.5 py-0.5 text-[9px] font-semibold text-[#664b14]">Coordinator</span>
                   </div>
                   <span className="mt-1 block font-mono text-[9px] uppercase tracking-[.08em] text-[#9a711f]">

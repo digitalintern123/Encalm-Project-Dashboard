@@ -986,6 +986,16 @@ export async function searchEncalmDirectory(searchQuery: string = ''): Promise<D
     const data = (await res.json()) as { value?: any[] };
     const items = data.value || [];
 
+    // Fetch local user accounts to map any directory users sharing the same email to canonical IDs
+    const localUsers = db.prepare('SELECT id, name, email, role, title, initials FROM users').all() as Array<{
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+      title: string;
+      initials: string;
+    }>;
+
     return items
       .filter((u) => u.displayName && (u.mail || u.userPrincipalName))
       .map((u) => {
@@ -996,20 +1006,46 @@ export async function searchEncalmDirectory(searchQuery: string = ''): Promise<D
           (parts[0]?.[0] || '') + (parts[parts.length - 1]?.[0] || '')
         ).toUpperCase() || 'U';
 
-        let role = 'stakeholder';
+        // Check if user already exists as a local account
+        const matchedLocal = localUsers.find(
+          (lu) => lu.email && lu.email.toLowerCase() === email
+        );
+
+        let role = matchedLocal ? matchedLocal.role : 'stakeholder';
         const titleLower = (u.jobTitle || '').toLowerCase();
-        if (titleLower.includes('hod') || titleLower.includes('head')) role = 'hod';
-        else if (titleLower.includes('lead') || titleLower.includes('manager')) role = 'lead';
-        else if (titleLower.includes('coordinator')) role = 'coordinator';
+        if (!matchedLocal) {
+          if (titleLower.includes('hod') || titleLower.includes('head')) role = 'hod';
+          else if (titleLower.includes('lead') || titleLower.includes('manager')) role = 'lead';
+          else if (titleLower.includes('coordinator')) role = 'coordinator';
+        }
+
+        const finalId = matchedLocal ? matchedLocal.id : `azure-${u.id}`;
+        const finalTitle = matchedLocal ? matchedLocal.title : (u.jobTitle || u.department || 'Encalm Team');
+        const finalInitials = matchedLocal ? matchedLocal.initials : initials;
+
+        // Auto-register directory users in SQLite database so tag chips and queries resolve reliably
+        try {
+          db.prepare(`
+            INSERT INTO users (id, name, email, password_hash, role, title, initials, created_at)
+            VALUES (?, ?, ?, '', ?, ?, ?, datetime('now'))
+            ON CONFLICT(id) DO UPDATE SET
+              name = excluded.name,
+              email = excluded.email,
+              title = excluded.title,
+              initials = excluded.initials
+          `).run(finalId, name, email, role, finalTitle, finalInitials);
+        } catch {
+          // Ignore conflict / insertion errors
+        }
 
         return {
-          id: `azure-${u.id}`,
-          name,
+          id: finalId,
+          name: matchedLocal ? matchedLocal.name : name,
           email,
           role,
-          title: u.jobTitle || u.department || 'Encalm Team',
+          title: finalTitle,
           department: u.department || undefined,
-          initials,
+          initials: finalInitials,
         };
       });
   } catch (err: any) {

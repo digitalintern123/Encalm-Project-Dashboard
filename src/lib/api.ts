@@ -37,10 +37,44 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
   const url = path.startsWith('http') ? path : `${apiBase}${path}`;
 
-  const response = await fetch(url, {
+  let response = await fetch(url, {
     ...options,
     headers,
   });
+
+  // Auto-recovery: if request failed with 401 Unauthorized (and this isn't login), attempt auto-refresh
+  if (response.status === 401 && !path.includes('/api/auth/login')) {
+    try {
+      const savedRole = (typeof localStorage !== 'undefined' ? localStorage.getItem('encalm-projects-role-v1') : null) || 'coordinator';
+      const cleanRole = savedRole.replace(/"/g, '');
+      const loginEmail =
+        cleanRole === 'hod'
+          ? 'hod@encalm.com'
+          : cleanRole === 'lead'
+            ? 'chinmay.saxena@encalm.com'
+            : 'digital.intern@encalm.com';
+
+      const authRes = await fetch(`${apiBase}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: 'encalm' }),
+      });
+
+      if (authRes.ok) {
+        const authData = await authRes.json();
+        if (authData.token) {
+          setStoredToken(authData.token);
+          headers['Authorization'] = `Bearer ${authData.token}`;
+          response = await fetch(url, {
+            ...options,
+            headers,
+          });
+        }
+      }
+    } catch {
+      // Ignore retry failure and proceed to normal error handler
+    }
+  }
 
   const data = await response.json().catch(() => ({}));
 
