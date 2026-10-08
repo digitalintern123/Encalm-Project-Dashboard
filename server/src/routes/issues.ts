@@ -146,8 +146,8 @@ router.patch('/:issueId', optionalAuth, async (req: AuthenticatedRequest, res) =
   const origin = req.headers.origin || 'http://localhost:5173';
   const authorName = req.user?.name || issue.owner || 'Project Lead';
 
-  // Notify newly tagged users
-  if (newlyTaggedUsers.length > 0 && project) {
+  // Notify newly tagged users only when explicitly requested
+  if (patch.notify && newlyTaggedUsers.length > 0 && project) {
     await dispatchTagNotifications({
       taggedUserIds: newlyTaggedUsers,
       taggedBy: authorName,

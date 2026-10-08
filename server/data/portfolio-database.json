@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exportedAt": "2026-10-07T10:36:28.556Z",
+  "exportedAt": "2026-10-08T06:15:15.408Z",
   "projectCount": 68,
   "projects": [
     {
@@ -1460,7 +1460,8 @@
           "resolution": null,
           "taggedUsers": [
             "user-ruchika-chauhan",
-            "azure-b2dd1e3e-7219-4a32-adff-f7ef44b20ad1"
+            "azure-b2dd1e3e-7219-4a32-adff-f7ef44b20ad1",
+            "azure-50759bed-2b1e-478c-9c18-f030c0ff1959"
           ]
         }
       ],
@@ -11311,6 +11312,17 @@
   ],
   "notifications": [
     {
+      "id": "notif-tag-1791440115356-9l3d7",
+      "type": "tagged_issue",
+      "title": "Tagged on Issue: Diagnostic Test Issue",
+      "message": "Praveen Pal tagged you on issue \"Diagnostic Test Issue\" in CIP Delhi",
+      "project_id": "delhi-cip-delhi",
+      "link": "/project/delhi-cip-delhi",
+      "read": 0,
+      "created_at": "2026-10-08 06:15:15",
+      "recipient_id": "azure-50759bed-2b1e-478c-9c18-f030c0ff1959"
+    },
+    {
       "id": "notif-tag-1791369388469-ct521",
       "type": "tagged_issue",
       "title": "Tagged on Issue: Diagnostic Test Issue",
@@ -11330,7 +11342,7 @@
       "link": "/project/delhi-cip-delhi",
       "read": 0,
       "created_at": "2026-10-07 10:35:30",
-      "recipient_id": "user-ruchika-chauhan"
+      "recipient_id": "azure-3a4fa528-0d51-4d47-a64d-8a32c9304de3"
     },
     {
       "id": "notif-tag-1791369255803-0g3kb",
@@ -11352,7 +11364,7 @@
       "link": "/project/delhi-cip-delhi",
       "read": 0,
       "created_at": "2026-10-07 10:33:40",
-      "recipient_id": "user-ruchika-chauhan"
+      "recipient_id": "azure-3a4fa528-0d51-4d47-a64d-8a32c9304de3"
     },
     {
       "id": "notif-tag-1791369170782-rv8kb",

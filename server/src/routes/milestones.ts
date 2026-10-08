@@ -135,8 +135,8 @@ router.patch('/:milestoneId', optionalAuth, async (req: AuthenticatedRequest, re
   const origin = req.headers.origin || 'http://localhost:5173';
   const authorName = req.user?.name || milestone.owner || 'Project Lead';
 
-  // Notify newly tagged users
-  if (newlyTaggedUsers.length > 0 && project) {
+  // Notify newly tagged users only when explicitly requested
+  if (patch.notify && newlyTaggedUsers.length > 0 && project) {
     await dispatchTagNotifications({
       taggedUserIds: newlyTaggedUsers,
       taggedBy: authorName,

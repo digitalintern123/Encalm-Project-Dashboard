@@ -34,10 +34,18 @@ export function TagUserPopover({
   const [isOpen, setIsOpen] = useState(false);
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
+  const [stagedUserIds, setStagedUserIds] = useState<string[]>(taggedUsers || []);
   const [externalMentionedUsers, setExternalMentionedUsers] = useState<User[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const { leads, users: contextUsers, resolveUser, user: currentUser } = useAppState();
   const { toast } = useToast();
+
+  // Reset staged selections whenever popover opens
+  useEffect(() => {
+    if (isOpen) {
+      setStagedUserIds(taggedUsers || []);
+    }
+  }, [isOpen, taggedUsers]);
 
   // Merge default users, context directory users, leads, and dynamically fetched Azure users
   const baseUsers: User[] = React.useMemo(() => {
@@ -58,10 +66,10 @@ export function TagUserPopover({
     return extractMentionedUserIds(comment, baseUsers);
   }, [comment, baseUsers]);
 
-  // Combined selected IDs: explicitly checked + mentioned via @name in comment
+  // Combined selected IDs: staged checkboxes + mentions written in the comment
   const effectiveSelectedIds = React.useMemo(() => {
-    return Array.from(new Set([...(taggedUsers || []), ...mentionedFromComment]));
-  }, [taggedUsers, mentionedFromComment]);
+    return Array.from(new Set([...(stagedUserIds || []), ...mentionedFromComment]));
+  }, [stagedUserIds, mentionedFromComment]);
 
   // Sort available users: currently selected/tagged users always appear at the top
   const availableUsers: User[] = React.useMemo(() => {
@@ -87,12 +95,12 @@ export function TagUserPopover({
     };
   }, [isOpen]);
 
+  // Stage or un-stage member locally without sending emails or updating parent yet
   const toggleUser = (userId: string) => {
     if (!canTag) return;
     const isAlreadySelected = effectiveSelectedIds.includes(userId);
     if (isAlreadySelected) {
-      const updated = (taggedUsers || []).filter((id) => id !== userId);
-      onChange(updated);
+      setStagedUserIds((prev) => prev.filter((id) => id !== userId));
 
       // If user was also mentioned in comment, clear their @mention so it doesn't immediately re-check
       const targetUser = baseUsers.find((u) => u.id === userId);
@@ -104,8 +112,7 @@ export function TagUserPopover({
         setComment(cleanedComment);
       }
     } else {
-      const updated = Array.from(new Set([...(taggedUsers || []), userId]));
-      onChange(updated);
+      setStagedUserIds((prev) => Array.from(new Set([...prev, userId])));
     }
   };
 
@@ -115,6 +122,7 @@ export function TagUserPopover({
     onChange((taggedUsers || []).filter((id) => id !== userId));
   };
 
+  // When a user is picked from @ autocomplete, stage them locally without triggering premature emails
   const handleMentionSelect = (user: User) => {
     setExternalMentionedUsers((prev) => {
       if (!prev.some((u) => u.id === user.id || u.email?.toLowerCase() === user.email?.toLowerCase())) {
@@ -122,9 +130,7 @@ export function TagUserPopover({
       }
       return prev;
     });
-    if (!(taggedUsers || []).includes(user.id)) {
-      onChange([...(taggedUsers || []), user.id]);
-    }
+    setStagedUserIds((prev) => Array.from(new Set([...prev, user.id])));
   };
 
   const handleSendMail = async (e: React.FormEvent) => {
