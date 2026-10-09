@@ -63,11 +63,11 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
 
   db.prepare(`
     INSERT INTO phases (
-      id, project_id, name, status, progress, weight, owner, order_index,
+      id, project_id, name, status, progress, weight, budget, owner, order_index,
       planned_start, planned_finish, actual_finish, work_completed, next_action,
       decision_required, tagged_users, updated_at
     ) VALUES (
-      @id, @project_id, @name, @status, @progress, @weight, @owner, @order_index,
+      @id, @project_id, @name, @status, @progress, @weight, @budget, @owner, @order_index,
       @planned_start, @planned_finish, @actual_finish, @work_completed, @next_action,
       @decision_required, @tagged_users, @updated_at
     )
@@ -78,6 +78,7 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
     status: body.status || 'upcoming',
     progress: body.progress || 0,
     weight: body.weight !== undefined && body.weight !== '' && body.weight !== null ? Number(body.weight) : null,
+    budget: body.budget !== undefined && body.budget !== '' && body.budget !== null ? Number(body.budget) : null,
     owner: body.owner || 'PMO',
     order_index: nextOrder,
     planned_start: body.plannedStart || null,
@@ -130,6 +131,10 @@ router.patch('/:phaseId', optionalAuth, async (req: AuthenticatedRequest, res) =
   if (patch.weight !== undefined) {
     updates.push('weight = ?');
     values.push(patch.weight === '' || patch.weight === null ? null : Number(patch.weight));
+  }
+  if (patch.budget !== undefined) {
+    updates.push('budget = ?');
+    values.push(patch.budget === '' || patch.budget === null ? null : Number(patch.budget));
   }
   if (patch.owner !== undefined) { updates.push('owner = ?'); values.push(patch.owner); }
   if (patch.plannedStart !== undefined) { updates.push('planned_start = ?'); values.push(patch.plannedStart); }

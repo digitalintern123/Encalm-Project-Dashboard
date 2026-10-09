@@ -85,6 +85,18 @@ type AppStateValue = {
       takenDate?: string;
     }
   ) => Promise<SitePhoto | null>;
+  addMultiplePhotos: (
+    projectId: string,
+    photos: Array<{
+      fileData?: string;
+      fileName?: string;
+      url?: string;
+      caption: string;
+      stage?: string;
+      category?: PhotoCategory;
+      takenDate?: string;
+    }>
+  ) => Promise<SitePhoto[]>;
   deletePhoto: (projectId: string, photoId: string) => Promise<boolean>;
   resetProjects: () => Promise<void>;
   restoreAllPdfs: () => Promise<{ success: boolean; count?: number; error?: string }>;
@@ -896,10 +908,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       try {
         const res = await api.photos.upload(projectId, photoData);
         if (res && res.photo) {
-          // Replace previous photos with the new photo on client state
+          const newPhotos = res.photos || [res.photo];
           patchById(projectId, (p) => ({
             ...p,
-            photos: [res.photo],
+            photos: [...newPhotos, ...(p.photos || []).filter((oldPh) => !newPhotos.some((np) => np.id === oldPh.id))],
             lastUpdated: todayLabel(),
           }));
           refreshNotifications();
@@ -908,6 +920,39 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return null;
       } catch (err) {
         console.error('Failed to upload photo:', err);
+        throw err;
+      }
+    },
+    [patchById, refreshNotifications],
+  );
+
+  const addMultiplePhotos = useCallback(
+    async (
+      projectId: string,
+      photoList: Array<{
+        fileData?: string;
+        fileName?: string;
+        url?: string;
+        caption: string;
+        stage?: string;
+        category?: PhotoCategory;
+        takenDate?: string;
+      }>
+    ): Promise<SitePhoto[]> => {
+      try {
+        const res = await api.photos.uploadBatch(projectId, photoList);
+        if (res && res.photos && res.photos.length > 0) {
+          patchById(projectId, (p) => ({
+            ...p,
+            photos: [...res.photos, ...(p.photos || []).filter((oldPh) => !res.photos.some((np) => np.id === oldPh.id))],
+            lastUpdated: todayLabel(),
+          }));
+          refreshNotifications();
+          return res.photos;
+        }
+        return [];
+      } catch (err) {
+        console.error('Failed to upload multiple photos:', err);
         throw err;
       }
     },
@@ -1059,6 +1104,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateIssue,
       addUpdate,
       addPhoto,
+      addMultiplePhotos,
       deletePhoto,
       resetProjects,
       restoreAllPdfs,
@@ -1102,6 +1148,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateIssue,
       addUpdate,
       addPhoto,
+      addMultiplePhotos,
       deletePhoto,
       resetProjects,
       restoreAllPdfs,

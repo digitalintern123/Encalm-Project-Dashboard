@@ -217,6 +217,8 @@ export type CommercialSummary = {
   overAwarded: boolean;
   /** True when projected cost exceeds AOP budget */
   overBudget: boolean;
+  /** True when spent till date exceeds committed awarded amount */
+  overSpent: boolean;
 };
 
 function ratioPct(part: number, whole: number): number | null {
@@ -239,6 +241,7 @@ export function getCommercialSummary(project: Project): CommercialSummary {
     spentRatePct: ratioPct(spent, awarded),
     overAwarded: Number.isFinite(aop) && Number.isFinite(awarded) && awarded > aop,
     overBudget: Number.isFinite(aop) && Number.isFinite(projectedCost) && projectedCost > aop,
+    overSpent: Number.isFinite(awarded) && Number.isFinite(spent) && spent > awarded,
   };
 }
 

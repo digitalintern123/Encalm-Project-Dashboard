@@ -36,7 +36,7 @@ export const BrandLogo: FC<BrandLogoProps> = ({
     return (
       <div
         className={`relative inline-flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${className}`}
-        title="Encalm Hospitality Projects"
+        title="Encalm Project Dashboard"
       >
         <img
           src="/encalm-emblem.png"

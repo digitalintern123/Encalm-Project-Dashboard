@@ -347,63 +347,82 @@ router.post('/tag-and-comment', requireAuth, async (req: AuthenticatedRequest, r
 
   if (comment && typeof comment === 'string') {
     const allUsers = db.prepare('SELECT id, name, email FROM users').all() as Array<{ id: string; name: string; email: string }>;
-    const lowerComment = comment.toLowerCase();
+    
+    // Sort users by full name length descending so longer full names match first
+    const sortedUsers = [...allUsers].sort((a, b) => (b.name?.length || 0) - (a.name?.length || 0));
 
-    // 1. Direct scan against all registered users
+    // Count first name occurrences across all users to guard against ambiguous first names (e.g. 7 users named Akash)
+    const firstNameCounts = new Map<string, number>();
     for (const u of allUsers) {
-      if (!u || !u.name) continue;
-      const lowerName = u.name.toLowerCase().trim();
-      const lowerEmail = (u.email || '').toLowerCase().trim();
-      const firstName = lowerName.split(' ')[0];
-
-      if (lowerName && lowerComment.includes(`@${lowerName}`)) {
-        combinedUserIds.add(u.id);
-        continue;
-      }
-      if (lowerEmail && lowerComment.includes(`@${lowerEmail}`)) {
-        combinedUserIds.add(u.id);
-        continue;
-      }
-      if (lowerEmail) {
-        const prefix = lowerEmail.split('@')[0];
-        if (prefix.length >= 3 && lowerComment.includes(`@${prefix}`)) {
-          combinedUserIds.add(u.id);
-          continue;
-        }
-      }
-      if (firstName && firstName.length >= 3) {
-        const escapedFirst = firstName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`@${escapedFirst}(?:\\b|\\s|[,:;!?]|$)`, 'i');
-        if (regex.test(comment)) {
-          combinedUserIds.add(u.id);
-          continue;
-        }
-      }
-      const idSlug = u.id.replace('user-', '').replace(/-/g, ' ').toLowerCase();
-      if (idSlug.length >= 3 && lowerComment.includes(`@${idSlug}`)) {
-        combinedUserIds.add(u.id);
-        continue;
+      if (!u.name) continue;
+      const fn = u.name.toLowerCase().trim().split(' ')[0];
+      if (fn) {
+        firstNameCounts.set(fn, (firstNameCounts.get(fn) || 0) + 1);
       }
     }
 
-    // 2. Fallback regex to capture any token-based mentions
-    const mentionRegex = /@([a-zA-Z0-9._-]+(?:\s+[a-zA-Z0-9._-]+)?)/g;
-    let match: RegExpExecArray | null;
-    while ((match = mentionRegex.exec(comment)) !== null) {
-      const q = match[1].trim().toLowerCase();
-      const matchedUser = allUsers.find((u) => {
-        const fullName = u.name.toLowerCase();
-        const firstName = u.name.split(' ')[0].toLowerCase();
-        const emailPrefix = (u.email || '').split('@')[0].toLowerCase();
-        return (
-          fullName === q ||
-          firstName === q ||
-          fullName.startsWith(q) ||
-          emailPrefix === q
-        );
-      });
-      if (matchedUser) {
-        combinedUserIds.add(matchedUser.id);
+    const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let remainingComment = comment;
+
+    // 1. Exact Full Name Matching (e.g. "@Akash Deep")
+    for (const u of sortedUsers) {
+      if (!u.name) continue;
+      const fullName = u.name.trim();
+      const fnRegex = new RegExp(`@${escapeRegex(fullName)}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+      if (fnRegex.test(remainingComment)) {
+        combinedUserIds.add(u.id);
+        // Mask out the matched full name so sub-tokens are not falsely re-matched
+        remainingComment = remainingComment.replace(new RegExp(`@${escapeRegex(fullName)}`, 'gi'), ' ');
+      }
+    }
+
+    // 2. Exact Email or Email Prefix Matching (e.g. "@akash.deep@encalm.com" or "@akash.deep")
+    for (const u of sortedUsers) {
+      if (!u.email) continue;
+      const email = u.email.trim();
+      const emailPrefix = email.split('@')[0];
+
+      const emailRegex = new RegExp(`@${escapeRegex(email)}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+      if (emailRegex.test(remainingComment)) {
+        combinedUserIds.add(u.id);
+        remainingComment = remainingComment.replace(new RegExp(`@${escapeRegex(email)}`, 'gi'), ' ');
+        continue;
+      }
+
+      if (emailPrefix && emailPrefix.length >= 3) {
+        const prefixRegex = new RegExp(`@${escapeRegex(emailPrefix)}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+        if (prefixRegex.test(remainingComment)) {
+          combinedUserIds.add(u.id);
+          remainingComment = remainingComment.replace(new RegExp(`@${escapeRegex(emailPrefix)}`, 'gi'), ' ');
+        }
+      }
+    }
+
+    // 3. User ID Slug Matching (e.g. "user-praveen-pal" -> "@praveen pal")
+    for (const u of sortedUsers) {
+      if (!u.id) continue;
+      const idSlug = u.id.replace('user-', '').replace(/-/g, ' ').trim();
+      if (idSlug.length >= 3) {
+        const idSlugRegex = new RegExp(`@${escapeRegex(idSlug)}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+        if (idSlugRegex.test(remainingComment)) {
+          combinedUserIds.add(u.id);
+          remainingComment = remainingComment.replace(new RegExp(`@${escapeRegex(idSlug)}`, 'gi'), ' ');
+        }
+      }
+    }
+
+    // 4. First name matching ONLY IF that first name is completely unique across the organisation
+    // If multiple users share the same first name (e.g. multiple "Akash" in Encalm), matching on first name alone is strictly disabled
+    for (const u of sortedUsers) {
+      if (!u.name) continue;
+      const firstName = u.name.trim().split(' ')[0];
+      const fnLower = firstName.toLowerCase();
+      if (firstName.length >= 3 && firstNameCounts.get(fnLower) === 1) {
+        const firstNameRegex = new RegExp(`@${escapeRegex(firstName)}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+        if (firstNameRegex.test(remainingComment)) {
+          combinedUserIds.add(u.id);
+          remainingComment = remainingComment.replace(new RegExp(`@${escapeRegex(firstName)}`, 'gi'), ' ');
+        }
       }
     }
   }

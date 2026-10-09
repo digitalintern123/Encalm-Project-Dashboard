@@ -3,7 +3,7 @@ import { formatDayMonth } from '@/lib/date';
 export type Location = 'Delhi' | 'Hyderabad' | 'Goa' | 'Bhogapuram' | 'Vizag';
 export type Category = 'Hotel' | 'Lounge' | 'Kitchen' | 'Encalm Eats' | 'Other';
 export type Health = 'On track' | 'At risk' | 'Delayed' | 'Not started';
-export type ProjectStatus = 'Yet to start' | 'In Design' | 'In Tendering' | 'Under Construction' | 'Operational';
+export type ProjectStatus = 'Yet to start' | 'In Design' | 'In Tendering' | 'Under Construction' | 'Operational' | 'On Hold';
 export type StageStatus = 'complete' | 'active' | 'upcoming' | 'blocked';
 export type IssueCategory = 'Design' | 'Procurement' | 'Billing' | 'Construction' | 'Approval' | 'Other';
 export type IssueStatus = 'Open' | 'Under review' | 'Action in progress' | 'Resolved' | 'Closed';
@@ -15,6 +15,7 @@ export const projectStatuses: ProjectStatus[] = [
   'In Tendering',
   'Under Construction',
   'Operational',
+  'On Hold',
 ];
 
 export const issueCategories: IssueCategory[] = [
@@ -32,6 +33,7 @@ export type Phase = {
   status: StageStatus;
   progress: number;
   weight?: number;
+  budget?: number;
   owner: string;
   plannedStart?: string;
   plannedFinish?: string;

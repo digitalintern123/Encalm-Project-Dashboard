@@ -277,9 +277,25 @@ export const api = {
         takenDate?: string;
       }
     ) =>
-      request<{ message: string; photo: SitePhoto; project: Project }>(`/api/projects/${projectId}/photos`, {
+      request<{ message: string; photo: SitePhoto; photos?: SitePhoto[]; project: Project }>(`/api/projects/${projectId}/photos`, {
         method: 'POST',
         body: JSON.stringify(data),
+      }),
+    uploadBatch: (
+      projectId: string,
+      photos: Array<{
+        fileData?: string;
+        fileName?: string;
+        url?: string;
+        caption: string;
+        stage?: string;
+        category?: PhotoCategory;
+        takenDate?: string;
+      }>
+    ) =>
+      request<{ message: string; photos: SitePhoto[]; photo: SitePhoto; project: Project }>(`/api/projects/${projectId}/photos/batch`, {
+        method: 'POST',
+        body: JSON.stringify({ photos }),
       }),
     delete: (projectId: string, photoId: string) =>
       request<{ message: string; project: Project }>(`/api/projects/${projectId}/photos/${photoId}`, {

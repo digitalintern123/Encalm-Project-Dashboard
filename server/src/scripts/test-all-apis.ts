@@ -172,16 +172,23 @@ async function runTestSuite() {
   });
 
   // --- Phases (Stages) APIs ---
+  let createdPhaseId: string | undefined;
   await testApi('Add Project Phase/Stage', 'Phases', 'POST', `/api/projects/${sampleProjectId}/phases`, {
     name: 'Diagnostic Test Phase',
     owner: 'Quality Assurance',
     status: 'upcoming',
     progress: 0,
   }, 201, (d) => {
-    return d.project?.phases?.some((p: any) => p.name === 'Diagnostic Test Phase');
+    const phase = d.project?.phases?.find((p: any) => p.name === 'Diagnostic Test Phase');
+    if (phase) createdPhaseId = phase.id;
+    return Boolean(phase);
   });
+  if (createdPhaseId) {
+    await testApi('Clean up Test Phase', 'Phases', 'DELETE', `/api/projects/${sampleProjectId}/phases/${createdPhaseId}`, undefined, 200);
+  }
 
   // --- Milestones APIs ---
+  let createdMilestoneId: string | undefined;
   await testApi('Add Milestone', 'Milestones', 'POST', `/api/projects/${sampleProjectId}/milestones`, {
     title: 'Diagnostic Test Milestone',
     date: '2026-12-31',
@@ -191,10 +198,16 @@ async function runTestSuite() {
     approvalRequired: false,
     approvalStatus: 'Not required',
   }, 201, (d) => {
-    return d.project?.milestones?.some((m: any) => m.title === 'Diagnostic Test Milestone');
+    const ms = d.project?.milestones?.find((m: any) => m.title === 'Diagnostic Test Milestone');
+    if (ms) createdMilestoneId = ms.id;
+    return Boolean(ms);
   });
+  if (createdMilestoneId) {
+    await testApi('Clean up Test Milestone', 'Milestones', 'DELETE', `/api/projects/${sampleProjectId}/milestones/${createdMilestoneId}`, undefined, 200);
+  }
 
   // --- Issues APIs ---
+  let createdIssueId: string | undefined;
   await testApi('Add Issue', 'Issues', 'POST', `/api/projects/${sampleProjectId}/issues`, {
     title: 'Diagnostic Test Issue',
     category: 'Operational',
@@ -202,8 +215,13 @@ async function runTestSuite() {
     stage: 'Planning',
     detail: 'Verification of issue creation pipeline.',
   }, 201, (d) => {
-    return d.project?.issues?.some((i: any) => i.title === 'Diagnostic Test Issue');
+    const iss = d.project?.issues?.find((i: any) => i.title === 'Diagnostic Test Issue');
+    if (iss) createdIssueId = iss.id;
+    return Boolean(iss);
   });
+  if (createdIssueId) {
+    await testApi('Clean up Test Issue', 'Issues', 'DELETE', `/api/projects/${sampleProjectId}/issues/${createdIssueId}`, undefined, 200);
+  }
 
   // --- Updates APIs ---
   await testApi('List Global Updates Feed', 'Updates', 'GET', '/api/updates', undefined, 200, (d) => {

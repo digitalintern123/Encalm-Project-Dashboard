@@ -679,13 +679,13 @@ function baseEmailWrapper(contentHtml: string, previewText: string = 'Encalm Pro
   <div class="wrapper">
     <div class="header">
       <div class="brand">ENCALM HOSPITALITY</div>
-      <div class="brand-sub">Project Delivery Radar & Governance</div>
+      <div class="brand-sub">Project Dashboard</div>
     </div>
     <div class="body-content">
       ${contentHtml}
     </div>
     <div class="footer">
-      <p style="margin: 0 0 6px 0;">This is an automated notification from the <strong>Encalm Projects Dashboard</strong>.</p>
+      <p style="margin: 0 0 6px 0;">This is an automated notification from the <strong>Encalm Project Dashboard</strong>.</p>
       <p style="margin: 0;">Encalm Hospitality Private Limited • Airport Lounges, Transit Hotels & F&B Operations</p>
     </div>
   </div>
@@ -930,7 +930,7 @@ export function buildTestEmailHtml(recipientName: string): string {
       Hello <strong>${recipientName}</strong>,
     </p>
     <p>
-      This is a test notification confirming that the Encalm Projects Dashboard email service is operational and properly authenticated with your SMTP server.
+      This is a test notification confirming that the Encalm Project Dashboard email service is operational and properly authenticated with your SMTP server.
     </p>
 
     <div class="card-box" style="border-left: 4px solid #2e7c67;">
@@ -939,7 +939,7 @@ export function buildTestEmailHtml(recipientName: string): string {
         <strong>Timestamp:</strong> ${new Date().toUTCString()}
       </div>
     </div>
-  `, 'Encalm Projects SMTP Test Email');
+  `, 'Encalm Project Dashboard SMTP Test Email');
 }
 
 export interface DirectoryUser {

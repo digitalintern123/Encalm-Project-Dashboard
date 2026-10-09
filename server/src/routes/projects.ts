@@ -66,6 +66,7 @@ export function fetchFullProject(projectId: string) {
       nextAction: ph.next_action,
       decisionRequired: ph.decision_required,
       weight: ph.weight ?? null,
+      budget: ph.budget != null ? Number(ph.budget) : undefined,
       taggedUsers: parseTaggedUsers(ph.tagged_users),
       updatedAt: ph.updated_at,
     })),
@@ -402,10 +403,12 @@ router.patch('/:id', optionalAuth, (req: AuthenticatedRequest, res) => {
   const values: any[] = [todayFormatted];
 
   if (patch.name !== undefined) { updates.push('name = ?'); values.push(patch.name); }
+  if (patch.code !== undefined) { updates.push('code = ?'); values.push(patch.code); }
   if (patch.location !== undefined) { updates.push('location = ?'); values.push(patch.location); }
   if (patch.category !== undefined) { updates.push('category = ?'); values.push(patch.category); }
   if (patch.health !== undefined) { updates.push('health = ?'); values.push(patch.health); }
   if (patch.status !== undefined) { updates.push('status = ?'); values.push(patch.status); }
+  if (patch.startDate !== undefined) { updates.push('start_date = ?'); values.push(patch.startDate); }
   if (patch.progress !== undefined) {
     const newProgress = Math.max(0, Math.min(100, Number(patch.progress) || 0));
     updates.push('progress = ?');
@@ -433,6 +436,24 @@ router.patch('/:id', optionalAuth, (req: AuthenticatedRequest, res) => {
 
   values.push(id);
   db.prepare(`UPDATE projects SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+
+  if (Array.isArray(patch.phases)) {
+    for (const ph of patch.phases) {
+      if (ph.id) {
+        const phUpdates: string[] = [];
+        const phValues: any[] = [];
+        if (ph.budget !== undefined) {
+          phUpdates.push('budget = ?');
+          phValues.push(ph.budget === '' || ph.budget === null ? null : Number(ph.budget));
+        }
+        if (phUpdates.length > 0) {
+          phValues.push(ph.id);
+          phValues.push(id);
+          db.prepare(`UPDATE phases SET ${phUpdates.join(', ')} WHERE id = ? AND project_id = ?`).run(...phValues);
+        }
+      }
+    }
+  }
 
   saveDatabaseSnapshot();
 

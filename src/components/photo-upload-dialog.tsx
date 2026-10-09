@@ -3,16 +3,40 @@ import {
   X,
   Upload,
   Image as ImageIcon,
-  AlertTriangle,
   Calendar,
   Layers,
   Tag,
   FileText,
   Link as LinkIcon,
-  Check,
+  Trash2,
+  Plus,
+  CheckCircle2,
+  Camera,
 } from 'lucide-react';
 import { photoCategories, type PhotoCategory, type Phase } from '@/data/projects';
 import { todayIso } from '@/lib/date';
+
+export type PhotoUploadItem = {
+  fileData?: string;
+  fileName?: string;
+  url?: string;
+  caption: string;
+  stage?: string;
+  category?: PhotoCategory;
+  takenDate?: string;
+};
+
+interface QueuePhoto {
+  id: string;
+  fileData?: string;
+  fileName: string;
+  fileSizeText: string;
+  url?: string;
+  caption: string;
+  stage: string;
+  category: PhotoCategory;
+  takenDate: string;
+}
 
 interface PhotoUploadDialogProps {
   projectId: string;
@@ -20,15 +44,8 @@ interface PhotoUploadDialogProps {
   stages: Phase[];
   existingPhotoUrl?: string;
   onClose: () => void;
-  onUpload: (data: {
-    fileData?: string;
-    fileName?: string;
-    url?: string;
-    caption: string;
-    stage?: string;
-    category?: PhotoCategory;
-    takenDate?: string;
-  }) => Promise<void>;
+  onUpload?: (data: PhotoUploadItem) => Promise<void>;
+  onUploadBatch?: (photos: PhotoUploadItem[]) => Promise<void>;
 }
 
 export function PhotoUploadDialog({
@@ -38,17 +55,17 @@ export function PhotoUploadDialog({
   existingPhotoUrl,
   onClose,
   onUpload,
+  onUploadBatch,
 }: PhotoUploadDialogProps) {
   const [mode, setMode] = useState<'file' | 'url'>('file');
-  const [fileData, setFileData] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string>('');
-  const [fileSizeText, setFileSizeText] = useState<string>('');
+  const [queue, setQueue] = useState<QueuePhoto[]>([]);
   const [urlInput, setUrlInput] = useState<string>('');
-  const [caption, setCaption] = useState<string>('');
-  const [stage, setStage] = useState<string>(stages[0]?.name || '');
-  const [category, setCategory] = useState<PhotoCategory>('Progress');
-  const [takenDate, setTakenDate] = useState<string>(todayIso());
+  const [defaultCaption, setDefaultCaption] = useState<string>('');
+  const [batchStage, setBatchStage] = useState<string>(stages[0]?.name || '');
+  const [batchCategory, setBatchCategory] = useState<PhotoCategory>('Progress');
+  const [batchDate, setBatchDate] = useState<string>(todayIso());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgressText, setUploadProgressText] = useState<string>('');
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,90 +79,154 @@ export function PhotoUploadDialog({
     }
   };
 
-  const handleFileProcess = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      setError('Please select a valid image file (JPEG, PNG, WebP).');
+  const processFiles = (files: FileList | File[]) => {
+    setError(null);
+    const validImageFiles: File[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type.startsWith('image/')) {
+        validImageFiles.push(file);
+      }
+    }
+
+    if (validImageFiles.length === 0) {
+      setError('Please select valid image files (JPEG, PNG, WebP).');
       return;
     }
-    setError(null);
-    setFileName(file.name);
-    setFileSizeText(`${Math.round(file.size / 1024)} KB`);
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setFileData(result);
-    };
-    reader.onerror = () => {
-      setError('Failed to read the selected file.');
-    };
-    reader.readAsDataURL(file);
+    validImageFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        const newQueueItem: QueuePhoto = {
+          id: `queue-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          fileData: result,
+          fileName: file.name,
+          fileSizeText: `${Math.round(file.size / 1024)} KB`,
+          caption: defaultCaption || file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
+          stage: batchStage,
+          category: batchCategory,
+          takenDate: batchDate,
+        };
+        setQueue((prev) => [...prev, newQueueItem]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileProcess(file);
+    if (e.target.files && e.target.files.length > 0) {
+      processFiles(e.target.files);
     }
-    // Reset input value so selecting the same file again triggers onChange
     e.target.value = '';
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      handleFileProcess(file);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFiles(e.dataTransfer.files);
     }
+  };
+
+  const handleAddUrl = () => {
+    const trimmed = urlInput.trim();
+    if (!trimmed) {
+      setError('Please enter a valid image URL.');
+      return;
+    }
+    const newQueueItem: QueuePhoto = {
+      id: `queue-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      url: trimmed,
+      fileName: trimmed.split('/').pop() || 'Remote Image',
+      fileSizeText: 'URL Link',
+      caption: defaultCaption || 'Site progress photograph',
+      stage: batchStage,
+      category: batchCategory,
+      takenDate: batchDate,
+    };
+    setQueue((prev) => [...prev, newQueueItem]);
+    setUrlInput('');
+    setError(null);
+  };
+
+  const handleRemoveItem = (id: string) => {
+    setQueue((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleUpdateItemCaption = (id: string, caption: string) => {
+    setQueue((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, caption } : item))
+    );
+  };
+
+  const handleApplyBatchMetadata = () => {
+    setQueue((prev) =>
+      prev.map((item) => ({
+        ...item,
+        stage: batchStage,
+        category: batchCategory,
+        takenDate: batchDate,
+        ...(defaultCaption.trim() ? { caption: defaultCaption.trim() } : {}),
+      }))
+    );
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (mode === 'file' && !fileData) {
-      setError('Please select an image file to upload.');
-      return;
-    }
-    if (mode === 'url' && !urlInput.trim()) {
-      setError('Please enter a valid image URL.');
-      return;
-    }
-    if (!caption.trim()) {
-      setError('Please enter a caption describing the site progress or area.');
+    if (queue.length === 0) {
+      setError('Please select at least one photograph to upload.');
       return;
     }
 
     setIsSubmitting(true);
     setError(null);
 
+    const payload: PhotoUploadItem[] = queue.map((item) => ({
+      fileData: item.fileData,
+      fileName: item.fileName,
+      url: item.url,
+      caption: item.caption.trim() || 'Site progress photograph',
+      stage: item.stage || undefined,
+      category: item.category,
+      takenDate: item.takenDate,
+    }));
+
     try {
-      await onUpload({
-        fileData: mode === 'file' ? fileData! : undefined,
-        fileName: mode === 'file' ? fileName : undefined,
-        url: mode === 'url' ? urlInput.trim() : undefined,
-        caption: caption.trim(),
-        stage: stage || undefined,
-        category,
-        takenDate,
-      });
+      if (onUploadBatch) {
+        setUploadProgressText(`Uploading ${payload.length} photographs...`);
+        await onUploadBatch(payload);
+      } else if (onUpload) {
+        for (let i = 0; i < payload.length; i++) {
+          setUploadProgressText(`Uploading photo ${i + 1} of ${payload.length}...`);
+          await onUpload(payload[i]);
+        }
+      }
       onClose();
     } catch (err: any) {
-      setError(err?.message || 'Failed to upload photograph. Please try again.');
+      setError(err?.message || 'Failed to upload photographs. Please try again.');
       setIsSubmitting(false);
+      setUploadProgressText('');
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-xl rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-2xl rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-muted/40">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-muted/40 shrink-0">
           <div>
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[#9a711f]">
-              Site Visual Progress
-            </span>
-            <h2 className="text-[17px] font-bold text-foreground">
-              {existingPhotoUrl ? 'Update Site Photograph' : 'Upload Site Photograph'}
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#9a711f] font-bold">
+                Site Visual Gallery
+              </span>
+              <span className="rounded-full bg-[#edf5f0] px-2 py-0.5 font-mono text-[9px] font-bold text-[#2e7c67]">
+                Multiple Upload Supported
+              </span>
+            </div>
+            <h2 className="text-[17px] font-bold text-foreground mt-0.5">
+              Upload Site Photographs
             </h2>
             <p className="text-[11px] text-muted-foreground truncate max-w-md">
               {projectName}
@@ -161,239 +242,289 @@ export function PhotoUploadDialog({
         </div>
 
         {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-5">
-          {/* Automatic Deletion Notice Banner */}
-          <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-amber-900 text-[11px] leading-relaxed dark:bg-amber-950/30 dark:border-amber-800/60 dark:text-amber-200">
-            <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <strong className="font-semibold">Automatic Cleanup:</strong> Uploading a new site photograph will automatically replace and permanently delete any old photograph on the server disk, ensuring zero storage bloat and displaying only the latest verified progress photo.
-            </div>
-          </div>
-
+        <form onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-5 flex-1">
           {error && (
             <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-800 text-[11px] dark:bg-rose-950/30 dark:border-rose-900 dark:text-rose-200">
               {error}
             </div>
           )}
 
-          {/* Mode Switch (File Upload vs URL) */}
-          <div className="flex items-center gap-2 border-b border-border pb-3">
-            <button
-              type="button"
-              onClick={openFilePicker}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition ${
-                mode === 'file'
-                  ? 'bg-[#173e49] text-white shadow-sm'
-                  : 'text-muted-foreground hover:bg-muted'
-              }`}
-            >
-              <Upload size={13} />
-              Upload from Device
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode('url'); setError(null); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition ${
-                mode === 'url'
-                  ? 'bg-[#173e49] text-white shadow-sm'
-                  : 'text-muted-foreground hover:bg-muted'
-              }`}
-            >
-              <LinkIcon size={13} />
-              Image URL / Link
-            </button>
+          {/* Mode Switch (Device vs URL) */}
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={openFilePicker}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition ${
+                  mode === 'file'
+                    ? 'bg-[#173e49] text-white shadow-sm'
+                    : 'text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <Upload size={13} />
+                Upload from Device / Camera
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMode('url'); setError(null); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition ${
+                  mode === 'url'
+                    ? 'bg-[#173e49] text-white shadow-sm'
+                    : 'text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <LinkIcon size={13} />
+                Image URL / CDN
+              </button>
+            </div>
+
+            {queue.length > 0 && (
+              <span className="font-mono text-[10px] font-bold text-[#2e7c67]">
+                {queue.length} photo{queue.length > 1 ? 's' : ''} queued
+              </span>
+            )}
           </div>
 
-          {/* Image Input Area */}
-          {mode === 'file' ? (
-            <div>
-              <input
-                id="site-photo-file-input"
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/*"
-                onChange={handleFileChange}
-                className="sr-only"
-                tabIndex={-1}
-              />
+          {/* Hidden multi-file input */}
+          <input
+            id="site-photo-multi-input"
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/*"
+            onChange={handleFileChange}
+            className="sr-only"
+            tabIndex={-1}
+          />
 
-              {fileData ? (
-                <div className="relative rounded-2xl border border-border bg-muted/20 p-3 flex flex-col items-center gap-3">
-                  <div className="relative max-h-52 w-full overflow-hidden rounded-xl bg-black/5 flex items-center justify-center">
-                    <img
-                      src={fileData}
-                      alt="Selected preview"
-                      className="max-h-52 w-auto object-contain rounded-lg"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between w-full px-2 text-[11px]">
-                    <span className="font-medium text-foreground truncate max-w-[280px]">
-                      {fileName}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-muted-foreground">{fileSizeText}</span>
-                      <button
-                        type="button"
-                        onClick={openFilePicker}
-                        className="text-[11px] font-bold text-[#9a711f] hover:underline ml-2"
-                      >
-                        Change photo
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={handleDrop}
-                  onClick={(e) => {
-                    // Only trigger if click wasn't already on the label
-                    if ((e.target as HTMLElement).tagName !== 'LABEL' && !(e.target as HTMLElement).closest('label')) {
-                      openFilePicker();
-                    }
-                  }}
-                  className={`border-2 border-dashed rounded-2xl p-7 text-center cursor-pointer transition flex flex-col items-center justify-center gap-3 ${
-                    dragOver
-                      ? 'border-[#9a711f] bg-[#f8f5ec]'
-                      : 'border-border/80 hover:border-muted-foreground/50 hover:bg-muted/20'
-                  }`}
-                >
-                  <div className="grid size-12 place-items-center rounded-2xl bg-[#f8f5ec] text-[#9a711f]">
-                    <ImageIcon size={22} />
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-bold text-foreground">
-                      Choose or drag & drop a site photograph
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Supports JPEG, PNG, WebP from phone camera or computer (up to 50MB)
-                    </p>
-                  </div>
-                  <label
-                    htmlFor="site-photo-file-input"
-                    className="mt-1 inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-2.5 text-[11px] font-bold text-white shadow-sm hover:bg-[#205160] transition cursor-pointer active:scale-95"
-                  >
-                    <Upload size={14} />
-                    Browse from Device / Camera
-                  </label>
-                </div>
-              )}
+          {/* Device Upload Drop Zone */}
+          {mode === 'file' ? (
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={(e) => {
+                if ((e.target as HTMLElement).tagName !== 'LABEL' && !(e.target as HTMLElement).closest('label')) {
+                  openFilePicker();
+                }
+              }}
+              className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2.5 ${
+                dragOver
+                  ? 'border-[#9a711f] bg-[#f8f5ec]'
+                  : 'border-border/80 hover:border-muted-foreground/50 hover:bg-muted/10'
+              }`}
+            >
+              <div className="grid size-11 place-items-center rounded-2xl bg-[#f8f5ec] text-[#9a711f]">
+                <Camera size={20} />
+              </div>
+              <div>
+                <p className="text-[13px] font-bold text-foreground">
+                  Select or drop multiple site photographs
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Select 1 or more images (JPEG, PNG, WebP) from your phone camera or computer
+                </p>
+              </div>
+              <label
+                htmlFor="site-photo-multi-input"
+                className="mt-1 inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-2 text-[11px] font-bold text-white shadow-sm hover:bg-[#205160] transition cursor-pointer active:scale-95"
+              >
+                <Upload size={13} />
+                Browse Device / Choose Photos
+              </label>
             </div>
           ) : (
-            <div className="space-y-3">
-              <label className="block">
-                <span className="mb-1.5 block text-[11px] font-bold">Image URL</span>
-                <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/... or company CDN link"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-[12px] outline-none focus:border-[#9a711f]"
-                />
-              </label>
-              {urlInput.trim() && (
-                <div className="max-h-44 overflow-hidden rounded-xl border border-border bg-black/5 flex items-center justify-center p-2">
-                  <img
-                    src={urlInput}
-                    alt="Preview"
-                    className="max-h-40 object-contain rounded"
-                    onError={() => setError('Unable to load image from this URL.')}
-                  />
-                </div>
-              )}
+            <div className="flex gap-2">
+              <input
+                type="url"
+                placeholder="https://images.unsplash.com/... or company CDN link"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddUrl();
+                  }
+                }}
+                className="h-10 flex-1 rounded-xl border border-border bg-background px-3 text-[12px] outline-none focus:border-[#9a711f]"
+              />
+              <button
+                type="button"
+                onClick={handleAddUrl}
+                className="h-10 rounded-xl bg-[#173e49] px-4 text-[11px] font-bold text-white hover:bg-[#205160] transition flex items-center gap-1.5 shrink-0"
+              >
+                <Plus size={14} /> Add to Queue
+              </button>
             </div>
           )}
 
-          {/* Caption */}
-          <label className="block">
-            <span className="mb-1.5 block text-[11px] font-bold flex items-center gap-1.5">
-              <FileText size={12} className="text-muted-foreground" />
-              Progress Caption / Description <span className="text-rose-500">*</span>
-            </span>
-            <textarea
-              rows={2}
-              required
-              placeholder="e.g. Main lounge ceiling grid installation completed. Fit-out vendor on schedule."
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background p-3 text-[12px] leading-relaxed outline-none focus:border-[#9a711f]"
-            />
-          </label>
+          {/* Selected Photos Queue List */}
+          {queue.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-bold text-foreground flex items-center gap-1.5">
+                  <CheckCircle2 size={14} className="text-[#2e7c67]" />
+                  Selected Photographs ({queue.length})
+                </span>
+                <button
+                  type="button"
+                  onClick={openFilePicker}
+                  className="text-[11px] font-bold text-[#9a711f] hover:underline flex items-center gap-1"
+                >
+                  <Plus size={12} /> Add more photos
+                </button>
+              </div>
 
-          {/* Metadata Row: Stage, Category, Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Stage */}
-            <label className="block">
-              <span className="mb-1.5 block text-[11px] font-bold flex items-center gap-1">
-                <Layers size={11} className="text-muted-foreground" />
-                Project Stage
-              </span>
-              <select
-                value={stage}
-                onChange={(e) => setStage(e.target.value)}
-                className="h-9 w-full rounded-xl border border-border bg-background px-2.5 text-[11px] outline-none focus:border-[#9a711f]"
-              >
-                {stages.map((s) => (
-                  <option key={s.name} value={s.name}>
-                    {s.name}
-                  </option>
+              <div className="grid gap-2.5 max-h-56 overflow-y-auto pr-1">
+                {queue.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5 transition hover:border-muted-foreground/40"
+                  >
+                    {/* Thumbnail */}
+                    <div className="size-14 shrink-0 overflow-hidden rounded-lg bg-black/5 flex items-center justify-center border border-border">
+                      {item.fileData || item.url ? (
+                        <img
+                          src={item.fileData || item.url}
+                          alt={item.fileName}
+                          className="size-full object-cover"
+                        />
+                      ) : (
+                        <ImageIcon size={18} className="text-muted-foreground" />
+                      )}
+                    </div>
+
+                    {/* Metadata & Caption Input */}
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-semibold text-foreground truncate max-w-[200px] sm:max-w-xs">
+                          {index + 1}. {item.fileName}
+                        </span>
+                        <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+                          {item.fileSizeText}
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Progress caption (e.g. Ceiling framing complete)..."
+                        value={item.caption}
+                        onChange={(e) => handleUpdateItemCaption(item.id, e.target.value)}
+                        className="h-7 w-full rounded-lg border border-border/80 bg-background px-2 text-[11px] outline-none focus:border-[#9a711f]"
+                      />
+                    </div>
+
+                    {/* Remove button */}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveItem(item.id)}
+                      className="p-1.5 text-muted-foreground hover:text-rose-600 rounded-lg hover:bg-rose-50 transition shrink-0"
+                      title="Remove photograph"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 ))}
-              </select>
-            </label>
+              </div>
+            </div>
+          )}
 
-            {/* Category */}
-            <label className="block">
-              <span className="mb-1.5 block text-[11px] font-bold flex items-center gap-1">
-                <Tag size={11} className="text-muted-foreground" />
-                Category
+          {/* Batch Metadata Controls */}
+          <div className="rounded-xl border border-border/80 bg-muted/20 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-foreground">
+                Batch Metadata (Applies to all selected photos)
               </span>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value as PhotoCategory)}
-                className="h-9 w-full rounded-xl border border-border bg-background px-2.5 text-[11px] outline-none focus:border-[#9a711f]"
-              >
-                {photoCategories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </label>
+              {queue.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleApplyBatchMetadata}
+                  className="text-[10px] font-bold text-[#173e49] hover:underline"
+                >
+                  Apply to all photos
+                </button>
+              )}
+            </div>
 
-            {/* Date Taken */}
-            <label className="block">
-              <span className="mb-1.5 block text-[11px] font-bold flex items-center gap-1">
-                <Calendar size={11} className="text-muted-foreground" />
-                Date Captured
-              </span>
-              <input
-                type="date"
-                value={takenDate}
-                onChange={(e) => setTakenDate(e.target.value)}
-                className="h-9 w-full rounded-xl border border-border bg-background px-2.5 text-[11px] outline-none focus:border-[#9a711f]"
-              />
-            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Stage */}
+              <label className="block">
+                <span className="mb-1 block text-[10px] font-bold flex items-center gap-1 text-muted-foreground">
+                  <Layers size={11} /> Project Stage
+                </span>
+                <select
+                  value={batchStage}
+                  onChange={(e) => setBatchStage(e.target.value)}
+                  className="h-8 w-full rounded-lg border border-border bg-background px-2 text-[10px] font-medium outline-none focus:border-[#9a711f]"
+                >
+                  {stages.map((s) => (
+                    <option key={s.name} value={s.name}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {/* Category */}
+              <label className="block">
+                <span className="mb-1 block text-[10px] font-bold flex items-center gap-1 text-muted-foreground">
+                  <Tag size={11} /> Category
+                </span>
+                <select
+                  value={batchCategory}
+                  onChange={(e) => setBatchCategory(e.target.value as PhotoCategory)}
+                  className="h-8 w-full rounded-lg border border-border bg-background px-2 text-[10px] font-medium outline-none focus:border-[#9a711f]"
+                >
+                  {photoCategories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {/* Date Taken */}
+              <label className="block">
+                <span className="mb-1 block text-[10px] font-bold flex items-center gap-1 text-muted-foreground">
+                  <Calendar size={11} /> Date Captured
+                </span>
+                <input
+                  type="date"
+                  value={batchDate}
+                  onChange={(e) => setBatchDate(e.target.value)}
+                  className="h-8 w-full rounded-lg border border-border bg-background px-2 text-[10px] font-medium outline-none focus:border-[#9a711f]"
+                />
+              </label>
+            </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={onClose}
-              className="rounded-xl border border-border px-4 py-2 text-[11px] font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="rounded-xl bg-[#173e49] px-5 py-2 text-[11px] font-bold text-white hover:bg-[#205160] transition flex items-center gap-2 shadow-sm disabled:opacity-50"
-            >
-              <Upload size={13} />
-              {isSubmitting ? 'Uploading & Replacing...' : 'Upload Site Photograph'}
-            </button>
+          <div className="flex items-center justify-between gap-3 pt-3 border-t border-border shrink-0">
+            <span className="text-[11px] text-muted-foreground font-medium">
+              {uploadProgressText || (queue.length > 0 ? `${queue.length} photograph${queue.length > 1 ? 's' : ''} ready` : 'No photos selected yet')}
+            </span>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={onClose}
+                className="rounded-xl border border-border px-4 py-2 text-[11px] font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || queue.length === 0}
+                className="rounded-xl bg-[#173e49] px-5 py-2 text-[11px] font-bold text-white hover:bg-[#205160] transition flex items-center gap-2 shadow-sm disabled:opacity-50"
+              >
+                <Upload size={13} />
+                {isSubmitting
+                  ? (uploadProgressText || 'Uploading...')
+                  : queue.length > 1
+                    ? `Upload ${queue.length} Site Photographs`
+                    : 'Upload Site Photograph'}
+              </button>
+            </div>
           </div>
         </form>
       </div>

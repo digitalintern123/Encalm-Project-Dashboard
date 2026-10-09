@@ -30,6 +30,7 @@ import {
   Upload,
   Sparkles,
   Building2,
+  MapPin,
 } from 'lucide-react';
 import { categories, formatCrore, healthOptions, locations, projectStatuses, issueCategories, type Category, type Health, type Project, type ProjectStatus, type IssueCategory, type IssueStatus, type ProjectIssue, type SitePhoto, type PhotoCategory, photoCategories, type ArchitecturalAreaProgram } from '@/data/projects';
 import { AreaProgramEditorModal, emptyAreaProgram } from '@/components/project-area-program';
@@ -41,6 +42,7 @@ import { initialsOf, leadName } from '@/data/users';
 import { formatRatio, getCommercialSummary, getPortfolioCommercialSummary, sortProjectsIncompleteFirst } from '@/lib/calculations';
 import { PhotoLightbox } from '@/components/photo-lightbox';
 import { PhotoUploadDialog } from '@/components/photo-upload-dialog';
+import { getIssueStatusTheme, issueStatusOptions } from '@/lib/issue-theme';
 
 export type WorkspaceView = 'projects' | 'my-projects' | 'timeline' | 'milestones' | 'issues' | 'commercial' | 'updates' | 'photos' | 'reports' | 'new-project' | 'team';
 
@@ -52,6 +54,7 @@ export const statusTone: Record<ProjectStatus, string> = {
   'In Tendering': 'bg-[#fef4e6] text-[#b37418]',
   'Under Construction': 'bg-[#fff0eb] text-[#c2583f]',
   'Operational': 'bg-[#e4f1ec] text-[#2e7c67]',
+  'On Hold': 'bg-[#fae5e1] text-[#b2473d]',
 };
 
 function PageHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: ReactNode }) {
@@ -66,71 +69,109 @@ function ProjectTable({ rows }: { rows: Project[] }) {
 
   return (
     <>
-      <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-[#173e49]/[.03]">
-        <div className="hidden grid-cols-[minmax(180px,1.2fr)_85px_110px_110px_100px_85px_100px_90px_36px] gap-3 border-b border-border bg-[#f7f4ec] px-5 py-3 font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground md:grid">
-          <span>Project</span>
-          <span>Location</span>
-          <span>Status</span>
-          <span>Area</span>
-          <span>Lead</span>
-          <span>Progress</span>
-          <span>Target</span>
-          <span>Health</span>
-          <span className="text-right">Action</span>
+      <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-[11px]">
+            <thead>
+              <tr className="border-b border-border bg-[#f8f6f0] font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground whitespace-nowrap">
+                <th className="py-3.5 pl-5 pr-3 min-w-[220px]">Project</th>
+                <th className="px-3 py-3.5 w-28">Location</th>
+                <th className="px-3 py-3.5 w-36">Status</th>
+                <th className="px-3 py-3.5 w-32">Area</th>
+                <th className="px-3 py-3.5 w-36">Lead</th>
+                <th className="px-3 py-3.5 w-36">Progress</th>
+                <th className="px-3 py-3.5 w-28">Target</th>
+                <th className="px-3 py-3.5 w-28">Health</th>
+                <th className="py-3.5 pl-2 pr-5 text-right w-16">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {rows.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-5 py-12 text-center text-[12px] text-muted-foreground">
+                    No projects match this view. Try adjusting your search or filters.
+                  </td>
+                </tr>
+              ) : (
+                rows.map((project) => (
+                  <tr
+                    key={project.id}
+                    className="transition hover:bg-[#fcfaf5]"
+                  >
+                    <td className="py-3.5 pl-5 pr-3">
+                      <Link href={`/project/${project.id}`} className="group inline-block">
+                        <span className="block text-[12px] font-bold text-foreground group-hover:text-[#2e7c67] group-hover:underline transition">
+                          {project.name}
+                        </span>
+                        <span className="mt-0.5 block font-mono text-[9px] uppercase tracking-[.08em] text-muted-foreground">
+                          {project.code}
+                        </span>
+                      </Link>
+                    </td>
+                    <td className="px-3 py-3.5 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                        <MapPin size={11} className="text-muted-foreground/70" />
+                        {project.location}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3.5 whitespace-nowrap">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-bold ${statusTone[project.status || 'Yet to start']}`}>
+                        {project.status || 'Yet to start'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3.5 whitespace-nowrap font-mono text-[10px] font-bold text-foreground" title={project.area || '—'}>
+                      {project.area ? (
+                        project.area.includes('SQ.FT.')
+                          ? project.area.split('/')[1]?.trim() || project.area
+                          : project.area
+                      ) : (
+                        <span className="text-muted-foreground font-normal">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3.5 whitespace-nowrap font-medium text-foreground">
+                      {leadName(project.leadId)}
+                    </td>
+                    <td className="px-3 py-3.5 whitespace-nowrap">
+                      <div className="flex items-center gap-2.5 min-w-[100px]">
+                        <div className="h-1.5 w-16 rounded-full bg-[#e7e7dc] overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-[#2e7c67] transition-all"
+                            style={{ width: `${project.progress}%` }}
+                          />
+                        </div>
+                        <span className="font-mono text-[11px] font-bold text-foreground">
+                          {project.progress}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3.5 whitespace-nowrap font-medium text-muted-foreground">
+                      {project.targetLabel}
+                    </td>
+                    <td className="px-3 py-3.5 whitespace-nowrap">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold ${healthTone[project.health]}`}>
+                        {project.health}
+                      </span>
+                    </td>
+                    <td className="py-3.5 pl-2 pr-5 text-right whitespace-nowrap">
+                      {canEditProject(project) ? (
+                        <button
+                          type="button"
+                          title={`Delete ${project.name}`}
+                          onClick={() => setProjectToDelete(project)}
+                          className="inline-grid size-7 place-items-center rounded-lg text-muted-foreground/60 hover:bg-rose-50 hover:text-rose-600 transition"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      ) : (
+                        <span className="inline-block size-7" />
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-        {rows.length === 0 && <p className="px-5 py-10 text-center text-[12px] text-muted-foreground">No projects match this view. Try a broader search.</p>}
-        {rows.map((project) => (
-          <div
-            key={project.id}
-            className="grid gap-3 border-b border-border/70 px-5 py-4 transition hover:bg-[#fcf5e5] md:grid-cols-[minmax(180px,1.2fr)_85px_110px_110px_100px_85px_100px_90px_36px] md:items-center"
-          >
-            <Link href={`/project/${project.id}`} className="flex items-center justify-between gap-3 group">
-              <span>
-                <span className="block text-[12px] font-bold group-hover:text-[#9a711f] transition">{project.name}</span>
-                <span className="mt-1 block font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">{project.code}</span>
-              </span>
-              <ArrowUpRight size={15} className="text-muted-foreground/50 md:hidden" />
-            </Link>
-            <span className="text-[11px] text-muted-foreground">{project.location}</span>
-            <span>
-              <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${statusTone[project.status || 'Yet to start']}`}>
-                {project.status || 'Yet to start'}
-              </span>
-            </span>
-            <span className="font-mono text-[10px] font-bold text-foreground truncate" title={project.area || '—'}>
-              {project.area ? (
-                project.area.includes('SQ.FT.')
-                  ? project.area.split('/')[1]?.trim() || project.area
-                  : project.area
-              ) : (
-                <span className="text-muted-foreground font-normal">—</span>
-              )}
-            </span>
-            <span className="text-[11px] font-semibold truncate">{leadName(project.leadId)}</span>
-            <span className="flex items-center gap-2 text-[11px] font-bold">
-              <span className="h-1.5 flex-1 rounded-full bg-[#e7e7dc]">
-                <span className="block h-full rounded-full bg-[#3d9a7e]" style={{ width: `${project.progress}%` }} />
-              </span>
-              {project.progress}%
-            </span>
-            <span className="text-[11px] font-semibold">{project.targetLabel}</span>
-            <span className={`w-fit rounded-full px-2.5 py-1 text-[10px] font-bold ${healthTone[project.health]}`}>{project.health}</span>
-            <div className="flex justify-end">
-              {canEditProject(project) ? (
-                <button
-                  type="button"
-                  title={`Delete ${project.name}`}
-                  onClick={() => setProjectToDelete(project)}
-                  className="grid size-7 place-items-center rounded-lg text-muted-foreground/60 hover:bg-rose-50 hover:text-rose-600 transition"
-                >
-                  <Trash2 size={13} />
-                </button>
-              ) : (
-                <span className="size-7" />
-              )}
-            </div>
-          </div>
-        ))}
       </div>
 
       {projectToDelete && (
@@ -463,7 +504,17 @@ function MilestonesView() {
           project,
         }))
       )
-      .sort((a, b) => a.date.localeCompare(b.date));
+      .sort((a, b) => {
+        const aComplete = a.status === 'complete';
+        const bComplete = b.status === 'complete';
+        if (aComplete !== bComplete) {
+          return aComplete ? 1 : -1; // incomplete first, complete at the bottom
+        }
+        if (aComplete) {
+          return b.date.localeCompare(a.date); // completed: most recent first
+        }
+        return a.date.localeCompare(b.date); // incomplete: earliest / upcoming first
+      });
   }, [projects]);
 
   const filtered = useMemo(() => {
@@ -1272,10 +1323,12 @@ function IssuesView() {
                             </div>
 
                             <div className="grid gap-3 md:grid-cols-2">
-                              {highSeverityIssues.map((issue) => (
+                              {highSeverityIssues.map((issue) => {
+                                const statusTheme = getIssueStatusTheme(issue.status, 'High');
+                                return (
                                 <div
                                   key={`${project.id}-${issue.id ?? issue.title}-${issue.issueIndex}`}
-                                  className="rounded-xl border border-[#f0c8c2] bg-[#fff5f2] p-4 shadow-sm"
+                                  className={`rounded-xl border p-4 shadow-sm transition-colors duration-200 ${statusTheme.cardClass}`}
                                 >
                                   <div className="flex items-start justify-between gap-2">
                                     <div>
@@ -1283,8 +1336,12 @@ function IssuesView() {
                                         <span className="rounded-full bg-[#fae5e1] px-2 py-0.5 font-mono text-[8px] uppercase font-bold text-[#b2473d]">
                                           High Severity
                                         </span>
+                                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[8px] uppercase font-bold ${statusTheme.badgeClass}`}>
+                                          <span className="size-1.5 rounded-full" style={{ backgroundColor: statusTheme.dotColor }} />
+                                          {issue.status || 'Open'}
+                                        </span>
                                         {issue.category && (
-                                          <span className="rounded-full bg-white/80 px-2 py-0.5 font-mono text-[8px] uppercase tracking-[.08em] text-muted-foreground border border-[#f0c8c2]/50">
+                                          <span className="rounded-full bg-white/80 px-2 py-0.5 font-mono text-[8px] uppercase tracking-[.08em] text-muted-foreground border border-border/70">
                                             {issue.category}
                                           </span>
                                         )}
@@ -1301,14 +1358,14 @@ function IssuesView() {
                                   <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{issue.detail}</p>
 
                                   {(issue.impactSchedule || issue.impactCost || issue.impactScope || issue.action) && (
-                                    <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#f0c8c2]/60 pt-2 text-[10px]">
+                                    <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border/50 pt-2 text-[10px]">
                                       {issue.impactSchedule && (
-                                        <span className="rounded-md bg-white/90 px-2 py-0.5 font-mono text-[#b2473d] border border-[#f0c8c2]/60">
+                                        <span className="rounded-md bg-white/90 px-2 py-0.5 font-mono text-[#b2473d] border border-border/60">
                                           Schedule: {issue.impactSchedule}
                                         </span>
                                       )}
                                       {issue.impactCost && (
-                                        <span className="rounded-md bg-white/90 px-2 py-0.5 font-mono text-[#b2473d] border border-[#f0c8c2]/60">
+                                        <span className="rounded-md bg-white/90 px-2 py-0.5 font-mono text-[#b2473d] border border-border/60">
                                           Cost: {issue.impactCost}
                                         </span>
                                       )}
@@ -1320,7 +1377,7 @@ function IssuesView() {
                                     </div>
                                   )}
 
-                                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#f0c8c2]/60 pt-2.5 font-mono text-[9px]">
+                                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-2.5 font-mono text-[9px]">
                                     <div className="text-muted-foreground">
                                       <span>Owner: <strong className="text-foreground">{issue.owner || 'Unassigned'}</strong></span>
                                       {(issue.targetClosureDate || issue.dueDate) && (
@@ -1334,22 +1391,23 @@ function IssuesView() {
                                       <select
                                         value={issue.status || 'Open'}
                                         onChange={(e) => handleStatusChange(project.id, issue.issueIndex, e.target.value)}
-                                        className="rounded-lg border border-border bg-white px-2 py-1 text-[10px] font-bold outline-none"
+                                        className={`rounded-lg border px-2 py-1 text-[10px] font-bold outline-none cursor-pointer transition-colors shadow-sm ${statusTheme.selectClass}`}
                                       >
-                                        <option value="Open">Open</option>
-                                        <option value="Under review">Under review</option>
-                                        <option value="Action in progress">Action in progress</option>
-                                        <option value="Resolved">Resolved</option>
-                                        <option value="Closed">Closed</option>
+                                        {issueStatusOptions.map((opt) => (
+                                          <option key={opt.status} value={opt.status} className="bg-white text-foreground">
+                                            {opt.prefix} {opt.label}
+                                          </option>
+                                        ))}
                                       </select>
                                     ) : (
-                                      <span className="rounded-full bg-white px-2 py-0.5 font-bold text-foreground">
+                                      <span className={`rounded-full px-2 py-0.5 font-bold ${statusTheme.badgeClass}`}>
                                         {issue.status || 'Open'}
                                       </span>
                                     )}
                                   </div>
                                 </div>
-                              ))}
+                              );
+                              })}
                             </div>
                           </div>
                         )}
@@ -1367,10 +1425,12 @@ function IssuesView() {
                             </div>
 
                             <div className="grid gap-3 md:grid-cols-2">
-                              {standardIssues.map((issue) => (
+                              {standardIssues.map((issue) => {
+                                const statusTheme = getIssueStatusTheme(issue.status, issue.severity || 'Medium');
+                                return (
                                 <div
                                   key={`${project.id}-${issue.id ?? issue.title}-${issue.issueIndex}`}
-                                  className="rounded-xl border border-border bg-white p-4 shadow-sm hover:border-[#eadcb1] transition"
+                                  className={`rounded-xl border p-4 shadow-sm transition-colors duration-200 ${statusTheme.cardClass}`}
                                 >
                                   <div className="flex items-start justify-between gap-2">
                                     <div>
@@ -1382,8 +1442,12 @@ function IssuesView() {
                                         >
                                           {issue.severity || 'Medium'} Severity
                                         </span>
+                                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[8px] uppercase font-bold ${statusTheme.badgeClass}`}>
+                                          <span className="size-1.5 rounded-full" style={{ backgroundColor: statusTheme.dotColor }} />
+                                          {issue.status || 'Open'}
+                                        </span>
                                         {issue.category && (
-                                          <span className="rounded-full bg-[#f8f6f0] px-2 py-0.5 font-mono text-[8px] uppercase tracking-[.08em] text-muted-foreground border border-border/70">
+                                          <span className="rounded-full bg-white/80 px-2 py-0.5 font-mono text-[8px] uppercase tracking-[.08em] text-muted-foreground border border-border/70">
                                             {issue.category}
                                           </span>
                                         )}
@@ -1400,26 +1464,26 @@ function IssuesView() {
                                   <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{issue.detail}</p>
 
                                   {(issue.impactSchedule || issue.impactCost || issue.impactScope || issue.action) && (
-                                    <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border/60 pt-2 text-[10px]">
+                                    <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border/50 pt-2 text-[10px]">
                                       {issue.impactSchedule && (
-                                        <span className="rounded-md bg-[#f8f6f0] px-2 py-0.5 font-mono text-[#9a711f] border border-border/70">
+                                        <span className="rounded-md bg-white/90 px-2 py-0.5 font-mono text-[#9a711f] border border-border/70">
                                           Schedule: {issue.impactSchedule}
                                         </span>
                                       )}
                                       {issue.impactCost && (
-                                        <span className="rounded-md bg-[#f8f6f0] px-2 py-0.5 font-mono text-[#9a711f] border border-border/70">
+                                        <span className="rounded-md bg-white/90 px-2 py-0.5 font-mono text-[#9a711f] border border-border/70">
                                           Cost: {issue.impactCost}
                                         </span>
                                       )}
                                       {issue.action && (
-                                        <span className="rounded-md bg-[#f8f6f0] px-2 py-0.5 text-muted-foreground border border-border/70">
+                                        <span className="rounded-md bg-white/90 px-2 py-0.5 text-muted-foreground border border-border/70">
                                           Action: <strong className="text-foreground">{issue.action}</strong>
                                         </span>
                                       )}
                                     </div>
                                   )}
 
-                                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-2.5 font-mono text-[9px]">
+                                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-2.5 font-mono text-[9px]">
                                     <div className="text-muted-foreground">
                                       <span>Owner: <strong className="text-foreground">{issue.owner || 'Unassigned'}</strong></span>
                                       {(issue.targetClosureDate || issue.dueDate) && (
@@ -1433,22 +1497,23 @@ function IssuesView() {
                                       <select
                                         value={issue.status || 'Open'}
                                         onChange={(e) => handleStatusChange(project.id, issue.issueIndex, e.target.value)}
-                                        className="rounded-lg border border-border bg-white px-2 py-1 text-[10px] font-bold outline-none"
+                                        className={`rounded-lg border px-2 py-1 text-[10px] font-bold outline-none cursor-pointer transition-colors shadow-sm ${statusTheme.selectClass}`}
                                       >
-                                        <option value="Open">Open</option>
-                                        <option value="Under review">Under review</option>
-                                        <option value="Action in progress">Action in progress</option>
-                                        <option value="Resolved">Resolved</option>
-                                        <option value="Closed">Closed</option>
+                                        {issueStatusOptions.map((opt) => (
+                                          <option key={opt.status} value={opt.status} className="bg-white text-foreground">
+                                            {opt.prefix} {opt.label}
+                                          </option>
+                                        ))}
                                       </select>
                                     ) : (
-                                      <span className="rounded-full bg-[#f8f6f0] px-2 py-0.5 font-bold text-foreground">
+                                      <span className={`rounded-full px-2 py-0.5 font-bold ${statusTheme.badgeClass}`}>
                                         {issue.status || 'Open'}
                                       </span>
                                     )}
                                   </div>
                                 </div>
-                              ))}
+                              );
+                              })}
                             </div>
                           </div>
                         )}
@@ -1493,13 +1558,20 @@ function CommercialView() {
           </div>
           <p className="mt-2 text-[10px] text-[#2e7c67]">{formatRatio(portfolio.awardRatePct)} commitment rate</p>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-5 flex flex-col justify-between">
+        <div className={`rounded-2xl border p-5 flex flex-col justify-between transition-colors ${
+          portfolio.totalProjectedCost > portfolio.totalAop ? 'border-[#f0c8c2] bg-[#fff6f5]' : 'border-border bg-card'
+        }`}>
           <div>
             <p className="font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground">Projected Cost</p>
-            <p className="mt-4 text-[27px] font-extrabold">{formatCrore(portfolio.totalProjectedCost)}</p>
+            <p className={`mt-4 text-[27px] font-extrabold ${
+              portfolio.totalProjectedCost > portfolio.totalAop ? 'text-[#b2473d]' : ''
+            }`}>{formatCrore(portfolio.totalProjectedCost)}</p>
           </div>
-          <p className="mt-2 text-[10px] text-muted-foreground">
+          <p className={`mt-2 text-[10px] font-bold ${
+            portfolio.totalProjectedCost > portfolio.totalAop ? 'text-[#b2473d]' : 'text-muted-foreground'
+          }`}>
             Variance: {portfolio.totalProjectedCost >= portfolio.totalAop ? '+' : ''}{formatCrore(portfolio.totalProjectedCost - portfolio.totalAop)}
+            {portfolio.totalProjectedCost > portfolio.totalAop && ' (Over Budget)'}
           </p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 flex flex-col justify-between">
@@ -1530,18 +1602,46 @@ function CommercialView() {
           return (
             <div
               key={project.id}
-              className="grid gap-2 border-b border-border/70 px-5 py-4 md:grid-cols-[minmax(180px,1.2fr)_110px_110px_110px_110px_110px_90px_80px] md:items-center"
+              className={`grid gap-2 border-b border-border/70 px-5 py-4 md:grid-cols-[minmax(180px,1.2fr)_110px_110px_110px_110px_110px_90px_80px] md:items-center transition-colors ${
+                commercial.overBudget ? 'bg-[#fffbfb] hover:bg-[#fff5f5]' : 'hover:bg-muted/30'
+              }`}
             >
-              <Link href={`/project/${project.id}`} className="text-[12px] font-bold hover:text-[#2e7c67]">
-                {project.name}
+              <Link href={`/project/${project.id}`} className="text-[12px] font-bold hover:text-[#2e7c67] flex items-center gap-1.5">
+                {commercial.overBudget && (
+                  <span title="Over Budget" className="inline-block size-2 rounded-full bg-[#d66254] shrink-0" />
+                )}
+                <span className="truncate">{project.name}</span>
               </Link>
-              <span className="text-[11px]">{formatCrore(commercial.aop)}</span>
-              <span className="text-[11px]">{formatCrore(commercial.awarded)}</span>
-              <span className="text-[11px] font-semibold">{formatCrore(commercial.projectedCost)}</span>
-              <span className="text-[11px]">{formatCrore(commercial.spent)}</span>
-              <span className={`text-[11px] font-bold ${commercial.overBudget ? 'text-[#b2473d]' : 'text-[#2e7c67]'}`}>
-                {commercial.costVariance > 0 ? `+${formatCrore(commercial.costVariance)}` : formatCrore(commercial.costVariance)}
+              <span className="text-[11px] font-mono">{formatCrore(commercial.aop)}</span>
+              <span className={`text-[11px] font-mono ${commercial.overAwarded ? 'font-bold text-[#b2473d]' : ''}`}>
+                {formatCrore(commercial.awarded)}
+                {commercial.overAwarded && (
+                  <span className="block text-[8px] uppercase font-bold tracking-wider text-[#b2473d]">Over AOP</span>
+                )}
               </span>
+              <span className={`text-[11px] font-mono font-semibold ${commercial.overBudget ? 'font-bold text-[#b2473d]' : ''}`}>
+                {formatCrore(commercial.projectedCost)}
+                {commercial.overBudget && (
+                  <span className="block text-[8px] uppercase font-bold tracking-wider text-[#b2473d]">Overrun</span>
+                )}
+              </span>
+              <span className={`text-[11px] font-mono ${commercial.overSpent ? 'font-bold text-[#b2473d]' : ''}`}>
+                {formatCrore(commercial.spent)}
+                {commercial.overSpent && (
+                  <span className="block text-[8px] uppercase font-bold tracking-wider text-[#b2473d]">Over Awarded</span>
+                )}
+              </span>
+              <div>
+                <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-mono font-bold ${
+                  commercial.costVariance > 0
+                    ? 'bg-[#fae5e1] text-[#b2473d]'
+                    : commercial.costVariance < 0
+                      ? 'bg-[#edf5f0] text-[#2e7c67]'
+                      : 'text-muted-foreground'
+                }`}>
+                  {commercial.costVariance > 0 ? `+${formatCrore(commercial.costVariance)}` : formatCrore(commercial.costVariance)}
+                </span>
+              </div>
               <span className="text-[10px] text-muted-foreground">{project.status || 'Yet to start'}</span>
               <span className="text-[10px] font-semibold text-muted-foreground">{canEdit ? 'Editable' : 'View only'}</span>
             </div>
@@ -2666,7 +2766,7 @@ function TeamView() {
 }
 
 function SitePhotographsView() {
-  const { projects, canEditProject, role, addPhoto, deletePhoto } = useAppState();
+  const { projects, canEditProject, role, addPhoto, addMultiplePhotos, deletePhoto } = useAppState();
   const { toast } = useToast();
   const [selectedLocation, setSelectedLocation] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -2739,11 +2839,11 @@ function SitePhotographsView() {
           <p className="mt-1 text-[11px] text-muted-foreground">Verified progress photos on server</p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-5">
-          <p className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Automatic Cleanup</p>
-          <p className="mt-3 text-3xl font-extrabold tracking-tight text-[#9a711f]">
-            Enabled
+          <p className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Gallery Multi-Upload</p>
+          <p className="mt-3 text-3xl font-extrabold tracking-tight text-[#2e7c67]">
+            Active
           </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">Old images auto-deleted on each new upload</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Multiple photos supported per project</p>
         </div>
       </div>
 
@@ -2880,6 +2980,7 @@ function SitePhotographsView() {
       {lightboxPhoto && (
         <PhotoLightbox
           photo={lightboxPhoto.photo}
+          photos={filteredItems.map((item) => item.photo)}
           projectName={lightboxPhoto.project.name}
           projectCode={lightboxPhoto.project.code}
           canDelete={canEditProject(lightboxPhoto.project)}
@@ -2901,12 +3002,28 @@ function SitePhotographsView() {
           stages={uploadProject.phases}
           existingPhotoUrl={uploadProject.photos?.[0]?.url}
           onClose={() => setUploadProject(null)}
+          onUploadBatch={async (photos) => {
+            try {
+              await addMultiplePhotos(uploadProject.id, photos);
+              toast({
+                title: `${photos.length} photograph${photos.length > 1 ? 's' : ''} uploaded`,
+                description: 'Successfully added to project site gallery.',
+              });
+            } catch (err: any) {
+              toast({
+                variant: 'destructive',
+                title: 'Upload failed',
+                description: err?.message || 'Failed to upload photographs.',
+              });
+              throw err;
+            }
+          }}
           onUpload={async (data) => {
             try {
               await addPhoto(uploadProject.id, data);
               toast({
-                title: 'Site photograph updated',
-                description: 'New photograph uploaded and previous photo purged from server.',
+                title: 'Site photograph added',
+                description: 'New photograph uploaded to project site gallery.',
               });
             } catch (err: any) {
               toast({

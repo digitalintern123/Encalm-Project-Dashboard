@@ -15,77 +15,82 @@ interface MentionTextareaProps extends Omit<React.TextareaHTMLAttributes<HTMLTex
 export function extractMentionedUserIds(text: string, users: User[]): string[] {
   if (!text || !users || !users.length) return [];
   const mentionedIds = new Set<string>();
-  const lowerText = text.toLowerCase();
 
-  // 1. Direct scan for all users in the provided directory
+  // Sort users by full name length descending so longer full names match first
+  const sortedUsers = [...users].sort((a, b) => (b.name?.length || 0) - (a.name?.length || 0));
+
+  // Count first name occurrences across all users to guard against ambiguous first names (e.g. 7 users named Akash)
+  const firstNameCounts = new Map<string, number>();
   for (const u of users) {
-    if (!u || !u.name) continue;
-    const lowerName = u.name.toLowerCase().trim();
-    const lowerEmail = (u.email || '').toLowerCase().trim();
-    const firstName = lowerName.split(' ')[0];
-
-    // Match exact full name (e.g. "@praveen pal")
-    if (lowerName && lowerText.includes(`@${lowerName}`)) {
-      mentionedIds.add(u.id);
-      continue;
-    }
-
-    // Match exact email (e.g. "@digital.intern@encalm.com")
-    if (lowerEmail && lowerText.includes(`@${lowerEmail}`)) {
-      mentionedIds.add(u.id);
-      continue;
-    }
-
-    // Match email username prefix (e.g. "@digital.intern")
-    if (lowerEmail) {
-      const emailPrefix = lowerEmail.split('@')[0];
-      if (emailPrefix.length >= 3 && lowerText.includes(`@${emailPrefix}`)) {
-        mentionedIds.add(u.id);
-        continue;
-      }
-    }
-
-    // Match first name with word boundary (e.g. "@praveen please" or "@praveen,")
-    if (firstName && firstName.length >= 3) {
-      const escapedFirst = firstName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`@${escapedFirst}(?:\\b|\\s|[,:;!?]|$)`, 'i');
-      if (regex.test(text)) {
-        mentionedIds.add(u.id);
-        continue;
-      }
-    }
-
-    // Match user id slug (e.g. "@praveen pal" from "user-praveen-pal")
-    const idSlug = u.id.replace('user-', '').replace(/-/g, ' ').toLowerCase();
-    if (idSlug.length >= 3 && lowerText.includes(`@${idSlug}`)) {
-      mentionedIds.add(u.id);
-      continue;
+    if (!u.name) continue;
+    const fn = u.name.toLowerCase().trim().split(' ')[0];
+    if (fn) {
+      firstNameCounts.set(fn, (firstNameCounts.get(fn) || 0) + 1);
     }
   }
 
-  // 2. Fallback regex to capture any token-based mentions
-  const mentionRegex = /@([a-zA-Z0-9._-]+(?:\s+[a-zA-Z0-9._-]+)?)/g;
-  let match: RegExpExecArray | null;
+  const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  let remainingText = text;
 
-  while ((match = mentionRegex.exec(text)) !== null) {
-    const query = match[1].trim().toLowerCase();
-    const matchedUser = users.find((u) => {
-      const fullName = u.name.toLowerCase();
-      const firstName = u.name.split(' ')[0].toLowerCase();
-      const emailPrefix = (u.email || '').split('@')[0].toLowerCase();
-      const idPrefix = u.id.replace('user-', '').replace(/-/g, ' ').toLowerCase();
+  // 1. Exact Full Name Matching (e.g. "@Akash Deep")
+  for (const u of sortedUsers) {
+    if (!u.name) continue;
+    const fullName = u.name.trim();
+    const fnRegex = new RegExp(`@${escapeRegex(fullName)}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+    if (fnRegex.test(remainingText)) {
+      mentionedIds.add(u.id);
+      // Mask out matched full name so sub-tokens are not falsely re-matched
+      remainingText = remainingText.replace(new RegExp(`@${escapeRegex(fullName)}`, 'gi'), ' ');
+    }
+  }
 
-      return (
-        fullName === query ||
-        firstName === query ||
-        fullName.startsWith(query) ||
-        emailPrefix === query ||
-        idPrefix === query
-      );
-    });
+  // 2. Exact Email or Email Prefix Matching (e.g. "@akash.deep@encalm.com" or "@akash.deep")
+  for (const u of sortedUsers) {
+    if (!u.email) continue;
+    const email = u.email.trim();
+    const emailPrefix = email.split('@')[0];
 
-    if (matchedUser) {
-      mentionedIds.add(matchedUser.id);
+    const emailRegex = new RegExp(`@${escapeRegex(email)}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+    if (emailRegex.test(remainingText)) {
+      mentionedIds.add(u.id);
+      remainingText = remainingText.replace(new RegExp(`@${escapeRegex(email)}`, 'gi'), ' ');
+      continue;
+    }
+
+    if (emailPrefix && emailPrefix.length >= 3) {
+      const prefixRegex = new RegExp(`@${escapeRegex(emailPrefix)}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+      if (prefixRegex.test(remainingText)) {
+        mentionedIds.add(u.id);
+        remainingText = remainingText.replace(new RegExp(`@${escapeRegex(emailPrefix)}`, 'gi'), ' ');
+      }
+    }
+  }
+
+  // 3. User ID Slug Matching (e.g. "user-praveen-pal" -> "@praveen pal")
+  for (const u of sortedUsers) {
+    if (!u.id) continue;
+    const idSlug = u.id.replace('user-', '').replace(/-/g, ' ').trim();
+    if (idSlug.length >= 3) {
+      const idSlugRegex = new RegExp(`@${escapeRegex(idSlug)}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+      if (idSlugRegex.test(remainingText)) {
+        mentionedIds.add(u.id);
+        remainingText = remainingText.replace(new RegExp(`@${escapeRegex(idSlug)}`, 'gi'), ' ');
+      }
+    }
+  }
+
+  // 4. First name matching ONLY IF that first name is completely unique across the organisation
+  // If multiple users share the same first name (e.g. multiple "Akash" in Encalm), matching on first name alone is strictly disabled
+  for (const u of sortedUsers) {
+    if (!u.name) continue;
+    const firstName = u.name.trim().split(' ')[0];
+    const fnLower = firstName.toLowerCase();
+    if (firstName.length >= 3 && firstNameCounts.get(fnLower) === 1) {
+      const firstNameRegex = new RegExp(`@${escapeRegex(firstName)}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+      if (firstNameRegex.test(remainingText)) {
+        mentionedIds.add(u.id);
+        remainingText = remainingText.replace(new RegExp(`@${escapeRegex(firstName)}`, 'gi'), ' ');
+      }
     }
   }
 
@@ -212,7 +217,8 @@ export function MentionTextarea({
       if (!textareaRef.current || mentionIndex === -1) return;
 
       const before = value.slice(0, mentionIndex);
-      const afterCursor = textareaRef.current.selectionStart;
+      const queryLength = mentionQuery ? mentionQuery.length : 0;
+      const afterCursor = Math.max(mentionIndex + 1 + queryLength, textareaRef.current.selectionStart || 0);
       const after = value.slice(afterCursor);
 
       const mentionText = `@${user.name} `;
@@ -226,16 +232,20 @@ export function MentionTextarea({
         onMentionSelect(user);
       }
 
-      // Restore focus and place cursor after inserted mention
-      setTimeout(() => {
+      // Restore focus and place cursor right after inserted mention so typing continues immediately
+      const newCursorPos = before.length + mentionText.length;
+      const placeFocus = () => {
         if (textareaRef.current) {
           textareaRef.current.focus();
-          const newCursorPos = before.length + mentionText.length;
           textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
         }
-      }, 10);
+      };
+
+      placeFocus();
+      setTimeout(placeFocus, 10);
+      setTimeout(placeFocus, 50);
     },
-    [value, mentionIndex, onChange, onMentionSelect]
+    [value, mentionIndex, mentionQuery, onChange, onMentionSelect]
   );
 
   // Keyboard navigation for dropdown
@@ -320,6 +330,8 @@ export function MentionTextarea({
                   type="button"
                   onMouseDown={(e) => {
                     e.preventDefault(); // Prevents textarea blur before insertion
+                    e.stopPropagation();
+                    e.nativeEvent?.stopImmediatePropagation?.();
                     insertMention(user);
                   }}
                   onMouseEnter={() => setSelectedIndex(idx)}

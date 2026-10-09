@@ -10,12 +10,15 @@ import {
   Minimize2,
   Layers,
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import type { SitePhoto, PhotoCategory } from '@/data/projects';
 import { formatFullDate } from '@/lib/date';
 
 interface PhotoLightboxProps {
   photo: SitePhoto;
+  photos?: SitePhoto[];
   projectName?: string;
   projectCode?: string;
   canDelete?: boolean;
@@ -33,18 +36,37 @@ const categoryStyles: Record<PhotoCategory, { bg: string; text: string; border: 
 };
 
 export function PhotoLightbox({
-  photo,
+  photo: initialPhoto,
+  photos,
   projectName,
   projectCode,
   canDelete = false,
   onClose,
   onDelete,
 }: PhotoLightboxProps) {
+  const photoList = photos && photos.length > 0 ? photos : [initialPhoto];
+  const initialIdx = photoList.findIndex((p) => p.id === initialPhoto.id);
+  const [currentIndex, setCurrentIndex] = useState(initialIdx >= 0 ? initialIdx : 0);
+
+  const currentPhoto = photoList[currentIndex] || initialPhoto;
+
   const [zoomed, setZoomed] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Close on Escape key
+  const hasMultiple = photoList.length > 1;
+
+  const goToPrevious = () => {
+    setZoomed(false);
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : photoList.length - 1));
+  };
+
+  const goToNext = () => {
+    setZoomed(false);
+    setCurrentIndex((prev) => (prev < photoList.length - 1 ? prev + 1 : 0));
+  };
+
+  // Keyboard navigation: Escape, ArrowLeft, ArrowRight
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -53,20 +75,24 @@ export function PhotoLightbox({
         } else {
           onClose();
         }
+      } else if (e.key === 'ArrowLeft' && hasMultiple) {
+        goToPrevious();
+      } else if (e.key === 'ArrowRight' && hasMultiple) {
+        goToNext();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [confirmDelete, onClose]);
+  }, [confirmDelete, onClose, hasMultiple, photoList.length]);
 
-  const catStyle = photo.category && categoryStyles[photo.category]
-    ? categoryStyles[photo.category]
+  const catStyle = currentPhoto.category && categoryStyles[currentPhoto.category]
+    ? categoryStyles[currentPhoto.category]
     : categoryStyles.General;
 
   const handleDownload = () => {
     const link = document.createElement('a');
-    link.href = photo.url;
-    link.download = `${projectCode || 'project'}-site-photo-${photo.takenDate || 'current'}.jpg`;
+    link.href = currentPhoto.url;
+    link.download = `${projectCode || 'project'}-site-photo-${currentPhoto.takenDate || 'current'}.jpg`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -76,8 +102,14 @@ export function PhotoLightbox({
     if (!onDelete) return;
     setIsDeleting(true);
     try {
-      await onDelete(photo.id);
-      onClose();
+      await onDelete(currentPhoto.id);
+      if (hasMultiple) {
+        setConfirmDelete(false);
+        setIsDeleting(false);
+        goToNext();
+      } else {
+        onClose();
+      }
     } catch (e) {
       console.error(e);
       setIsDeleting(false);
@@ -87,7 +119,7 @@ export function PhotoLightbox({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/90 backdrop-blur-md text-white animate-in fade-in duration-200">
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/40">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/40 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
@@ -101,19 +133,24 @@ export function PhotoLightbox({
                   {projectName}
                 </span>
               )}
+              {hasMultiple && (
+                <span className="rounded-full bg-white/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-white/80">
+                  {currentIndex + 1} of {photoList.length}
+                </span>
+              )}
             </div>
-            <span className="text-[11px] text-white/60">
-              Site Photograph • {photo.takenDate ? formatFullDate(photo.takenDate) : 'Current'}
-            </span>
+            <p className="text-[11px] text-white/60 truncate max-w-lg mt-0.5">
+              {currentPhoto.caption || 'Verified Site Progress Photograph'}
+            </p>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
+        {/* Top Controls */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={() => setZoomed(!zoomed)}
-            title={zoomed ? 'Fit to screen' : 'Zoom in'}
+            title={zoomed ? 'Zoom Out' : 'Zoom In'}
             className="grid size-9 place-items-center rounded-xl bg-white/10 hover:bg-white/20 text-white/90 transition"
           >
             {zoomed ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
@@ -150,11 +187,32 @@ export function PhotoLightbox({
         </div>
       </div>
 
-      {/* Main Image Area */}
+      {/* Main Image Area with Previous / Next Arrows */}
       <div className="relative flex-1 overflow-auto flex items-center justify-center p-4 md:p-8">
+        {hasMultiple && (
+          <>
+            <button
+              type="button"
+              onClick={goToPrevious}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 grid size-12 place-items-center rounded-2xl bg-black/60 hover:bg-black/90 text-white border border-white/20 transition shadow-xl"
+              title="Previous photograph (Left Arrow)"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button
+              type="button"
+              onClick={goToNext}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 grid size-12 place-items-center rounded-2xl bg-black/60 hover:bg-black/90 text-white border border-white/20 transition shadow-xl"
+              title="Next photograph (Right Arrow)"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </>
+        )}
+
         <img
-          src={photo.url}
-          alt={photo.caption || 'Site photograph'}
+          src={currentPhoto.url}
+          alt={currentPhoto.caption || 'Site photograph'}
           onClick={() => setZoomed(!zoomed)}
           className={`transition-all duration-200 cursor-pointer object-contain rounded-lg shadow-2xl ${
             zoomed ? 'max-w-none scale-125' : 'max-h-[75vh] max-w-full'
@@ -163,71 +221,70 @@ export function PhotoLightbox({
       </div>
 
       {/* Bottom Metadata Drawer */}
-      <div className="border-t border-white/10 bg-black/60 px-6 py-4">
+      <div className="border-t border-white/10 bg-black/60 px-6 py-4 shrink-0">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              {photo.category && (
+              {currentPhoto.category && (
                 <span
                   className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
                 >
                   <Tag size={10} />
-                  {photo.category}
+                  {currentPhoto.category}
                 </span>
               )}
-              {photo.stage && (
+              {currentPhoto.stage && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 text-white/90 border border-white/15">
                   <Layers size={10} />
-                  {photo.stage}
+                  Stage: {currentPhoto.stage}
+                </span>
+              )}
+              {hasMultiple && (
+                <span className="text-[10px] text-white/50 font-mono">
+                  Photograph {currentIndex + 1} of {photoList.length}
                 </span>
               )}
             </div>
-            <p className="text-[14px] font-medium text-white/95 leading-snug">
-              {photo.caption || 'No caption provided'}
+            <p className="text-[13px] font-medium leading-relaxed text-white">
+              {currentPhoto.caption || 'Site progress photograph'}
             </p>
           </div>
 
-          <div className="flex items-center gap-5 text-[11px] text-white/60 shrink-0">
-            {photo.takenDate && (
-              <div className="flex items-center gap-1.5">
-                <Calendar size={13} className="text-[#d19b35]" />
-                <span>Captured: <strong className="text-white/90">{formatFullDate(photo.takenDate)}</strong></span>
-              </div>
-            )}
-            {photo.uploadedBy && (
-              <div className="flex items-center gap-1.5">
-                <User size={13} className="text-[#3d9a7e]" />
-                <span>Uploaded by: <strong className="text-white/90">{photo.uploadedBy}</strong> ({photo.role || 'Team'})</span>
-              </div>
-            )}
-            {photo.fileSize && (
-              <span className="text-[10px] text-white/40 font-mono">
-                {Math.round(photo.fileSize / 1024)} KB
-              </span>
-            )}
+          <div className="flex flex-wrap items-center gap-6 text-[11px] text-white/70">
+            <div className="flex items-center gap-1.5">
+              <Calendar size={13} className="text-white/50" />
+              <span>Captured: <strong className="text-white">{currentPhoto.takenDate ? formatFullDate(currentPhoto.takenDate) : 'Unknown'}</strong></span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <User size={13} className="text-white/50" />
+              <span>Uploaded by: <strong className="text-white">{currentPhoto.uploadedBy || 'Team'} ({currentPhoto.role || 'Lead'})</strong></span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Delete Confirmation Modal */}
       {confirmDelete && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-white/20 bg-[#173e49] p-6 text-white shadow-2xl">
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-neutral-900 p-6 text-white shadow-2xl space-y-4">
             <div className="flex items-center gap-3 text-rose-400">
-              <span className="grid size-10 place-items-center rounded-xl bg-rose-500/20 text-rose-300">
-                <Trash2 size={20} />
-              </span>
-              <h3 className="text-[16px] font-bold text-white">Delete Site Photograph?</h3>
+              <div className="grid size-10 place-items-center rounded-xl bg-rose-500/20">
+                <AlertTriangle size={20} />
+              </div>
+              <div>
+                <h3 className="text-[14px] font-bold text-white">Delete Photograph</h3>
+                <p className="text-[11px] text-white/60">This action cannot be undone.</p>
+              </div>
             </div>
-            <p className="mt-3 text-[12px] leading-relaxed text-white/70">
-              Are you sure you want to permanently delete this site photograph? The physical image file will be unlinked from the server and cannot be recovered.
+            <p className="text-[12px] text-white/80 leading-relaxed">
+              Are you sure you want to permanently delete this site photograph?
             </p>
-            <div className="mt-6 flex items-center justify-end gap-3">
+            <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 disabled={isDeleting}
                 onClick={() => setConfirmDelete(false)}
-                className="rounded-xl border border-white/20 px-4 py-2 text-[11px] font-bold text-white/80 hover:bg-white/10 transition"
+                className="rounded-xl border border-white/20 px-3.5 py-1.5 text-[11px] font-bold text-white hover:bg-white/10 transition"
               >
                 Cancel
               </button>
@@ -235,9 +292,9 @@ export function PhotoLightbox({
                 type="button"
                 disabled={isDeleting}
                 onClick={handleDelete}
-                className="rounded-xl bg-rose-600 px-4 py-2 text-[11px] font-bold text-white hover:bg-rose-500 transition flex items-center gap-2"
+                className="rounded-xl bg-rose-600 px-4 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700 transition"
               >
-                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+                {isDeleting ? 'Deleting...' : 'Delete Photograph'}
               </button>
             </div>
           </div>

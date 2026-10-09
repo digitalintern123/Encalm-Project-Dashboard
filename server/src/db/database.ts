@@ -89,6 +89,7 @@ export function initDatabase() {
       work_completed TEXT,
       next_action TEXT,
       decision_required TEXT,
+      budget REAL,
       updated_at TEXT
     );
 
@@ -215,6 +216,9 @@ export function initDatabase() {
     }
     if (!phaseColNames.has('tagged_users')) {
       db.prepare("ALTER TABLE phases ADD COLUMN tagged_users TEXT").run();
+    }
+    if (!phaseColNames.has('budget')) {
+      db.prepare("ALTER TABLE phases ADD COLUMN budget REAL").run();
     }
 
     const milestoneColumns = db.prepare("PRAGMA table_info(milestones)").all() as { name: string }[];

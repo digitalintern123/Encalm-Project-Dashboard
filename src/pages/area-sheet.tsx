@@ -80,7 +80,7 @@ export default function AreaSheet() {
         areaSqm: sqm,
         rawArea: p.area || (sqft ? `${sqft.toLocaleString()} SQ.FT.` : '—'),
       };
-    });
+    }).sort((a, b) => a.slNo - b.slNo);
   }, [projects]);
 
   // Filtered items

@@ -31,7 +31,7 @@ import {
   TrendingUp,
   Upload,
 } from 'lucide-react';
-import { CRORE, formatCrore, formatShortDate, getProjectTemplate, issueCategories, projectStatuses, type Health, type IssueCategory, type IssueStatus, type Phase, type Project, type ProjectIssue, type ProjectStatus, type SitePhoto, type PhotoCategory, photoCategories } from '@/data/projects';
+import { CRORE, formatCrore, formatShortDate, getProjectTemplate, issueCategories, projectStatuses, locations, categories, type Health, type IssueCategory, type IssueStatus, type Phase, type Project, type ProjectIssue, type ProjectStatus, type SitePhoto, type PhotoCategory, type Location, type Category, photoCategories } from '@/data/projects';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/hooks/use-toast';
 import { formatFullDate, isValidIsoDate, parseIsoDate, todayLabel } from '@/lib/date';
@@ -43,6 +43,7 @@ import { PhotoUploadDialog } from '@/components/photo-upload-dialog';
 import { ProjectAreaProgram } from '@/components/project-area-program';
 import { TagUserPopover } from '@/components/tag-user-popover';
 import { EmailHubModal } from '@/components/email-hub-modal';
+import { getIssueStatusTheme, issueStatusOptions } from '@/lib/issue-theme';
 
 const healthStyles: Record<Health, { dot: string; text: string; bg: string; border: string }> = {
   'On track': { dot: 'bg-[#3d9a7e]', text: 'text-[#2e7c67]', bg: 'bg-[#e4f1ec]', border: 'border-[#cbe4d9]' },
@@ -53,18 +54,48 @@ const healthStyles: Record<Health, { dot: string; text: string; bg: string; bord
 
 type Tab = 'overview' | 'program' | 'progress' | 'timeline' | 'milestones' | 'photos' | 'commercial' | 'issues' | 'updates';
 
-function Metric({ label, value, note, icon: Icon }: { label: string; value: string; note: ReactNode; icon: typeof Target }) {
+function Metric({
+  label,
+  value,
+  note,
+  icon: Icon,
+  tone = 'default',
+}: {
+  label: string;
+  value: string;
+  note: ReactNode;
+  icon: typeof Target;
+  tone?: 'default' | 'danger' | 'warning' | 'success';
+}) {
+  const toneClasses =
+    tone === 'danger'
+      ? 'border-[#f0c8c2] bg-[#fff6f5]'
+      : tone === 'warning'
+        ? 'border-[#eadcb1] bg-[#fbf1d8]'
+        : tone === 'success'
+          ? 'border-[#cbe4d9] bg-[#edf5f0]'
+          : 'border-border bg-card';
+
+  const textTone =
+    tone === 'danger'
+      ? 'text-[#b2473d]'
+      : tone === 'warning'
+        ? 'text-[#9a711f]'
+        : tone === 'success'
+          ? 'text-[#2e7c67]'
+          : '';
+
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 flex flex-col justify-between">
+    <div className={`rounded-2xl border p-4 flex flex-col justify-between transition-colors ${toneClasses}`}>
       <div>
         <div className="flex items-center justify-between">
           <span className="font-mono text-[9px] uppercase tracking-[.13em] text-muted-foreground">{label}</span>
-          <Icon size={15} className="text-muted-foreground/60" />
+          <Icon size={15} className={textTone || 'text-muted-foreground/60'} />
         </div>
-        <p className="mt-4 text-[23px] font-extrabold tracking-[-.04em]">{value}</p>
+        <p className={`mt-4 text-[23px] font-extrabold tracking-[-.04em] ${textTone}`}>{value}</p>
       </div>
       {typeof note === 'string' ? (
-        <p className="mt-1 text-[10px] text-muted-foreground">{note}</p>
+        <p className={`mt-1 text-[10px] ${textTone || 'text-muted-foreground'}`}>{note}</p>
       ) : (
         note
       )}
@@ -86,9 +117,23 @@ function PhaseList({ project }: { project: Project }) {
   return <div className="space-y-1">{project.phases.map((phase, index) => <div key={`${phase.name}-${index}`} className="group flex items-center gap-3 rounded-xl p-3 hover:bg-[#f8f5ec]"><div className={`relative grid size-8 shrink-0 place-items-center rounded-full ${phase.status === 'complete' ? 'bg-[#e4f1ec] text-[#2e7c67]' : phase.status === 'active' ? 'bg-[#f8edcf] text-[#9a711f]' : 'bg-muted text-muted-foreground'}`}>{phase.status === 'complete' ? <Check size={14} strokeWidth={3} /> : phase.status === 'active' ? <span className="size-2 rounded-full bg-[#d19b35]" /> : <span className="size-1.5 rounded-full bg-muted-foreground/50" />}{index < project.phases.length - 1 && <span className="absolute left-1/2 top-8 h-4 w-px bg-border" />}</div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-4"><p className={`text-[12px] font-bold ${phase.status === 'upcoming' ? 'text-muted-foreground' : ''}`}>{phase.name}</p><span className="font-mono text-[10px] text-muted-foreground">{phase.progress}%</span></div><div className="mt-2 h-1 overflow-hidden rounded-full bg-[#e7e7dc]"><div className={`h-full rounded-full ${phase.status === 'active' ? 'bg-[#d19b35]' : 'bg-[#3d9a7e]'}`} style={{ width: `${phase.progress}%` }} /></div><p className="mt-1.5 text-[10px] text-muted-foreground">{phase.owner}</p></div></div>)}</div>;
 }
 
-function DetailCard({ title, eyebrow, icon: Icon, children, tone = 'card' }: { title: string; eyebrow: string; icon: typeof Target; children: ReactNode; tone?: 'card' | 'gold' | 'green' }) {
+function DetailCard({ title, eyebrow, icon: Icon, children, tone = 'card', action }: { title: string; eyebrow: string; icon: typeof Target; children: ReactNode; tone?: 'card' | 'gold' | 'green'; action?: ReactNode }) {
   const toneClass = tone === 'gold' ? 'border-[#eadcb1] bg-[#fbf1d8]' : tone === 'green' ? 'border-[#d0e0d9] bg-[#edf5f0]' : 'border-border bg-card';
-  return <section className={`rounded-2xl border p-5 shadow-sm shadow-[#173e49]/[.03] md:p-6 ${toneClass}`}><div className="flex items-start justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground">{eyebrow}</p><h2 className="mt-2 text-[19px] font-extrabold tracking-[-.03em]">{title}</h2></div><Icon size={18} className="text-muted-foreground/60" /></div>{children}</section>;
+  return (
+    <section className={`rounded-2xl border p-5 shadow-sm shadow-[#173e49]/[.03] md:p-6 ${toneClass}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground">{eyebrow}</p>
+          <h2 className="mt-2 text-[19px] font-extrabold tracking-[-.03em]">{title}</h2>
+        </div>
+        <div className="flex items-center gap-2">
+          {action}
+          <Icon size={18} className="text-muted-foreground/60" />
+        </div>
+      </div>
+      {children}
+    </section>
+  );
 }
 
 const stageStatuses: Phase['status'][] = ['upcoming', 'active', 'blocked', 'complete'];
@@ -293,6 +338,7 @@ function StageEditorForm({ phase, onCancel, onSave }: { phase: Phase; onCancel: 
     status: phase.status,
     progress: String(phase.progress),
     weight: phase.weight !== undefined ? String(phase.weight) : '',
+    budget: phase.budget !== undefined ? String(phase.budget / CRORE) : '',
     plannedStart: phase.plannedStart ?? '',
     plannedFinish: phase.plannedFinish ?? '',
     actualFinish: phase.actualFinish ?? '',
@@ -310,13 +356,14 @@ function StageEditorForm({ phase, onCancel, onSave }: { phase: Phase; onCancel: 
           ...draft,
           progress: Math.max(0, Math.min(100, Number(draft.progress) || 0)),
           weight: draft.weight !== '' && !isNaN(Number(draft.weight)) ? Math.max(0, Math.min(100, Number(draft.weight))) : undefined,
+          budget: draft.budget !== '' && !isNaN(Number(draft.budget)) ? Math.max(0, Number(draft.budget)) * CRORE : undefined,
           status: draft.status as Phase['status'],
           updatedAt: todayLabel(),
         });
       }}
       className="mt-4 rounded-xl border border-[#cbe4d9] bg-[#edf5f0] p-4"
     >
-      <div className="grid gap-3 md:grid-cols-5">
+      <div className="grid gap-3 md:grid-cols-6">
         <label>
           <span className="mb-1.5 block text-[10px] font-bold">Stage name</span>
           <input
@@ -370,6 +417,20 @@ function StageEditorForm({ phase, onCancel, onSave }: { phase: Phase; onCancel: 
             placeholder="Auto"
             value={draft.weight}
             onChange={(event) => set('weight', event.target.value)}
+            className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]"
+          />
+        </label>
+        <label>
+          <span className="mb-1.5 block text-[10px] font-bold" title="Allocated budget for this stage in ₹ Crores">
+            Budget (₹ Cr)
+          </span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="e.g. 0.5"
+            value={draft.budget}
+            onChange={(event) => set('budget', event.target.value)}
             className="h-9 w-full rounded-lg border border-border bg-white px-2 text-[11px]"
           />
         </label>
@@ -563,7 +624,12 @@ function StageTimelinePanel({
                       </div>
                     )}
 
-                    <div className="mt-3 flex items-center gap-2">
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      {phase.budget != null && (
+                        <span className="rounded-md border border-[#cbe4d9] bg-[#edf5f0] px-2 py-0.5 font-mono text-[10px] font-bold text-[#2e7c67]">
+                          Budget: {formatCrore(phase.budget)}
+                        </span>
+                      )}
                       <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
                         Assigned:
                       </span>
@@ -769,121 +835,257 @@ function StageMilestonesPanel({
     }
   };
 
+  // Partition into Active/Incomplete (top) and Completed (bottom)
+  const sortedMilestones = useMemo(() => {
+    const active: Array<{ milestone: (typeof project.milestones)[0]; originalIndex: number }> = [];
+    const completed: Array<{ milestone: (typeof project.milestones)[0]; originalIndex: number }> = [];
+
+    project.milestones.forEach((m, idx) => {
+      if (m.status === 'complete') {
+        completed.push({ milestone: m, originalIndex: idx });
+      } else {
+        active.push({ milestone: m, originalIndex: idx });
+      }
+    });
+
+    // Active/incomplete: earliest / imminent target date first
+    active.sort((a, b) => a.milestone.date.localeCompare(b.milestone.date));
+    // Completed: most recently completed / target date first at bottom
+    completed.sort((a, b) => b.milestone.date.localeCompare(a.milestone.date));
+
+    return [...active, ...completed];
+  }, [project.milestones]);
+
+  const hasActive = sortedMilestones.some((item) => item.milestone.status !== 'complete');
+  const hasCompleted = sortedMilestones.some((item) => item.milestone.status === 'complete');
+
   return (
     <DetailCard title="Milestones & approvals" eyebrow="Control points" icon={CalendarDays}>
-      <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {project.milestones.map((milestone, index) => {
-          const milestoneId = (milestone as any).id || `${project.id}-${milestone.title}`;
-          const isPendingApproval = milestone.approvalRequired && milestone.approvalStatus === 'Pending';
-          const isComplete = milestone.status === 'complete';
-          return (
-            <div
-              key={`${milestone.title}-${milestone.date}-${index}`}
-              className={`flex flex-col justify-between rounded-xl border p-4 ${
-                isComplete
-                  ? 'border-[#cbe4d9] bg-[#edf5f0]'
-                  : milestone.status === 'late'
-                    ? 'border-[#f0c8c2] bg-[#fae5e1]'
-                    : 'border-border bg-[#fbfaf6]'
-              }`}
-            >
-              <div>
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`grid size-7 place-items-center rounded-lg ${
-                      isComplete
-                        ? 'bg-[#d8ede3] text-[#2e7c67]'
-                        : milestone.status === 'late'
-                          ? 'bg-[#f3d3ce] text-[#b2473d]'
-                          : 'bg-[#f8edcf] text-[#9a711f]'
-                    }`}
-                  >
-                    {isComplete ? (
-                      <CheckCircle2 size={14} />
-                    ) : milestone.status === 'late' ? (
-                      <AlertTriangle size={14} />
-                    ) : (
-                      <Clock3 size={14} />
-                    )}
-                  </span>
-                  <span className="font-mono text-[9px] uppercase tracking-[.08em] text-muted-foreground">
-                    {milestone.status}
-                  </span>
-                </div>
-                <p className="mt-4 text-[11px] font-bold leading-4">{milestone.title}</p>
-                <p className="mt-2 font-mono text-[9px] uppercase tracking-[.09em] text-muted-foreground">
-                  {formatShortDate(milestone.date)} {milestone.date.slice(0, 4)}
-                </p>
-                {(milestone.stage || milestone.owner) && (
-                  <p className="mt-2 text-[10px] text-muted-foreground">
-                    {milestone.stage ?? 'Unassigned'} · {milestone.owner ?? 'No owner'}
-                  </p>
-                )}
-                {milestone.approvalRequired && (
-                  <span
-                    className={`mt-2 inline-flex rounded-full px-2 py-0.5 font-mono text-[8px] uppercase tracking-[.08em] ${
-                      milestone.approvalStatus === 'Approved'
-                        ? 'bg-[#d8ede3] text-[#2e7c67]'
-                        : milestone.approvalStatus === 'Rejected'
-                          ? 'bg-[#fae5e1] text-[#b2473d]'
-                          : 'bg-[#f8edcf] text-[#9a711f]'
-                    }`}
-                  >
-                    Approval · {milestone.approvalStatus ?? 'Pending'}
-                  </span>
-                )}
-
-                <div className="mt-3 flex items-center gap-1.5">
-                  <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-                    Assigned:
-                  </span>
-                  <TagUserPopover
-                    taggedUsers={milestone.taggedUsers}
-                    onChange={(newTagged) => updateMilestone(project.id, index, { taggedUsers: newTagged })}
-                    canTag={canTag}
-                    label="Tag Member"
-                    projectId={project.id}
-                    entityType="Milestone"
-                    entityId={milestoneId}
-                    entityTitle={milestone.title}
-                    entityContext={`Target Date: ${milestone.date}${milestone.stage ? ` • Stage: ${milestone.stage}` : ''}`}
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
-                {isPendingApproval && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => handleApprove(milestoneId, 'Approved')}
-                      className="flex items-center gap-1 rounded-lg bg-[#2e7c67] px-2 py-1 text-[9px] font-bold text-white hover:bg-[#256554]"
-                    >
-                      <ThumbsUp size={10} /> Approve
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleApprove(milestoneId, 'Rejected')}
-                      className="flex items-center gap-1 rounded-lg bg-[#b2473d] px-2 py-1 text-[9px] font-bold text-white hover:bg-[#963c33]"
-                    >
-                      <ThumbsDown size={10} /> Reject
-                    </button>
-                  </>
-                )}
-                {!isComplete && (
-                  <button
-                    type="button"
-                    onClick={() => handleComplete(milestoneId)}
-                    className="flex items-center gap-1 rounded-lg border border-[#cbe4d9] bg-white px-2 py-1 text-[9px] font-bold text-[#2e7c67] hover:bg-[#edf5f0]"
-                  >
-                    <Check size={10} /> Complete
-                  </button>
-                )}
-              </div>
+      <div className="mt-6 space-y-6">
+        {/* Active & Pending Milestones */}
+        <div>
+          {hasCompleted && hasActive && (
+            <div className="mb-3 flex items-center justify-between">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-[.12em] text-foreground">
+                Active & Upcoming ({sortedMilestones.filter((m) => m.milestone.status !== 'complete').length})
+              </span>
             </div>
-          );
-        })}
+          )}
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {sortedMilestones
+              .filter((item) => item.milestone.status !== 'complete')
+              .map(({ milestone, originalIndex }) => {
+                const milestoneId = (milestone as any).id || `${project.id}-${milestone.title}`;
+                const isPendingApproval = milestone.approvalRequired && milestone.approvalStatus === 'Pending';
+                const isComplete = milestone.status === 'complete';
+                return (
+                  <div
+                    key={`${milestone.title}-${milestone.date}-${originalIndex}`}
+                    className={`flex flex-col justify-between rounded-xl border p-4 ${
+                      isComplete
+                        ? 'border-[#cbe4d9] bg-[#edf5f0]'
+                        : milestone.status === 'late'
+                          ? 'border-[#f0c8c2] bg-[#fae5e1]'
+                          : 'border-border bg-[#fbfaf6]'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`grid size-7 place-items-center rounded-lg ${
+                            isComplete
+                              ? 'bg-[#d8ede3] text-[#2e7c67]'
+                              : milestone.status === 'late'
+                                ? 'bg-[#f3d3ce] text-[#b2473d]'
+                                : 'bg-[#f8edcf] text-[#9a711f]'
+                          }`}
+                        >
+                          {isComplete ? (
+                            <CheckCircle2 size={14} />
+                          ) : milestone.status === 'late' ? (
+                            <AlertTriangle size={14} />
+                          ) : (
+                            <Clock3 size={14} />
+                          )}
+                        </span>
+                        <span className="font-mono text-[9px] uppercase tracking-[.08em] text-muted-foreground">
+                          {milestone.status}
+                        </span>
+                      </div>
+                      <p className="mt-4 text-[11px] font-bold leading-4">{milestone.title}</p>
+                      <p className="mt-2 font-mono text-[9px] uppercase tracking-[.09em] text-muted-foreground">
+                        {formatShortDate(milestone.date)} {milestone.date.slice(0, 4)}
+                      </p>
+                      {(milestone.stage || milestone.owner) && (
+                        <p className="mt-2 text-[10px] text-muted-foreground">
+                          {milestone.stage ?? 'Unassigned'} · {milestone.owner ?? 'No owner'}
+                        </p>
+                      )}
+                      {milestone.approvalRequired && (
+                        <span
+                          className={`mt-2 inline-flex rounded-full px-2 py-0.5 font-mono text-[8px] uppercase tracking-[.08em] ${
+                            milestone.approvalStatus === 'Approved'
+                              ? 'bg-[#d8ede3] text-[#2e7c67]'
+                              : milestone.approvalStatus === 'Rejected'
+                                ? 'bg-[#fae5e1] text-[#b2473d]'
+                                : 'bg-[#f8edcf] text-[#9a711f]'
+                          }`}
+                        >
+                          Approval · {milestone.approvalStatus ?? 'Pending'}
+                        </span>
+                      )}
+
+                      <div className="mt-3 flex items-center gap-1.5">
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                          Assigned:
+                        </span>
+                        <TagUserPopover
+                          taggedUsers={milestone.taggedUsers}
+                          onChange={(newTagged) => updateMilestone(project.id, originalIndex, { taggedUsers: newTagged })}
+                          canTag={canTag}
+                          label="Tag Member"
+                          projectId={project.id}
+                          entityType="Milestone"
+                          entityId={milestoneId}
+                          entityTitle={milestone.title}
+                          entityContext={`Target Date: ${milestone.date}${milestone.stage ? ` • Stage: ${milestone.stage}` : ''}`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
+                      {isPendingApproval && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleApprove(milestoneId, 'Approved')}
+                            className="flex items-center gap-1 rounded-lg bg-[#2e7c67] px-2 py-1 text-[9px] font-bold text-white hover:bg-[#256554]"
+                          >
+                            <ThumbsUp size={10} /> Approve
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleApprove(milestoneId, 'Rejected')}
+                            className="flex items-center gap-1 rounded-lg bg-[#b2473d] px-2 py-1 text-[9px] font-bold text-white hover:bg-[#963c33]"
+                          >
+                            <ThumbsDown size={10} /> Reject
+                          </button>
+                        </>
+                      )}
+                      {!isComplete && (
+                        <button
+                          type="button"
+                          onClick={() => handleComplete(milestoneId)}
+                          className="flex items-center gap-1 rounded-lg border border-[#cbe4d9] bg-white px-2 py-1 text-[9px] font-bold text-[#2e7c67] hover:bg-[#edf5f0]"
+                        >
+                          <Check size={10} /> Complete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+
+        {/* Completed Milestones Section at Bottom */}
+        {hasCompleted && (
+          <div className="border-t border-border/70 pt-5">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-[.12em] text-muted-foreground">
+                Completed Milestones ({sortedMilestones.filter((m) => m.milestone.status === 'complete').length})
+              </span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {sortedMilestones
+                .filter((item) => item.milestone.status === 'complete')
+                .map(({ milestone, originalIndex }) => {
+                  const milestoneId = (milestone as any).id || `${project.id}-${milestone.title}`;
+                  const isPendingApproval = milestone.approvalRequired && milestone.approvalStatus === 'Pending';
+                  const isComplete = true;
+                  return (
+                    <div
+                      key={`${milestone.title}-${milestone.date}-${originalIndex}`}
+                      className="flex flex-col justify-between rounded-xl border border-[#cbe4d9] bg-[#edf5f0]/80 p-4 opacity-90 transition hover:opacity-100"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="grid size-7 place-items-center rounded-lg bg-[#d8ede3] text-[#2e7c67]">
+                            <CheckCircle2 size={14} />
+                          </span>
+                          <span className="font-mono text-[9px] uppercase tracking-[.08em] text-[#2e7c67] font-semibold">
+                            Complete
+                          </span>
+                        </div>
+                        <p className="mt-4 text-[11px] font-bold leading-4 line-through decoration-[#2e7c67]/40 text-foreground/80">
+                          {milestone.title}
+                        </p>
+                        <p className="mt-2 font-mono text-[9px] uppercase tracking-[.09em] text-muted-foreground">
+                          {formatShortDate(milestone.date)} {milestone.date.slice(0, 4)}
+                        </p>
+                        {(milestone.stage || milestone.owner) && (
+                          <p className="mt-2 text-[10px] text-muted-foreground">
+                            {milestone.stage ?? 'Unassigned'} · {milestone.owner ?? 'No owner'}
+                          </p>
+                        )}
+                        {milestone.approvalRequired && (
+                          <span
+                            className={`mt-2 inline-flex rounded-full px-2 py-0.5 font-mono text-[8px] uppercase tracking-[.08em] ${
+                              milestone.approvalStatus === 'Approved'
+                                ? 'bg-[#d8ede3] text-[#2e7c67]'
+                                : milestone.approvalStatus === 'Rejected'
+                                  ? 'bg-[#fae5e1] text-[#b2473d]'
+                                  : 'bg-[#f8edcf] text-[#9a711f]'
+                            }`}
+                          >
+                            Approval · {milestone.approvalStatus ?? 'Pending'}
+                          </span>
+                        )}
+
+                        <div className="mt-3 flex items-center gap-1.5">
+                          <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                            Assigned:
+                          </span>
+                          <TagUserPopover
+                            taggedUsers={milestone.taggedUsers}
+                            onChange={(newTagged) => updateMilestone(project.id, originalIndex, { taggedUsers: newTagged })}
+                            canTag={canTag}
+                            label="Tag Member"
+                            projectId={project.id}
+                            entityType="Milestone"
+                            entityId={milestoneId}
+                            entityTitle={milestone.title}
+                            entityContext={`Target Date: ${milestone.date}${milestone.stage ? ` • Stage: ${milestone.stage}` : ''}`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Action Buttons if needed */}
+                      {isPendingApproval && (
+                        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
+                          <button
+                            type="button"
+                            onClick={() => handleApprove(milestoneId, 'Approved')}
+                            className="flex items-center gap-1 rounded-lg bg-[#2e7c67] px-2 py-1 text-[9px] font-bold text-white hover:bg-[#256554]"
+                          >
+                            <ThumbsUp size={10} /> Approve
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleApprove(milestoneId, 'Rejected')}
+                            className="flex items-center gap-1 rounded-lg bg-[#b2473d] px-2 py-1 text-[9px] font-bold text-white hover:bg-[#963c33]"
+                          >
+                            <ThumbsDown size={10} /> Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
       </div>
       {editable &&
         (adding ? (
@@ -1010,22 +1212,33 @@ function StageIssuesPanel({
           project.issues.map((issue, index) => {
             const ariseDate = issue.issueAriseDate || issue.dateRaised;
             const closureDate = issue.targetClosureDate || issue.dueDate;
+            const statusTheme = getIssueStatusTheme(issue.status, issue.severity);
+            const StatusIcon = statusTheme.icon;
+
             return (
-              <div key={`${issue.id ?? issue.title}-${index}`} className="rounded-xl border border-[#eadcb1] bg-[#fff8e9]/70 p-3.5">
+              <div
+                key={`${issue.id ?? issue.title}-${index}`}
+                className={`rounded-xl border p-3.5 transition-colors duration-200 ${statusTheme.cardClass}`}
+              >
                 <div className="flex items-start gap-3">
                   <span
-                    className={`mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg ${
-                      issue.severity === 'High' ? 'bg-[#fae5e1] text-[#b2473d]' : 'bg-[#f8edcf] text-[#9a711f]'
-                    }`}
+                    className={`mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg transition-colors ${statusTheme.iconBoxClass}`}
+                    title={statusTheme.description}
                   >
-                    <AlertTriangle size={14} />
+                    <StatusIcon size={14} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-[11px] font-bold">{issue.title}</span>
-                      <span className="flex items-center gap-2 font-mono text-[8px] uppercase tracking-[.1em] text-[#9a711f]">
-                        {issue.severity} · Category: {issue.category ?? 'Other'}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider ${statusTheme.badgeClass}`}>
+                          <span className="size-1.5 rounded-full" style={{ backgroundColor: statusTheme.dotColor }} />
+                          {issue.status ?? 'Open'}
+                        </span>
+                        <span className="font-mono text-[8px] uppercase tracking-[.1em] text-muted-foreground">
+                          {issue.severity} · Category: {issue.category ?? 'Other'}
+                        </span>
+                      </div>
                     </span>
                     <span className="mt-1.5 block text-[10px] leading-4 text-muted-foreground">{issue.detail}</span>
                     <div className="mt-2 flex flex-wrap gap-2 text-[9px] text-muted-foreground">
@@ -1050,7 +1263,24 @@ function StageIssuesPanel({
                         {issue.impactScope && <p><strong className="text-foreground">Scope / quality impact:</strong> {issue.impactScope}</p>}
                       </div>
                     )}
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#eadcb1]/60 pt-2.5">
+
+                    {/* Progress indicator toward resolution & closure */}
+                    <div className="mt-2.5 flex items-center gap-2">
+                      <div className="h-1 flex-1 overflow-hidden rounded-full bg-black/5">
+                        <div
+                          className="h-full rounded-full transition-all duration-300"
+                          style={{
+                            width: `${statusTheme.stepPercent}%`,
+                            backgroundColor: statusTheme.dotColor,
+                          }}
+                        />
+                      </div>
+                      <span className="font-mono text-[8px] font-bold" style={{ color: statusTheme.dotColor }}>
+                        {statusTheme.stepPercent}% · {statusTheme.description}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-2.5">
                       <div className="flex items-center gap-1.5">
                         <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
                           Tagged:
@@ -1069,19 +1299,21 @@ function StageIssuesPanel({
                       </div>
                       {editable ? (
                         <label className="flex items-center gap-2 text-[10px] font-bold">
-                          <span>Status</span>
+                          <span className="text-muted-foreground">Status</span>
                           <select
                             value={issue.status ?? 'Open'}
                             onChange={(event) => onUpdate(index, { status: event.target.value as IssueStatus })}
-                            className="h-8 rounded-lg border border-border bg-white px-2 text-[10px]"
+                            className={`h-8 rounded-lg border px-2 text-[10px] outline-none transition-all cursor-pointer shadow-sm ${statusTheme.selectClass}`}
                           >
-                            {issueStatuses.map((status) => (
-                              <option key={status}>{status}</option>
+                            {issueStatusOptions.map((opt) => (
+                              <option key={opt.status} value={opt.status} className="bg-white text-foreground">
+                                {opt.prefix} {opt.label}
+                              </option>
                             ))}
                           </select>
                         </label>
                       ) : (
-                        <span className="font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">
+                        <span className={`rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[.1em] ${statusTheme.badgeClass}`}>
                           {issue.status ?? 'Open'}
                         </span>
                       )}
@@ -1397,19 +1629,25 @@ function StagePhotosPanel({
   onDelete: (photoId: string) => void;
   onInspect: (photo: SitePhoto) => void;
 }) {
-  const currentPhoto = project.photos && project.photos.length > 0 ? project.photos[0] : null;
+  const photos = project.photos || [];
+  const latestPhoto = photos.length > 0 ? photos[0] : null;
 
   return (
     <div className="w-full space-y-6">
       <DetailCard
-        title="Current Site Photograph"
+        title="Site Photographs Gallery"
         eyebrow="Physical Progress Verification"
         icon={Camera}
       >
         <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-5">
           <div>
             <p className="text-[12px] text-muted-foreground max-w-xl">
-              Verified physical site photograph for <strong>{project.name}</strong>. Only the latest verified photograph is retained on the server; uploading a new photograph automatically replaces and deletes previous image files.
+              Verified physical site photographs for <strong>{project.name}</strong> documenting construction progress, MEP fit-out, and snag resolutions.
+              {photos.length > 0 && (
+                <span className="block mt-1 font-semibold text-foreground">
+                  {photos.length} verified site photograph{photos.length > 1 ? 's' : ''} in project gallery.
+                </span>
+              )}
             </p>
           </div>
           {editable && (
@@ -1419,101 +1657,180 @@ function StagePhotosPanel({
               className="inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-4 py-2.5 text-[11px] font-bold text-white hover:bg-[#205160] transition shadow-sm shrink-0"
             >
               <Upload size={14} />
-              {currentPhoto ? 'Update / Replace Photograph' : 'Upload Site Photograph'}
+              Upload Site Photographs
             </button>
           )}
         </div>
 
-        {currentPhoto ? (
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr] items-start">
-            {/* Clickable Image Card */}
-            <div
-              onClick={() => onInspect(currentPhoto)}
-              className="group relative aspect-video w-full overflow-hidden rounded-2xl border border-border bg-black/5 cursor-pointer shadow-md"
-            >
-              <img
-                src={currentPhoto.url}
-                alt={currentPhoto.caption}
-                className="size-full object-cover transition duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                <span className="rounded-xl bg-black/75 px-4 py-2 text-[11px] font-bold text-white backdrop-blur-sm shadow-lg flex items-center gap-2">
-                  <Camera size={14} /> Click to inspect high-resolution
+        {photos.length > 0 ? (
+          <div className="mt-6 space-y-8">
+            {/* Featured / Latest Photograph */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-[10px] uppercase tracking-wider font-bold text-[#9a711f]">
+                  Latest Verified Progress
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  Captured {latestPhoto?.takenDate ? formatFullDate(latestPhoto.takenDate) : 'Recently'}
                 </span>
               </div>
-            </div>
 
-            {/* Photo Metadata Card */}
-            <div className="rounded-2xl border border-border bg-[#fbf9f4] p-5 space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                {currentPhoto.category && (
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#e4f1ec] text-[#2e7c67] border border-[#cbe4d9]">
-                    {currentPhoto.category}
-                  </span>
-                )}
-                {currentPhoto.stage && (
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white text-foreground border border-border">
-                    Stage: {currentPhoto.stage}
-                  </span>
-                )}
-              </div>
-
-              <div>
-                <h4 className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-                  Progress Caption
-                </h4>
-                <p className="mt-1 text-[13px] font-semibold leading-relaxed text-foreground">
-                  "{currentPhoto.caption}"
-                </p>
-              </div>
-
-              <div className="border-t border-border/70 pt-4 space-y-2 text-[11px] text-muted-foreground">
-                <div className="flex items-center justify-between">
-                  <span>Date Captured</span>
-                  <strong className="text-foreground font-mono">
-                    {currentPhoto.takenDate ? formatFullDate(currentPhoto.takenDate) : '—'}
-                  </strong>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Uploaded By</span>
-                  <strong className="text-foreground">
-                    {currentPhoto.uploadedBy} ({currentPhoto.role || 'Team'})
-                  </strong>
-                </div>
-                {currentPhoto.fileSize ? (
-                  <div className="flex items-center justify-between">
-                    <span>File Size</span>
-                    <span className="font-mono">{Math.round(currentPhoto.fileSize / 1024)} KB</span>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="border-t border-border/70 pt-4 flex flex-wrap items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => onInspect(currentPhoto)}
-                  className="rounded-xl border border-border bg-white px-3.5 py-2 text-[11px] font-bold text-foreground hover:bg-muted transition"
+              <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr] items-start">
+                {/* Clickable Featured Image */}
+                <div
+                  onClick={() => latestPhoto && onInspect(latestPhoto)}
+                  className="group relative aspect-video w-full overflow-hidden rounded-2xl border border-border bg-black/5 cursor-pointer shadow-md"
                 >
-                  View High-Res
-                </button>
-                {editable && (
-                  <button
-                    type="button"
-                    onClick={() => onDelete(currentPhoto.id)}
-                    className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition"
-                  >
-                    Delete Photograph
-                  </button>
-                )}
+                  <img
+                    src={latestPhoto?.url}
+                    alt={latestPhoto?.caption}
+                    className="size-full object-cover transition duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                    <span className="rounded-xl bg-black/75 px-4 py-2 text-[11px] font-bold text-white backdrop-blur-sm shadow-lg flex items-center gap-2">
+                      <Camera size={14} /> Click to inspect high-resolution
+                    </span>
+                  </div>
+                </div>
+
+                {/* Latest Photo Metadata Card */}
+                <div className="rounded-2xl border border-border bg-[#fbf9f4] p-5 space-y-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {latestPhoto?.category && (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#e4f1ec] text-[#2e7c67] border border-[#cbe4d9]">
+                        {latestPhoto.category}
+                      </span>
+                    )}
+                    {latestPhoto?.stage && (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white text-foreground border border-border">
+                        Stage: {latestPhoto.stage}
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                      Progress Caption
+                    </h4>
+                    <p className="mt-1 text-[13px] font-semibold leading-relaxed text-foreground">
+                      "{latestPhoto?.caption}"
+                    </p>
+                  </div>
+
+                  <div className="border-t border-border/70 pt-4 space-y-2 text-[11px] text-muted-foreground">
+                    <div className="flex items-center justify-between">
+                      <span>Date Captured</span>
+                      <strong className="text-foreground font-mono">
+                        {latestPhoto?.takenDate ? formatFullDate(latestPhoto.takenDate) : '—'}
+                      </strong>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Uploaded By</span>
+                      <strong className="text-foreground">
+                        {latestPhoto?.uploadedBy} ({latestPhoto?.role || 'Team'})
+                      </strong>
+                    </div>
+                    {latestPhoto?.fileSize ? (
+                      <div className="flex items-center justify-between">
+                        <span>File Size</span>
+                        <span className="font-mono">{Math.round(latestPhoto.fileSize / 1024)} KB</span>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="border-t border-border/70 pt-4 flex flex-wrap items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => latestPhoto && onInspect(latestPhoto)}
+                      className="rounded-xl border border-border bg-white px-3.5 py-2 text-[11px] font-bold text-foreground hover:bg-muted transition"
+                    >
+                      View High-Res
+                    </button>
+                    {editable && latestPhoto && (
+                      <button
+                        type="button"
+                        onClick={() => onDelete(latestPhoto.id)}
+                        className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition"
+                      >
+                        Delete Photograph
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* Gallery Grid (All Photographs) */}
+            {photos.length > 1 && (
+              <div className="border-t border-border/70 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-[14px] font-bold text-foreground">
+                    All Project Photographs ({photos.length})
+                  </h3>
+                  <span className="text-[11px] text-muted-foreground">
+                    Click any photo to open full-screen viewer
+                  </span>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {photos.map((ph, idx) => (
+                    <div
+                      key={ph.id}
+                      className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition flex flex-col justify-between"
+                    >
+                      <div
+                        onClick={() => onInspect(ph)}
+                        className="relative aspect-video w-full overflow-hidden bg-black/5 cursor-pointer"
+                      >
+                        <img
+                          src={ph.url}
+                          alt={ph.caption}
+                          className="size-full object-cover transition duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+                          {ph.category && (
+                            <span className="rounded-full bg-black/60 backdrop-blur-sm px-2 py-0.5 font-mono text-[8px] font-bold text-white uppercase">
+                              {ph.category}
+                            </span>
+                          )}
+                        </div>
+                        <div className="absolute bottom-2 right-2 rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-mono text-white/90">
+                          #{idx + 1}
+                        </div>
+                      </div>
+
+                      <div className="p-3 space-y-2">
+                        <p className="text-[11px] font-semibold text-foreground line-clamp-2 leading-snug">
+                          {ph.caption}
+                        </p>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-border/60">
+                          <span>{ph.takenDate ? formatFullDate(ph.takenDate) : 'Unknown date'}</span>
+                          {ph.stage && <span className="font-medium text-foreground">{ph.stage}</span>}
+                        </div>
+                        {editable && (
+                          <div className="flex items-center justify-end pt-1">
+                            <button
+                              type="button"
+                              onClick={() => onDelete(ph.id)}
+                              className="text-[10px] font-bold text-rose-600 hover:text-rose-800 hover:underline"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="mt-8 rounded-2xl border-2 border-dashed border-border p-12 text-center">
             <Camera size={38} className="mx-auto text-muted-foreground/50 mb-3" />
-            <h3 className="text-[16px] font-bold text-foreground">No Site Photograph Uploaded Yet</h3>
+            <h3 className="text-[16px] font-bold text-foreground">No Site Photographs Uploaded Yet</h3>
             <p className="mt-2 text-[12px] text-muted-foreground max-w-md mx-auto leading-relaxed">
-              Upload physical progress photos, snag shots, or milestone completions directly from the site to keep stakeholders visually aligned.
+              Upload physical progress photos, snag shots, or milestone completions directly from the site to keep stakeholders visually aligned. Multiple photos can be uploaded at once.
             </p>
             {editable && (
               <button
@@ -1522,7 +1839,7 @@ function StagePhotosPanel({
                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#173e49] px-5 py-2.5 text-[11px] font-bold text-white hover:bg-[#205160] transition shadow-sm"
               >
                 <Upload size={14} />
-                Upload First Site Photograph
+                Upload Site Photographs
               </button>
             )}
           </div>
@@ -1550,6 +1867,7 @@ export default function ProjectDetail() {
     updateIssue,
     addUpdate,
     addPhoto,
+    addMultiplePhotos,
     deletePhoto,
   } = useAppState();
   const { toast } = useToast();
@@ -1721,9 +2039,13 @@ export default function ProjectDetail() {
       <Metric
         label="Approved Budget (AOP)"
         value={formatCrore(project.aop)}
+        tone={commercial.overAwarded ? 'warning' : 'default'}
         note={
           <div className="mt-1 space-y-0.5 text-[10px] text-muted-foreground">
-            <div>{formatCrore(project.awarded)} committed</div>
+            <div>
+              {formatCrore(project.awarded)} committed{' '}
+              {commercial.overAwarded && <span className="font-bold text-[#b2473d]">(Over AOP)</span>}
+            </div>
             <div>{formatCrore(project.spent)} spent</div>
           </div>
         }
@@ -1732,11 +2054,12 @@ export default function ProjectDetail() {
       <Metric
         label="Projected Cost"
         value={formatCrore(project.projectedCost ?? project.aop)}
+        tone={commercial.overBudget ? 'danger' : 'default'}
         note={
           commercial.costVariance === 0
             ? 'On approved budget'
             : commercial.costVariance > 0
-              ? `+${formatCrore(commercial.costVariance)} variance`
+              ? `+${formatCrore(commercial.costVariance)} variance (Over budget)`
               : `${formatCrore(commercial.costVariance)} variance`
         }
         icon={ReceiptText}
@@ -1878,12 +2201,28 @@ export default function ProjectDetail() {
         stages={project.phases}
         existingPhotoUrl={project.photos?.[0]?.url}
         onClose={() => setUploadOpen(false)}
+        onUploadBatch={async (photos) => {
+          try {
+            await addMultiplePhotos(project.id, photos);
+            toast({
+              title: `${photos.length} photograph${photos.length > 1 ? 's' : ''} uploaded`,
+              description: 'Successfully added to project site gallery.',
+            });
+          } catch (err: any) {
+            toast({
+              variant: 'destructive',
+              title: 'Upload failed',
+              description: err?.message || 'Failed to upload photographs.',
+            });
+            throw err;
+          }
+        }}
         onUpload={async (data) => {
           try {
             await addPhoto(project.id, data);
             toast({
-              title: 'Site photograph updated',
-              description: 'New photograph uploaded and previous photo purged from server.',
+              title: 'Site photograph added',
+              description: 'New photograph uploaded to project site gallery.',
             });
           } catch (err: any) {
             toast({
@@ -1900,6 +2239,7 @@ export default function ProjectDetail() {
     {lightboxPhoto && (
       <PhotoLightbox
         photo={lightboxPhoto}
+        photos={project.photos || []}
         projectName={project.name}
         projectCode={project.code}
         canDelete={canEdit}
@@ -1918,12 +2258,25 @@ export default function ProjectDetail() {
 function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCancel: () => void; onSave: (patch: Partial<Project>) => void }) {
   const { leads, role } = useAppState();
   const [name, setName] = useState(project.name);
-  const [targetDate, setTargetDate] = useState(project.targetDate);
-  const [health, setHealth] = useState(project.health);
+  const [code, setCode] = useState(project.code || '');
+  const [location, setLocation] = useState<Location>(project.location);
+  const [category, setCategory] = useState<Category>(project.category);
   const [status, setStatus] = useState<ProjectStatus>(project.status || 'Yet to start');
+  const [health, setHealth] = useState<Health>(project.health);
+  const [leadId, setLeadId] = useState(project.leadId);
+  const [startDate, setStartDate] = useState(project.startDate || '');
+  const [targetDate, setTargetDate] = useState(project.targetDate);
+  const [nextMilestone, setNextMilestone] = useState(project.nextMilestone || '');
+  const [nextMilestoneDate, setNextMilestoneDate] = useState(project.nextMilestoneDate || '');
   const [area, setArea] = useState(project.area || project.specification?.area || '');
   const [paxKeys, setPaxKeys] = useState(project.paxKeys || project.specification?.capacity || '');
-  const [leadId, setLeadId] = useState(project.leadId);
+  const [terminal, setTerminal] = useState(project.specification?.terminal || '');
+  const [floor, setFloor] = useState(project.specification?.floor || '');
+  const [scope, setScope] = useState(project.specification?.scope || '');
+  const [aop, setAop] = useState(String((project.aop || 0) / CRORE));
+  const [awarded, setAwarded] = useState(String((project.awarded || 0) / CRORE));
+  const [spent, setSpent] = useState(String((project.spent || 0) / CRORE));
+  const [projectedCost, setProjectedCost] = useState(String(((project.projectedCost ?? project.aop) || 0) / CRORE));
   const [error, setError] = useState('');
 
   const handleSubmit = (event: FormEvent) => {
@@ -1931,98 +2284,221 @@ function EditProjectForm({ project, onCancel, onSave }: { project: Project; onCa
     if (!name.trim()) { setError('Project name cannot be empty.'); return; }
     if (!isValidIsoDate(targetDate)) { setError('Enter a valid target completion date.'); return; }
     setError('');
+
+    const parsedAop = !isNaN(Number(aop)) && Number(aop) >= 0 ? Number(aop) * CRORE : project.aop;
+    const parsedAwarded = !isNaN(Number(awarded)) && Number(awarded) >= 0 ? Number(awarded) * CRORE : project.awarded;
+    const parsedSpent = !isNaN(Number(spent)) && Number(spent) >= 0 ? Number(spent) * CRORE : project.spent;
+    const parsedProjected = !isNaN(Number(projectedCost)) && Number(projectedCost) >= 0 ? Number(projectedCost) * CRORE : parsedAop;
+
     onSave({
       name: name.trim(),
+      code: code.trim() || project.code,
+      location,
+      category,
+      status,
+      health,
+      leadId: role === 'coordinator' ? leadId : project.leadId,
+      startDate: startDate || undefined,
       targetDate,
       targetLabel: formatFullDate(targetDate),
-      health,
-      status,
-      leadId: role === 'coordinator' ? leadId : project.leadId,
+      nextMilestone: nextMilestone.trim() || project.nextMilestone,
+      nextMilestoneDate: nextMilestoneDate || project.nextMilestoneDate,
       area: area.trim(),
       paxKeys: paxKeys.trim(),
+      aop: parsedAop,
+      awarded: parsedAwarded,
+      spent: parsedSpent,
+      projectedCost: parsedProjected,
       specification: {
-        projectType: project.specification?.projectType ?? project.category,
+        projectType: project.specification?.projectType ?? category,
         area: area.trim(),
         capacity: paxKeys.trim(),
         units: project.specification?.units ?? '',
-        terminal: project.specification?.terminal ?? project.location,
-        floor: project.specification?.floor ?? '',
-        scope: project.specification?.scope ?? '',
+        terminal: terminal.trim() || location,
+        floor: floor.trim(),
+        scope: scope.trim(),
         customFields: project.specification?.customFields,
+        areaProgram: project.specification?.areaProgram,
+        areaSheet: project.specification?.areaSheet,
       },
     });
   };
+
   return (
-    <form onSubmit={handleSubmit} noValidate className="mt-6 rounded-2xl border border-[#eadcb1] bg-[#fff8e9] p-5 md:p-6">
-      <div className="flex items-center justify-between">
+    <form onSubmit={handleSubmit} noValidate className="mt-6 rounded-2xl border border-[#eadcb1] bg-[#fff8e9] p-5 md:p-6 shadow-sm">
+      <div className="flex items-center justify-between border-b border-[#eadcb1]/70 pb-3">
         <div>
           <p className="font-mono text-[9px] uppercase tracking-[.13em] text-[#9a711f]">
             {role === 'coordinator' ? 'Project coordinator controls' : 'Project lead controls'}
           </p>
-          <h2 className="mt-1 text-[16px] font-extrabold">Edit project information</h2>
+          <h2 className="mt-0.5 text-[16px] font-extrabold text-[#173e49]">Edit project information</h2>
         </div>
-        <button type="button" onClick={onCancel} className="text-[11px] text-muted-foreground">Cancel</button>
+        <button type="button" onClick={onCancel} className="rounded-lg border border-border bg-white px-3 py-1.5 text-[11px] font-bold text-muted-foreground hover:bg-muted">
+          Cancel
+        </button>
       </div>
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
-        <label className="md:col-span-2">
-          <span className="mb-2 block text-[10px] font-bold">Project name</span>
-          <input value={name} onChange={(event) => setName(event.target.value)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
-        </label>
-        <div>
-          <label className="mb-2 block text-[10px] font-bold">
-            Project status
-          </label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as ProjectStatus)}
-            className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px] font-bold text-[#173e49]"
-          >
-            {projectStatuses.map((st) => (
-              <option key={st} value={st}>
-                {st}
-              </option>
-            ))}
-          </select>
-        </div>
 
-        {role === 'coordinator' && leads.length > 0 && (
-          <label className="md:col-span-3">
-            <span className="mb-2 block text-[10px] font-bold text-[#664b14]">Allotted Project Lead</span>
+      {/* Section 1: Core Details */}
+      <div className="mt-4">
+        <p className="mb-2 font-mono text-[9px] uppercase tracking-wider text-[#9a711f] font-bold">1. Core Information</p>
+        <div className="grid gap-3 md:grid-cols-4">
+          <label className="md:col-span-2">
+            <span className="mb-1.5 block text-[10px] font-bold">Project name *</span>
+            <input value={name} onChange={(event) => setName(event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Project Code</span>
+            <input value={code} onChange={(event) => setCode(event.target.value)} placeholder="e.g. DEL-T3-L01" className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px] font-mono" />
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Project status</span>
             <select
-              value={leadId}
-              onChange={(event) => setLeadId(event.target.value)}
-              className="h-10 w-full rounded-lg border border-[#d6a95d] bg-white px-3 text-[11px] font-bold text-[#173e49]"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as ProjectStatus)}
+              className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px] font-bold text-[#173e49]"
             >
-              {leads.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.name} ({l.title}) — {l.email}
-                </option>
+              {projectStatuses.map((st) => (
+                <option key={st} value={st}>{st}</option>
               ))}
             </select>
           </label>
-        )}
-
-        <label>
-          <span className="mb-2 block text-[10px] font-bold">Target completion (Project Completion Date)</span>
-          <input type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
-        </label>
-        <label>
-          <span className="mb-2 block text-[10px] font-bold">Health</span>
-          <select value={health} onChange={(event) => setHealth(event.target.value as Health)} className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]">
-            {(Object.keys(healthStyles) as Health[]).map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </label>
-        <label>
-          <span className="mb-2 block text-[10px] font-bold">Area</span>
-          <input value={area} onChange={(event) => setArea(event.target.value)} placeholder="e.g. 24,000 sqft" className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
-        </label>
-        <label className="md:col-span-3">
-          <span className="mb-2 block text-[10px] font-bold">Pax / Keys</span>
-          <input value={paxKeys} onChange={(event) => setPaxKeys(event.target.value)} placeholder="e.g. 180 Pax / 45 Keys" className="h-10 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
-        </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Location</span>
+            <select
+              value={location}
+              onChange={(e) => setLocation(e.target.value as Location)}
+              className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px]"
+            >
+              {locations.map((loc) => (
+                <option key={loc} value={loc}>{loc}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Category</span>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as Category)}
+              className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px]"
+            >
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Health status</span>
+            <select value={health} onChange={(event) => setHealth(event.target.value as Health)} className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px]">
+              {(Object.keys(healthStyles) as Health[]).map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+          </label>
+          {role === 'coordinator' && leads.length > 0 && (
+            <label>
+              <span className="mb-1.5 block text-[10px] font-bold text-[#664b14]">Allotted Project Lead</span>
+              <select
+                value={leadId}
+                onChange={(event) => setLeadId(event.target.value)}
+                className="h-9 w-full rounded-lg border border-[#d6a95d] bg-white px-3 text-[11px] font-bold text-[#173e49]"
+              >
+                {leads.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name} ({l.title})
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
       </div>
-      {error && <p role="alert" className="mt-3 rounded-lg bg-[#fae5e1] px-3 py-2 text-[11px] font-semibold text-[#b2473d]">{error}</p>}
-      <button type="submit" className="mt-4 rounded-lg bg-[#173e49] px-4 py-2.5 text-[10px] font-bold text-white">Save project</button>
+
+      {/* Section 2: Timeline & Milestones */}
+      <div className="mt-5 border-t border-[#eadcb1]/70 pt-4">
+        <p className="mb-2 font-mono text-[9px] uppercase tracking-wider text-[#9a711f] font-bold">2. Timeline & Next Milestone</p>
+        <div className="grid gap-3 md:grid-cols-4">
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Start Date</span>
+            <input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Target Completion Date *</span>
+            <input type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Next Key Milestone</span>
+            <input value={nextMilestone} onChange={(event) => setNextMilestone(event.target.value)} placeholder="e.g. MEP rough-in sign-off" className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Milestone Target Date</span>
+            <input type="date" value={nextMilestoneDate} onChange={(event) => setNextMilestoneDate(event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+          </label>
+        </div>
+      </div>
+
+      {/* Section 3: Physical Specifications & Scope */}
+      <div className="mt-5 border-t border-[#eadcb1]/70 pt-4">
+        <p className="mb-2 font-mono text-[9px] uppercase tracking-wider text-[#9a711f] font-bold">3. Physical Space & Specifications</p>
+        <div className="grid gap-3 md:grid-cols-4">
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Area</span>
+            <input value={area} onChange={(event) => setArea(event.target.value)} placeholder="e.g. 24,000 sqft" className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Pax / Keys</span>
+            <input value={paxKeys} onChange={(event) => setPaxKeys(event.target.value)} placeholder="e.g. 180 Pax / 45 Keys" className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Terminal / Airport</span>
+            <input value={terminal} onChange={(event) => setTerminal(event.target.value)} placeholder="e.g. T3 Departure" className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Floor Level</span>
+            <input value={floor} onChange={(event) => setFloor(event.target.value)} placeholder="e.g. Level 2 (Mezzanine)" className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px]" />
+          </label>
+          <label className="md:col-span-4">
+            <span className="mb-1.5 block text-[10px] font-bold">Scope of Work</span>
+            <textarea
+              value={scope}
+              onChange={(event) => setScope(event.target.value)}
+              rows={2}
+              placeholder="Detailed description of works, MEP coordination, finishes, and handover deliverables..."
+              className="w-full rounded-lg border border-border bg-white p-2.5 text-[11px] outline-none"
+            />
+          </label>
+        </div>
+      </div>
+
+      {/* Section 4: Commercial Figures */}
+      <div className="mt-5 border-t border-[#eadcb1]/70 pt-4">
+        <p className="mb-2 font-mono text-[9px] uppercase tracking-wider text-[#9a711f] font-bold">4. Commercial Capital Position (₹ in Crores)</p>
+        <div className="grid gap-3 sm:grid-cols-4">
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Approved Budget (AOP)</span>
+            <input type="number" min="0" step="0.01" value={aop} onChange={(event) => setAop(event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px] font-mono" />
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Committed / Awarded</span>
+            <input type="number" min="0" step="0.01" value={awarded} onChange={(event) => setAwarded(event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px] font-mono" />
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Spent Till Date</span>
+            <input type="number" min="0" step="0.01" value={spent} onChange={(event) => setSpent(event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px] font-mono" />
+          </label>
+          <label>
+            <span className="mb-1.5 block text-[10px] font-bold">Projected Final Cost</span>
+            <input type="number" min="0" step="0.01" value={projectedCost} onChange={(event) => setProjectedCost(event.target.value)} className="h-9 w-full rounded-lg border border-border bg-white px-3 text-[11px] font-mono" />
+          </label>
+        </div>
+      </div>
+
+      {error && <p role="alert" className="mt-4 rounded-lg bg-[#fae5e1] px-3 py-2 text-[11px] font-semibold text-[#b2473d]">{error}</p>}
+      <div className="mt-5 flex gap-2 border-t border-[#eadcb1]/70 pt-3">
+        <button type="submit" className="rounded-lg bg-[#173e49] px-5 py-2.5 text-[10px] font-bold text-white shadow-xs hover:bg-[#205160] transition">
+          Save project
+        </button>
+        <button type="button" onClick={onCancel} className="rounded-lg border border-border bg-white px-4 py-2.5 text-[10px] font-bold hover:bg-muted">
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }
@@ -2223,7 +2699,7 @@ function OverviewPanel({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent opacity-85 group-hover:opacity-100 transition" />
                     <div className="absolute bottom-3 left-3 right-3 text-white">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         {currentPhoto.category && (
                           <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#3d9a7e] text-white">
                             {currentPhoto.category}
@@ -2232,6 +2708,11 @@ function OverviewPanel({
                         {currentPhoto.stage && (
                           <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-white/20 text-white backdrop-blur-sm">
                             {currentPhoto.stage}
+                          </span>
+                        )}
+                        {project.photos && project.photos.length > 1 && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#173e49]/80 text-white backdrop-blur-sm border border-white/20">
+                            +{project.photos.length - 1} more in gallery
                           </span>
                         )}
                       </div>
@@ -2248,7 +2729,9 @@ function OverviewPanel({
                         onClick={() => onSelectTab('photos')}
                         className="font-bold text-[#9a711f] hover:underline"
                       >
-                        View full photo →
+                        {project.photos && project.photos.length > 1
+                          ? `View all ${project.photos.length} photos →`
+                          : 'View full photo →'}
                       </button>
                     )}
                   </div>
@@ -2279,19 +2762,27 @@ function OverviewPanel({
 
         <DetailCard title="Key issue" eyebrow="Decision radar" icon={AlertTriangle} tone="gold">
           {project.issues[0] ? (
-            <div className="mt-6">
-              <div className="flex items-center gap-2">
-                <span className="size-2 rounded-full bg-[#d19b35]" />
-                <span className="font-mono text-[9px] uppercase tracking-[.12em] text-[#9a711f]">
-                  {project.issues[0].severity} priority · {project.issues[0].category ?? 'Other'}
-                </span>
-              </div>
-              <h3 className="mt-3 text-[14px] font-extrabold">{project.issues[0].title}</h3>
-              <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{project.issues[0].detail}</p>
-              <p className="mt-4 font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">
-                Owner · {project.issues[0].owner}
-              </p>
-            </div>
+            (() => {
+              const keyIssueTheme = getIssueStatusTheme(project.issues[0].status, project.issues[0].severity);
+              return (
+                <div className="mt-6">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: keyIssueTheme.dotColor }} />
+                    <span className={`rounded-full px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider ${keyIssueTheme.badgeClass}`}>
+                      {project.issues[0].status ?? 'Open'}
+                    </span>
+                    <span className="font-mono text-[9px] uppercase tracking-[.12em] text-muted-foreground">
+                      {project.issues[0].severity} priority · {project.issues[0].category ?? 'Other'}
+                    </span>
+                  </div>
+                  <h3 className="mt-3 text-[14px] font-extrabold">{project.issues[0].title}</h3>
+                  <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{project.issues[0].detail}</p>
+                  <p className="mt-4 font-mono text-[9px] uppercase tracking-[.1em] text-[#9a711f]">
+                    Owner · {project.issues[0].owner}
+                  </p>
+                </div>
+              );
+            })()
           ) : (
             <p className="mt-6 text-[11px] leading-5 text-muted-foreground">
               No active issues. The next decision point is {project.nextMilestone}.
@@ -2315,6 +2806,78 @@ function CommercialPanel({ project, editable, onSave }: { project: Project; edit
   const [spent, setSpent] = useState(String(project.spent / CRORE));
   const [projectedCost, setProjectedCost] = useState(String((project.projectedCost ?? project.aop) / CRORE));
   const [commercialError, setCommercialError] = useState('');
+
+  // Phase Budgets editing state
+  const [editingPhaseBudgets, setEditingPhaseBudgets] = useState(false);
+  const [phaseBudgetsDraft, setPhaseBudgetsDraft] = useState<Record<number, string>>({});
+
+  const startEditingPhaseBudgets = () => {
+    const draft: Record<number, string> = {};
+    const totalAwardedCr = project.awarded / CRORE;
+    const numPhases = Math.max(1, project.phases.length);
+
+    project.phases.forEach((phase, idx) => {
+      if (phase.budget != null) {
+        draft[idx] = (phase.budget / CRORE).toString();
+      } else {
+        const legacyAmounts = [0.12, 0.24, 0.31, 0.33];
+        const defaultAmt = idx < legacyAmounts.length && numPhases === 4
+          ? (totalAwardedCr * legacyAmounts[idx]).toFixed(2)
+          : (totalAwardedCr / numPhases).toFixed(2);
+        draft[idx] = defaultAmt;
+      }
+    });
+    setPhaseBudgetsDraft(draft);
+    setEditingPhaseBudgets(true);
+  };
+
+  const distributeEvenly = () => {
+    const totalAwardedCr = project.awarded / CRORE;
+    const numPhases = Math.max(1, project.phases.length);
+    const splitVal = (totalAwardedCr / numPhases).toFixed(2);
+    const draft: Record<number, string> = {};
+    project.phases.forEach((_, idx) => {
+      draft[idx] = splitVal;
+    });
+    setPhaseBudgetsDraft(draft);
+  };
+
+  const distributeByWeight = () => {
+    const totalAwardedCr = project.awarded / CRORE;
+    const weights = project.phases.map((p) => (typeof p.weight === 'number' && p.weight > 0 ? p.weight : 1));
+    const sumWeights = weights.reduce((sum, w) => sum + w, 0) || 1;
+    const draft: Record<number, string> = {};
+    project.phases.forEach((_, idx) => {
+      const share = (weights[idx] / sumWeights) * totalAwardedCr;
+      draft[idx] = share.toFixed(2);
+    });
+    setPhaseBudgetsDraft(draft);
+  };
+
+  const sumDraftPhaseBudgets = useMemo(() => {
+    let sum = 0;
+    Object.values(phaseBudgetsDraft).forEach((val) => {
+      const num = Number(val);
+      if (!isNaN(num) && num >= 0) sum += num;
+    });
+    return sum;
+  }, [phaseBudgetsDraft]);
+
+  const handleSavePhaseBudgets = (e: FormEvent) => {
+    e.preventDefault();
+    const updatedPhases: Phase[] = project.phases.map((phase, idx) => {
+      const val = phaseBudgetsDraft[idx];
+      const parsedNum = Number(val);
+      return {
+        ...phase,
+        budget: !isNaN(parsedNum) && parsedNum >= 0 ? parsedNum * CRORE : phase.budget,
+      };
+    });
+
+    onSave({ phases: updatedPhases });
+    setEditingPhaseBudgets(false);
+  };
+
   return (
     <div className="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
       <DetailCard title="Capital position & commercial metrics" eyebrow="Commercial summary" icon={CircleDollarSign}>
@@ -2322,34 +2885,92 @@ function CommercialPanel({ project, editable, onSave }: { project: Project; edit
           <div>
             <div className="flex justify-between text-[11px] font-semibold">
               <span>Committed / Awarded against Approved Budget (AOP)</span>
-              <span>{awardRateLabel}</span>
+              <span className={commercial.overAwarded ? 'text-[#b2473d] font-bold' : ''}>
+                {awardRateLabel}
+                {commercial.overAwarded && ' ⚠️ (Over AOP)'}
+              </span>
             </div>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e7e7dc]">
-              <div className="h-full rounded-full bg-[#d19b35]" style={{ width: `${Math.min(100, awardRateWidth)}%` }} />
+              <div
+                className={`h-full rounded-full transition-all ${
+                  commercial.overAwarded ? 'bg-[#d66254]' : 'bg-[#d19b35]'
+                }`}
+                style={{ width: `${Math.min(100, awardRateWidth)}%` }}
+              />
             </div>
           </div>
           <div>
             <div className="flex justify-between text-[11px] font-semibold">
               <span>Spend till date against Committed / Awarded</span>
-              <span>{spentRateLabel}</span>
+              <span className={commercial.overSpent ? 'text-[#b2473d] font-bold' : ''}>
+                {spentRateLabel}
+                {commercial.overSpent && ' ⚠️ (Over Awarded)'}
+              </span>
             </div>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e7e7dc]">
-              <div className="h-full rounded-full bg-[#3d9a7e]" style={{ width: `${Math.min(100, spentRateWidth)}%` }} />
+              <div
+                className={`h-full rounded-full transition-all ${
+                  commercial.overSpent ? 'bg-[#d66254]' : 'bg-[#3d9a7e]'
+                }`}
+                style={{ width: `${Math.min(100, spentRateWidth)}%` }}
+              />
             </div>
           </div>
+
+          {/* Commercial Overrun Warning Banner */}
+          {(commercial.overBudget || commercial.overAwarded || commercial.overSpent) && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-[#f0c8c2] bg-[#fae5e1] p-3 text-[11px] text-[#b2473d]">
+              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <div className="space-y-0.5">
+                <strong className="font-bold">Commercial Overrun Alert:</strong>
+                {commercial.overBudget && (
+                  <p>
+                    Projected final cost ({formatCrore(commercial.projectedCost)}) exceeds Approved Budget AOP ({formatCrore(commercial.aop)}) by <strong>+{formatCrore(commercial.costVariance)}</strong>.
+                  </p>
+                )}
+                {commercial.overAwarded && (
+                  <p>
+                    Committed awarded contracts ({formatCrore(commercial.awarded)}) exceed Approved Budget AOP ({formatCrore(commercial.aop)}) by <strong>+{formatCrore(commercial.awarded - commercial.aop)}</strong>.
+                  </p>
+                )}
+                {commercial.overSpent && (
+                  <p>
+                    Actual spend ({formatCrore(commercial.spent)}) exceeds committed value ({formatCrore(commercial.awarded)}) by <strong>+{formatCrore(commercial.spent - commercial.awarded)}</strong>.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Info label="Approved Budget (AOP)" value={formatCrore(project.aop)} />
-            <Info label="Committed / Awarded" value={formatCrore(project.awarded)} />
-            <Info label="Projected Cost" value={formatCrore(commercial.projectedCost)} />
-            <Info label="Spent Till Date" value={formatCrore(project.spent)} />
+            <Info
+              label="Committed / Awarded"
+              value={formatCrore(project.awarded)}
+              tone={commercial.overAwarded ? 'danger' : 'default'}
+            />
+            <Info
+              label="Projected Cost"
+              value={formatCrore(commercial.projectedCost)}
+              tone={commercial.overBudget ? 'danger' : 'default'}
+            />
+            <Info
+              label="Spent Till Date"
+              value={formatCrore(project.spent)}
+              tone={commercial.overSpent ? 'danger' : 'default'}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Info label="Balance Remaining" value={formatCrore(commercial.remaining)} />
+            <Info
+              label="Balance Remaining"
+              value={formatCrore(commercial.remaining)}
+              tone={commercial.remaining < 0 ? 'danger' : 'success'}
+            />
             <Info
               label="Cost Variance (Projected - AOP)"
               value={`${commercial.costVariance > 0 ? '+' : ''}${formatCrore(commercial.costVariance)}`}
+              tone={commercial.costVariance > 0 ? 'danger' : 'success'}
             />
           </div>
 
@@ -2403,31 +3024,208 @@ function CommercialPanel({ project, editable, onSave }: { project: Project; edit
         </div>
       </DetailCard>
 
-      <DetailCard title="Budget by phase" eyebrow="Indicative cost line" icon={ReceiptText}>
+      <DetailCard
+        title="Budget by phase"
+        eyebrow="Indicative cost line"
+        icon={ReceiptText}
+        action={
+          editable && !editingPhaseBudgets && (
+            <button
+              type="button"
+              onClick={startEditingPhaseBudgets}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#eadcb1] bg-[#fff8e9] px-2.5 py-1 text-[10px] font-bold text-[#9a711f] hover:bg-[#faeed5] transition shadow-xs"
+            >
+              <Pencil size={11} />
+              <span>Edit phase budgets</span>
+            </button>
+          )
+        }
+      >
         <div className="mt-6 space-y-4">
-          <p className="text-[10px] leading-4 text-muted-foreground">Indicative split of the committed value across the stages.</p>
-          {project.phases.slice(0, 4).map((phase, index) => {
-            const amounts = [0.12, 0.24, 0.31, 0.33];
-            return (
-              <div key={`${phase.name}-${index}`}>
-                <div className="mb-1.5 flex justify-between text-[11px]">
-                  <span className="font-semibold">{phase.name}</span>
-                  <span className="font-mono text-muted-foreground">{formatCrore(project.awarded * amounts[index])}</span>
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+            <p>Indicative split of committed value across stages.</p>
+            <span className="font-mono font-bold text-[#173e49]">
+              Total Awarded: {formatCrore(project.awarded)}
+            </span>
+          </div>
+
+          {(() => {
+            const sumAllocated = project.phases.reduce((sum, p) => sum + (p.budget != null ? p.budget : 0), 0);
+            const isOverAllocated = project.awarded > 0 && sumAllocated > project.awarded;
+            if (isOverAllocated) {
+              return (
+                <div className="flex items-center gap-2 rounded-lg border border-[#f0c8c2] bg-[#fae5e1] p-2.5 text-[10px] font-semibold text-[#b2473d]">
+                  <AlertCircle size={14} className="shrink-0" />
+                  <span>
+                    Warning: Total stage allocations ({formatCrore(sumAllocated)}) exceed committed value ({formatCrore(project.awarded)}) by +{formatCrore(sumAllocated - project.awarded)}.
+                  </span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-[#e7e7dc]">
-                  <div className={`h-full rounded-full ${index === 2 ? 'bg-[#d19b35]' : 'bg-[#3d9a7e]'}`} style={{ width: `${Math.max(phase.progress, 8)}%` }} />
+              );
+            }
+            return null;
+          })()}
+
+          {editingPhaseBudgets ? (
+            <form onSubmit={handleSavePhaseBudgets} className="space-y-4 rounded-xl border border-[#eadcb1] bg-[#fff8e9] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#eadcb1]/70 pb-3">
+                <div>
+                  <span className="text-[11px] font-extrabold text-[#173e49]">Stage Budgets (in ₹ Cr)</span>
+                  <div className="mt-1 flex items-center gap-3 text-[10px]">
+                    <span className="text-muted-foreground">
+                      Allocated: <strong className="text-[#173e49]">₹{sumDraftPhaseBudgets.toFixed(2)} Cr</strong>
+                    </span>
+                    <span className="text-muted-foreground">
+                      Difference:{' '}
+                      <strong className={Math.abs((project.awarded / CRORE) - sumDraftPhaseBudgets) < 0.01 ? 'text-[#2e7c67]' : (project.awarded / CRORE) < sumDraftPhaseBudgets ? 'text-[#b2473d]' : 'text-[#9a711f]'}>
+                        ₹{((project.awarded / CRORE) - sumDraftPhaseBudgets).toFixed(2)} Cr
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={distributeEvenly}
+                    className="rounded-md border border-[#cbe4d9] bg-white px-2 py-1 text-[9px] font-bold text-[#2e7c67] hover:bg-[#edf5f0]"
+                  >
+                    Even Split
+                  </button>
+                  <button
+                    type="button"
+                    onClick={distributeByWeight}
+                    className="rounded-md border border-[#cbe4d9] bg-white px-2 py-1 text-[9px] font-bold text-[#2e7c67] hover:bg-[#edf5f0]"
+                  >
+                    Split by Weight
+                  </button>
                 </div>
               </div>
-            );
-          })}
+
+              <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                {project.phases.map((phase, index) => {
+                  const val = phaseBudgetsDraft[index] ?? '';
+                  const numVal = Number(val);
+                  const pct = project.awarded > 0 && !isNaN(numVal) ? Math.round((numVal / (project.awarded / CRORE)) * 100) : 0;
+
+                  return (
+                    <div key={`${phase.name}-${index}`} className="flex items-center justify-between gap-3 rounded-lg bg-white p-2.5 border border-border/80">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-[11px] text-[#173e49] truncate">{phase.name}</span>
+                          <span className="font-mono text-[9px] text-muted-foreground">({phase.progress}% done)</span>
+                        </div>
+                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[#e7e7dc]">
+                          <div className="h-full rounded-full bg-[#3d9a7e]" style={{ width: `${Math.max(phase.progress, 5)}%` }} />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-mono">₹</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={val}
+                            onChange={(e) => setPhaseBudgetsDraft((prev) => ({ ...prev, [index]: e.target.value }))}
+                            className="h-8 w-24 rounded-lg border border-border bg-[#faf8f3] pl-6 pr-2 text-right text-[11px] font-mono font-bold text-[#173e49] focus:bg-white focus:border-[#2e7c67] outline-none"
+                          />
+                        </div>
+                        <span className="w-10 text-right font-mono text-[10px] text-muted-foreground">
+                          {pct}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-between border-t border-[#eadcb1]/70 pt-2.5">
+                <span className="text-[10px] text-muted-foreground">
+                  Saved directly to stage allocations.
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-[#173e49] px-3.5 py-1.5 text-[10px] font-bold text-white hover:bg-[#205160] transition"
+                  >
+                    Save stage budgets
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingPhaseBudgets(false)}
+                    className="rounded-lg border border-border bg-white px-3 py-1.5 text-[10px] font-bold hover:bg-muted"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              {project.phases.map((phase, index) => {
+                const totalAwardedCr = project.awarded / CRORE;
+                const numPhases = Math.max(1, project.phases.length);
+                const legacyAmounts = [0.12, 0.24, 0.31, 0.33];
+                const phaseBudget = phase.budget != null
+                  ? phase.budget
+                  : (index < legacyAmounts.length && numPhases === 4
+                      ? project.awarded * legacyAmounts[index]
+                      : project.awarded / numPhases);
+                const isExplicit = phase.budget != null;
+
+                return (
+                  <div key={`${phase.name}-${index}`} className="group">
+                    <div className="mb-1.5 flex items-center justify-between text-[11px]">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-[#173e49]">{phase.name}</span>
+                        {isExplicit ? (
+                          <span className="rounded-sm bg-[#edf5f0] px-1 text-[8px] font-bold text-[#2e7c67] uppercase tracking-wider">
+                            Allocated
+                          </span>
+                        ) : (
+                          <span className="text-[9px] text-muted-foreground font-normal">
+                            (Indicative split)
+                          </span>
+                        )}
+                      </div>
+                      <span className="font-mono font-bold text-[#173e49]">{formatCrore(phaseBudget)}</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-[#e7e7dc]">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          index % 2 === 1 ? 'bg-[#d19b35]' : 'bg-[#3d9a7e]'
+                        }`}
+                        style={{ width: `${Math.max(phase.progress, 8)}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </DetailCard>
     </div>
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-xl border border-border p-3"><span className="block font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">{label}</span><span className="mt-2 block text-[11px] font-bold">{value}</span></div>;
+function Info({ label, value, tone = 'default' }: { label: string; value: string; tone?: 'default' | 'danger' | 'warning' | 'success' }) {
+  const toneClasses =
+    tone === 'danger'
+      ? 'border-[#f0c8c2] bg-[#fff6f5] text-[#b2473d]'
+      : tone === 'warning'
+        ? 'border-[#eadcb1] bg-[#fbf1d8] text-[#9a711f]'
+        : tone === 'success'
+          ? 'border-[#cbe4d9] bg-[#edf5f0] text-[#2e7c67]'
+          : 'border-border bg-card';
+
+  return (
+    <div className={`rounded-xl border p-3 transition-colors ${toneClasses}`}>
+      <span className="block font-mono text-[9px] uppercase tracking-[.1em] text-muted-foreground">{label}</span>
+      <span className="mt-2 block text-[11px] font-bold">{value}</span>
+    </div>
+  );
 }
 
 function HealthRow({ label, value, tone }: { label: string; value: string; tone: { dot: string; text: string } }) {

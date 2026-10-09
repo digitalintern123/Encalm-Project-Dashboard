@@ -83,7 +83,23 @@ export function TagUserPopover({
   // Close on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node | null;
+      if (!target || !containerRef.current) return;
+
+      // 1. If event path passed through the container, it's an inside click
+      const path = event.composedPath ? event.composedPath() : [];
+      if (path.length > 0 && path.includes(containerRef.current)) {
+        return;
+      }
+
+      // 2. If the clicked target was unmounted/detached during event processing (e.g. mention dropdown item),
+      // it was inside our container when clicked; do not close the popover.
+      if (!document.contains(target)) {
+        return;
+      }
+
+      // 3. Regular outside click check
+      if (!containerRef.current.contains(target)) {
         setIsOpen(false);
       }
     }

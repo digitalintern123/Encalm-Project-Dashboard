@@ -2,7 +2,7 @@ import { Router } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import { db, uploadsDir } from '../db/database.js';
-import { optionalAuth, requireRole, AuthenticatedRequest } from '../middleware/auth.js';
+import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import { saveDatabaseSnapshot } from '../utils/backup.js';
 import { fetchFullProject } from './projects.js';
 
@@ -28,12 +28,79 @@ function getExtension(fileName?: string, dataUri?: string): string {
   return 'jpg';
 }
 
+function processSinglePhoto(projectId: string, photoInput: any, user: any) {
+  const { fileData, fileName, url, caption, stage, category, takenDate } = photoInput;
+  if (!fileData && !url) {
+    throw new Error('Please provide either an image file or an image URL.');
+  }
+
+  let finalUrl = '';
+  let fileSize = 0;
+
+  if (fileData) {
+    const ext = getExtension(fileName, fileData);
+    const cleanBase64 = fileData.replace(/^data:image\/[a-zA-Z0-9+]+;base64,/, '');
+    const buffer = Buffer.from(cleanBase64, 'base64');
+    fileSize = buffer.length;
+
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const newFileName = `${projectId.replace(/[^a-zA-Z0-9-_]/g, '')}_${Date.now()}_${randomSuffix}.${ext}`;
+    const destinationPath = path.join(uploadsDir, newFileName);
+
+    fs.writeFileSync(destinationPath, buffer);
+    finalUrl = `/uploads/${newFileName}`;
+  } else if (url) {
+    finalUrl = url.trim();
+  }
+
+  const photoId = `photo-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  const uploaderName = user?.name || 'Project Team';
+  const uploaderRole = user?.title || user?.role || 'Lead';
+  const nowIso = new Date().toISOString();
+  const effectiveTakenDate = takenDate || nowIso.split('T')[0];
+  const effectiveCategory = category || 'Progress';
+  const effectiveCaption = (caption || 'Site progress photograph').trim();
+
+  db.prepare(`
+    INSERT INTO photos (
+      id, project_id, url, caption, stage, category, taken_date, uploaded_by, role, file_size, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    photoId,
+    projectId,
+    finalUrl,
+    effectiveCaption,
+    stage || null,
+    effectiveCategory,
+    effectiveTakenDate,
+    uploaderName,
+    uploaderRole,
+    fileSize || null,
+    nowIso
+  );
+
+  return {
+    id: photoId,
+    projectId,
+    url: finalUrl,
+    caption: effectiveCaption,
+    stage: stage || null,
+    category: effectiveCategory,
+    takenDate: effectiveTakenDate,
+    uploadedBy: uploaderName,
+    role: uploaderRole,
+    fileSize,
+    createdAt: nowIso,
+  };
+}
+
 /**
- * Upload a new site photograph for a project.
- * AUTOMATIC CLEANUP: Deletes any previous photograph file(s) for this project
- * from disk and SQLite before saving the new photo.
+ * Upload one or multiple site photographs for a project.
+ * Supports:
+ * 1. Single photo: { fileData, fileName, url, caption, stage, category, takenDate }
+ * 2. Batch photos: { photos: [{ fileData, fileName, url, caption, stage, category, takenDate }] }
  */
-projectPhotosRouter.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
+async function handlePhotoUpload(req: AuthenticatedRequest, res: any) {
   try {
     const projectId = req.params.id as string;
     const project = db.prepare('SELECT id, name, code FROM projects WHERE id = ?').get(projectId) as any;
@@ -46,81 +113,28 @@ projectPhotosRouter.post('/', optionalAuth, async (req: AuthenticatedRequest, re
       return res.status(403).json({ error: 'Project HOD has view-only permissions.' });
     }
 
-    const { fileData, fileName, url, caption, stage, category, takenDate } = req.body;
-
-    if (!fileData && !url) {
-      return res.status(400).json({ error: 'Please provide either an image file or an image URL.' });
+    const itemsToProcess: any[] = [];
+    if (Array.isArray(req.body.photos) && req.body.photos.length > 0) {
+      itemsToProcess.push(...req.body.photos);
+    } else if (req.body.fileData || req.body.url) {
+      itemsToProcess.push(req.body);
+    } else {
+      return res.status(400).json({ error: 'Please provide at least one image file or URL to upload.' });
     }
 
-    // 1. AUTOMATIC OLD IMAGE PURGE: Find all previous photos for this project
-    const previousPhotos = db.prepare('SELECT * FROM photos WHERE project_id = ?').all(projectId) as any[];
-    for (const old of previousPhotos) {
-      if (old.url && typeof old.url === 'string' && old.url.startsWith('/uploads/')) {
-        const oldFile = path.basename(old.url);
-        const oldPath = path.join(uploadsDir, oldFile);
-        if (fs.existsSync(oldPath)) {
-          try {
-            fs.unlinkSync(oldPath);
-            console.log(`[Photo Cleanup] Deleted previous site photo file on disk: ${oldFile}`);
-          } catch (unlinkErr) {
-            console.warn(`[Photo Cleanup] Could not delete disk file ${oldFile}:`, unlinkErr);
-          }
-        }
-      }
+    const createdPhotos: any[] = [];
+    for (const item of itemsToProcess) {
+      const created = processSinglePhoto(projectId, item, req.user);
+      createdPhotos.push(created);
     }
-
-    // Purge previous records from SQLite
-    db.prepare('DELETE FROM photos WHERE project_id = ?').run(projectId);
-
-    // 2. Save new photograph
-    let finalUrl = '';
-    let fileSize = 0;
-
-    if (fileData) {
-      const ext = getExtension(fileName, fileData);
-      const cleanBase64 = fileData.replace(/^data:image\/[a-zA-Z0-9+]+;base64,/, '');
-      const buffer = Buffer.from(cleanBase64, 'base64');
-      fileSize = buffer.length;
-
-      const randomSuffix = Math.random().toString(36).substring(2, 8);
-      const newFileName = `${projectId.replace(/[^a-zA-Z0-9-_]/g, '')}_${Date.now()}_${randomSuffix}.${ext}`;
-      const destinationPath = path.join(uploadsDir, newFileName);
-
-      fs.writeFileSync(destinationPath, buffer);
-      finalUrl = `/uploads/${newFileName}`;
-      console.log(`[Photo Upload] Saved new site photo to: ${finalUrl} (${Math.round(fileSize / 1024)} KB)`);
-    } else if (url) {
-      finalUrl = url.trim();
-    }
-
-    const photoId = `photo-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    const uploaderName = req.user?.name || 'Project Team';
-    const uploaderRole = req.user?.title || req.user?.role || 'Lead';
-    const nowIso = new Date().toISOString();
-    const effectiveTakenDate = takenDate || nowIso.split('T')[0];
-    const effectiveCategory = category || 'Progress';
-    const effectiveCaption = (caption || 'Site progress photograph').trim();
-
-    db.prepare(`
-      INSERT INTO photos (
-        id, project_id, url, caption, stage, category, taken_date, uploaded_by, role, file_size, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      photoId,
-      projectId,
-      finalUrl,
-      effectiveCaption,
-      stage || null,
-      effectiveCategory,
-      effectiveTakenDate,
-      uploaderName,
-      uploaderRole,
-      fileSize || null,
-      nowIso
-    );
 
     // Create system notification
+    const uploaderName = req.user?.name || 'Project Team';
     const notifId = `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const notifMessage = createdPhotos.length === 1
+      ? `${uploaderName} uploaded a new site photograph for ${project.name}`
+      : `${uploaderName} uploaded ${createdPhotos.length} site photographs for ${project.name}`;
+
     db.prepare(`
       INSERT INTO notifications (id, type, title, message, project_id, link, read, created_at)
       VALUES (?, ?, ?, ?, ?, ?, 0, datetime('now'))
@@ -128,7 +142,7 @@ projectPhotosRouter.post('/', optionalAuth, async (req: AuthenticatedRequest, re
       notifId,
       'system',
       'Site Photograph Updated',
-      `${uploaderName} uploaded a new site photograph for ${project.name}`,
+      notifMessage,
       projectId,
       `/project/${projectId}`
     );
@@ -137,30 +151,21 @@ projectPhotosRouter.post('/', optionalAuth, async (req: AuthenticatedRequest, re
     saveDatabaseSnapshot();
 
     const fullProject = fetchFullProject(projectId);
-    const createdPhoto = {
-      id: photoId,
-      projectId,
-      url: finalUrl,
-      caption: effectiveCaption,
-      stage: stage || null,
-      category: effectiveCategory,
-      takenDate: effectiveTakenDate,
-      uploadedBy: uploaderName,
-      role: uploaderRole,
-      fileSize,
-      createdAt: nowIso,
-    };
 
     res.status(201).json({
-      message: 'Site photograph uploaded successfully (previous photo purged)',
-      photo: createdPhoto,
+      message: `Successfully uploaded ${createdPhotos.length} site photograph${createdPhotos.length > 1 ? 's' : ''}`,
+      photos: createdPhotos,
+      photo: createdPhotos[0],
       project: fullProject,
     });
   } catch (err: any) {
     console.error('[Upload Photo Error]', err);
-    res.status(500).json({ error: 'Failed to upload photograph', message: err.message });
+    res.status(500).json({ error: 'Failed to upload photographs', message: err.message });
   }
-});
+}
+
+projectPhotosRouter.post('/', optionalAuth, handlePhotoUpload);
+projectPhotosRouter.post('/batch', optionalAuth, handlePhotoUpload);
 
 /**
  * Delete a specific site photograph
