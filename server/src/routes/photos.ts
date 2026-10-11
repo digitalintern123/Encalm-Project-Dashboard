@@ -9,6 +9,8 @@ import { fetchFullProject } from './projects.js';
 export const projectPhotosRouter = Router({ mergeParams: true });
 export const globalPhotosRouter = Router();
 
+const ALLOWED_IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif']);
+
 function getExtension(fileName?: string, dataUri?: string): string {
   if (dataUri) {
     const match = dataUri.match(/^data:image\/([a-zA-Z0-9+]+);base64,/);
@@ -18,12 +20,11 @@ function getExtension(fileName?: string, dataUri?: string): string {
       if (mime === 'png') return 'png';
       if (mime === 'webp') return 'webp';
       if (mime === 'gif') return 'gif';
-      if (mime === 'svg+xml') return 'svg';
     }
   }
   if (fileName) {
     const ext = path.extname(fileName).replace('.', '').toLowerCase();
-    if (ext) return ext;
+    if (ext && ALLOWED_IMAGE_EXTENSIONS.has(ext)) return ext;
   }
   return 'jpg';
 }
@@ -39,12 +40,18 @@ function processSinglePhoto(projectId: string, photoInput: any, user: any) {
 
   if (fileData) {
     const ext = getExtension(fileName, fileData);
+    if (!ALLOWED_IMAGE_EXTENSIONS.has(ext)) {
+      throw new Error(`Unsupported image format '.${ext}'. Only JPG, PNG, WEBP, and GIF images are permitted.`);
+    }
+
     const cleanBase64 = fileData.replace(/^data:image\/[a-zA-Z0-9+]+;base64,/, '');
     const buffer = Buffer.from(cleanBase64, 'base64');
     fileSize = buffer.length;
 
     const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const newFileName = `${projectId.replace(/[^a-zA-Z0-9-_]/g, '')}_${Date.now()}_${randomSuffix}.${ext}`;
+    const safeExt = ext === 'jpeg' ? 'jpg' : ext;
+    const safeProjectId = (projectId || 'project').replace(/[^a-zA-Z0-9-_]/g, '');
+    const newFileName = `${safeProjectId}_${Date.now()}_${randomSuffix}.${safeExt}`;
     const destinationPath = path.join(uploadsDir, newFileName);
 
     fs.writeFileSync(destinationPath, buffer);

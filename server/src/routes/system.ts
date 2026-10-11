@@ -3,11 +3,13 @@ import { db } from '../db/database.js';
 import { clearAllProjectData } from '../db/seed.js';
 import { getFullProjectRecord, restoreDatabaseFromJSON, saveDatabaseSnapshot } from '../utils/backup.js';
 import { restoreAllPdfDataToDatabase } from '../scripts/restore-all-pdfs.js';
+import { requireAuth, requireRole, optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 
 const router = Router();
+const isProduction = process.env.NODE_ENV === 'production';
 
-// GET export database as JSON
-router.get('/export', (req, res) => {
+// GET export database as JSON (Coordinator or Lead required)
+router.get('/export', requireAuth, requireRole(['coordinator', 'lead']), (req: AuthenticatedRequest, res) => {
   try {
     const rows = db.prepare('SELECT id FROM projects ORDER BY name ASC').all() as { id: string }[];
     const projects = rows.map((r) => getFullProjectRecord(r.id)).filter(Boolean);
@@ -26,8 +28,8 @@ router.get('/export', (req, res) => {
   }
 });
 
-// POST import database from JSON
-router.post('/import', (req, res) => {
+// POST import database from JSON (Coordinator only)
+router.post('/import', requireAuth, requireRole(['coordinator']), (req: AuthenticatedRequest, res) => {
   try {
     const body = req.body;
     if (!body) {
@@ -44,8 +46,20 @@ router.post('/import', (req, res) => {
   }
 });
 
-// POST reset/clear database
-router.post('/reset', (req, res) => {
+// Helper to check production wipe safeguards
+function assertResetAllowed(res: any): boolean {
+  if (isProduction && process.env.ALLOW_SYSTEM_RESET !== 'true') {
+    res.status(403).json({
+      error: 'Destructive system resets are disabled in production mode. Set ALLOW_SYSTEM_RESET=true in server environment to override.',
+    });
+    return false;
+  }
+  return true;
+}
+
+// POST reset/clear database (Coordinator only)
+router.post('/reset', requireAuth, requireRole(['coordinator']), (req: AuthenticatedRequest, res) => {
+  if (!assertResetAllowed(res)) return;
   try {
     clearAllProjectData();
     saveDatabaseSnapshot();
@@ -56,8 +70,9 @@ router.post('/reset', (req, res) => {
   }
 });
 
-// POST clear database explicitly
-router.post('/clear', (req, res) => {
+// POST clear database explicitly (Coordinator only)
+router.post('/clear', requireAuth, requireRole(['coordinator']), (req: AuthenticatedRequest, res) => {
+  if (!assertResetAllowed(res)) return;
   try {
     clearAllProjectData();
     saveDatabaseSnapshot();
@@ -68,8 +83,9 @@ router.post('/clear', (req, res) => {
   }
 });
 
-// POST restore all 3 PDF master data
-router.post('/restore-all-pdfs', (req, res) => {
+// POST restore all 3 PDF master data (Coordinator only)
+router.post('/restore-all-pdfs', requireAuth, requireRole(['coordinator']), (req: AuthenticatedRequest, res) => {
+  if (!assertResetAllowed(res)) return;
   try {
     const summary = restoreAllPdfDataToDatabase();
     return res.json({
@@ -82,7 +98,20 @@ router.post('/restore-all-pdfs', (req, res) => {
   }
 });
 
-// GET system health and statistics
+// GET readiness probe (verifies database responsiveness)
+router.get('/ready', (req, res) => {
+  try {
+    const ping = db.prepare('SELECT 1 as alive').get() as { alive: number };
+    if (ping?.alive === 1) {
+      return res.status(200).json({ status: 'ready', uptime: Math.round(process.uptime()) });
+    }
+    return res.status(503).json({ status: 'not_ready', error: 'Database ping returned invalid result' });
+  } catch (err: any) {
+    return res.status(503).json({ status: 'not_ready', error: err.message });
+  }
+});
+
+// GET system health and statistics (Liveness probe)
 router.get('/health', (req, res) => {
   try {
     const projectCount = db.prepare('SELECT COUNT(*) as count FROM projects').get() as { count: number };
@@ -91,6 +120,8 @@ router.get('/health', (req, res) => {
     const milestoneCount = db.prepare('SELECT COUNT(*) as count FROM milestones').get() as { count: number };
     const issueCount = db.prepare('SELECT COUNT(*) as count FROM issues').get() as { count: number };
     const updateCount = db.prepare('SELECT COUNT(*) as count FROM updates').get() as { count: number };
+
+    const mem = process.memoryUsage();
 
     return res.json({
       status: 'healthy',
@@ -103,6 +134,13 @@ router.get('/health', (req, res) => {
         issues: issueCount.count,
         updates: updateCount.count,
       },
+      uptimeSeconds: Math.round(process.uptime()),
+      memory: {
+        rssMb: Math.round(mem.rss / 1024 / 1024),
+        heapUsedMb: Math.round(mem.heapUsed / 1024 / 1024),
+      },
+      environment: process.env.NODE_ENV || 'development',
+      pid: process.pid,
       serverTime: new Date().toISOString(),
     });
   } catch (err: any) {

@@ -23,13 +23,22 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: false,
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
-        // Split the framework out of the app chunk so a code change does not
-        // invalidate the (much larger, rarely changing) vendor bundle.
+        // Split vendor frameworks and heavy components into cached chunks
         manualChunks: {
-          react: ['react', 'react-dom'],
-          charts: ['recharts'],
+          'react-vendor': ['react', 'react-dom'],
+          'charts-vendor': ['recharts'],
+          'icons-vendor': ['lucide-react'],
+          'ui-vendor': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-tooltip',
+          ],
         },
       },
     },
@@ -43,6 +52,10 @@ export default defineConfig({
         target: `http://localhost:${process.env.API_PORT || 5000}`,
         changeOrigin: true,
       },
+      '/uploads': {
+        target: `http://localhost:${process.env.API_PORT || 5000}`,
+        changeOrigin: true,
+      },
     },
   },
   preview: {
@@ -50,6 +63,10 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
+        target: `http://localhost:${process.env.API_PORT || 5000}`,
+        changeOrigin: true,
+      },
+      '/uploads': {
         target: `http://localhost:${process.env.API_PORT || 5000}`,
         changeOrigin: true,
       },

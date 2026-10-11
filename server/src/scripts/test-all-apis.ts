@@ -68,6 +68,8 @@ async function runTestSuite() {
 
   console.log(`✓ Test API server listening on ${baseUrl}\n`);
 
+  let authToken = '';
+
   async function testApi(
     name: string,
     category: string,
@@ -79,11 +81,16 @@ async function runTestSuite() {
   ) {
     const start = Date.now();
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
       const res = await fetch(`${baseUrl}${path}`, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: body ? JSON.stringify(body) : undefined,
       });
 
@@ -141,8 +148,12 @@ async function runTestSuite() {
   console.log('Step 2: Executing API Route Tests...\n');
 
   // --- System APIs ---
-  await testApi('System Health Check', 'System', 'GET', '/api/system/health', undefined, 200, (d) => {
+  await testApi('System Health Check (Liveness)', 'System', 'GET', '/api/system/health', undefined, 200, (d) => {
     return d.status === 'healthy' && d.counts?.projects >= 68;
+  });
+
+  await testApi('System Ready Probe (Readiness)', 'System', 'GET', '/api/system/ready', undefined, 200, (d) => {
+    return d.status === 'ready';
   });
 
   // --- Auth APIs ---
@@ -154,6 +165,9 @@ async function runTestSuite() {
     email: 'chinmay.saxena@encalm.com',
     password: 'encalm',
   }, 200, (d) => {
+    if (d.token) {
+      authToken = d.token;
+    }
     return Boolean(d.token && d.user?.email === 'chinmay.saxena@encalm.com');
   });
 

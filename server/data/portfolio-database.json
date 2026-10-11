@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exportedAt": "2026-10-09T05:45:13.335Z",
+  "exportedAt": "2026-10-11T16:19:49.805Z",
   "projectCount": 68,
   "projects": [
     {
@@ -1006,7 +1006,7 @@
       "nextMilestoneDate": "2026-04-30",
       "leadId": "user-saharsh-tandon",
       "startDate": "2025-01-15",
-      "lastUpdated": "08 Oct 2026",
+      "lastUpdated": "11 Oct 2026",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -1153,6 +1153,42 @@
         }
       ],
       "updates": [
+        {
+          "id": "delhi-cip-delhi-update-1791735589778",
+          "date": "11 Oct 2026",
+          "author": "Audit Runner",
+          "role": "Quality Assurance",
+          "text": "Automated test update note verification.",
+          "stage": "Planning",
+          "kind": "Progress"
+        },
+        {
+          "id": "upd-1791735468994-87w4",
+          "date": "2026-10-11",
+          "author": "Chinmay Saxena",
+          "role": "Project Lead",
+          "text": "[Tagged Ruchika Chauhan]: Audit comment: Please verify and sign off the drawings.",
+          "stage": "Stage 1: Concept & Planning",
+          "kind": "Progress"
+        },
+        {
+          "id": "delhi-cip-delhi-update-1791735468465",
+          "date": "11 Oct 2026",
+          "author": "Audit Runner",
+          "role": "Quality Assurance",
+          "text": "Automated test update note verification.",
+          "stage": "Planning",
+          "kind": "Progress"
+        },
+        {
+          "id": "delhi-cip-delhi-update-1791734736843",
+          "date": "11 Oct 2026",
+          "author": "Audit Runner",
+          "role": "Quality Assurance",
+          "text": "Automated test update note verification.",
+          "stage": "Planning",
+          "kind": "Progress"
+        },
         {
           "id": "upd-1791455592587-ms36",
           "date": "2026-10-08",
@@ -11007,6 +11043,17 @@
     }
   ],
   "notifications": [
+    {
+      "id": "notif-tag-1791735468589-5r17q",
+      "type": "tagged_task",
+      "title": "Tagged on Stage: Stage 1: Concept & Planning",
+      "message": "Chinmay Saxena tagged you on stage \"Stage 1: Concept & Planning\" in CIP Delhi: \"Audit comment: Please verify and sign off the drawings.\"",
+      "project_id": "delhi-cip-delhi",
+      "link": "/project/delhi-cip-delhi",
+      "read": 0,
+      "created_at": "2026-10-11 16:17:48",
+      "recipient_id": "user-ruchika-chauhan"
+    },
     {
       "id": "notif-tag-1791455592035-v1ix8",
       "type": "tagged_task",

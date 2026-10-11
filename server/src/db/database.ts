@@ -34,6 +34,9 @@ export const db = new Database(dbPath);
 // Performance & data integrity pragmas
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
+db.pragma('synchronous = NORMAL');
+db.pragma('cache_size = -64000');
+db.pragma('busy_timeout = 5000');
 
 export function initDatabase() {
   db.exec(`
