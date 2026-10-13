@@ -138,11 +138,11 @@ app.use('/api/email', emailRouter);
 app.use('/api/system', systemRouter);
 
 // 9. Explicit 404 for missing API and Upload resources (prevents falling through to SPA HTML)
-app.all('/api/*', (req, res) => {
+app.use('/api', (req, res) => {
   res.status(404).json({ error: `API endpoint not found: ${req.method} ${req.originalUrl}` });
 });
 
-app.all('/uploads/*', (req, res) => {
+app.use('/uploads', (req, res) => {
   res.status(404).json({ error: `Upload asset not found: ${req.originalUrl}` });
 });
 
@@ -162,7 +162,7 @@ if (fs.existsSync(distPath)) {
   app.use(express.static(distPath, { maxAge: '1h' }));
 
   // Client-side SPA routing fallback: always serve index.html with fresh no-cache headers
-  app.get('*', (req, res) => {
+  app.get('/{*splat}', (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
