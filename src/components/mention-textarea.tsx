@@ -44,16 +44,16 @@ export function extractMentionedUserIds(text: string, users: User[]): string[] {
     }
   }
 
-  // 2. Exact Email or Email Prefix Matching (e.g. "@akash.deep@encalm.com" or "@akash.deep")
+  // 2. Exact Email or Email Prefix Matching (e.g. "@akash.deep@encalm.com", "akash.deep@encalm.com", or "@akash.deep")
   for (const u of sortedUsers) {
     if (!u.email) continue;
     const email = u.email.trim();
     const emailPrefix = email.split('@')[0];
 
-    const emailRegex = new RegExp(`@${escapeRegex(email)}(?:\\b|\\s|[,:;!?]|$)`, 'i');
+    const emailRegex = new RegExp(`(?:^|\\s|@)${escapeRegex(email)}(?:\\b|\\s|[,:;!?]|$)`, 'i');
     if (emailRegex.test(remainingText)) {
       mentionedIds.add(u.id);
-      remainingText = remainingText.replace(new RegExp(`@${escapeRegex(email)}`, 'gi'), ' ');
+      remainingText = remainingText.replace(new RegExp(`@?${escapeRegex(email)}`, 'gi'), ' ');
       continue;
     }
 
@@ -103,7 +103,7 @@ export function MentionTextarea({
   users,
   onMentionSelect,
   dropdownDirection = 'auto',
-  placeholder = 'Type comments or instructions (use @name to tag)...',
+  placeholder = 'Type comments or instructions (use @name or @email to tag)...',
   className = '',
   rows = 3,
   ...rest
@@ -142,7 +142,7 @@ export function MentionTextarea({
       } finally {
         setSearchingAzure(false);
       }
-    }, 200);
+    }, 180);
 
     return () => clearTimeout(timer);
   }, [mentionQuery]);
@@ -151,21 +151,32 @@ export function MentionTextarea({
   const filteredUsers = React.useMemo(() => {
     if (mentionQuery === null) return [];
     const q = mentionQuery.toLowerCase().trim();
+    const tokens = q.split(/\s+/).filter(Boolean);
+
+    const matchesUser = (u: User) => {
+      if (!q) return true;
+      const name = (u.name || '').toLowerCase();
+      const email = (u.email || '').toLowerCase();
+      const title = (u.title || '').toLowerCase();
+      if (name.includes(q) || email.includes(q) || title.includes(q)) {
+        return true;
+      }
+      if (tokens.length > 1) {
+        return tokens.every((tok) => name.includes(tok) || email.includes(tok));
+      }
+      return false;
+    };
 
     // Start with local users matching the query
-    const matchedLocal = q
-      ? users.filter((u) => {
-          const name = u.name.toLowerCase();
-          const email = (u.email || '').toLowerCase();
-          const title = (u.title || '').toLowerCase();
-          return name.includes(q) || email.includes(q) || title.includes(q);
-        })
-      : users;
+    const matchedLocal = users.filter(matchesUser);
 
     // Combine with Azure users avoiding duplicates by email
     const combined: User[] = [...matchedLocal];
     azureUsers.forEach((au) => {
-      if (!combined.some((cu) => cu.email?.toLowerCase() === au.email?.toLowerCase())) {
+      if (
+        matchesUser(au) &&
+        !combined.some((cu) => cu.email && au.email && cu.email.toLowerCase() === au.email.toLowerCase())
+      ) {
         combined.push(au);
       }
     });
@@ -181,15 +192,31 @@ export function MentionTextarea({
     const cursorPos = e.target.selectionStart;
     const textBeforeCursor = newValue.slice(0, cursorPos);
 
+    // Match @ followed by name or email (supports @user@domain.com)
+    let matchedQuery: string | null = null;
+    let matchedAtPos = -1;
 
-    // Look for @ followed by word characters up to cursor
-    const lastAtMatch = /(?:^|\s)@([a-zA-Z0-9._-]*)$/.exec(textBeforeCursor);
+    const directAtMatch = /(?:^|\s)@([a-zA-Z0-9._+-]*(?:@[a-zA-Z0-9.-]*)?)$/.exec(textBeforeCursor);
+    if (directAtMatch) {
+      matchedQuery = directAtMatch[1];
+      matchedAtPos = cursorPos - matchedQuery.length - 1;
+    } else if (
+      showDropdown &&
+      mentionIndex !== -1 &&
+      cursorPos > mentionIndex &&
+      textBeforeCursor[mentionIndex] === '@'
+    ) {
+      // Allow a single space while typing a colleague's full name (e.g. "@Akash Deep")
+      const candidate = textBeforeCursor.slice(mentionIndex + 1);
+      if (/^[a-zA-Z0-9._+-]+\s[a-zA-Z0-9._-]*$/.test(candidate)) {
+        matchedQuery = candidate;
+        matchedAtPos = mentionIndex;
+      }
+    }
 
-    if (lastAtMatch) {
-      const query = lastAtMatch[1];
-      const atSymbolIndex = cursorPos - query.length - 1;
-      setMentionQuery(query);
-      setMentionIndex(atSymbolIndex);
+    if (matchedQuery !== null && matchedAtPos !== -1) {
+      setMentionQuery(matchedQuery);
+      setMentionIndex(matchedAtPos);
       setSelectedIndex(0);
 
       // Determine vertical direction (top vs bottom)
@@ -197,7 +224,6 @@ export function MentionTextarea({
         setEffectiveDirection(dropdownDirection);
       } else if (textareaRef.current) {
         const rect = textareaRef.current.getBoundingClientRect();
-        // If there isn't enough space above (less than 220px to top of viewport/container), open downward
         if (rect.top < 220) {
           setEffectiveDirection('bottom');
         } else {
@@ -209,6 +235,7 @@ export function MentionTextarea({
     } else {
       setShowDropdown(false);
       setMentionQuery(null);
+      setMentionIndex(-1);
     }
   };
 
@@ -227,6 +254,7 @@ export function MentionTextarea({
       onChange(updatedValue);
       setShowDropdown(false);
       setMentionQuery(null);
+      setMentionIndex(-1);
 
       if (onMentionSelect) {
         onMentionSelect(user);

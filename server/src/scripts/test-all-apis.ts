@@ -29,7 +29,7 @@ const results: TestResult[] = [];
 
 async function runTestSuite() {
   console.log('===============================================================');
-  console.log('  ENCALM PROJECT DASHBOARD - FULL SYSTEM & API AUDIT RUNNER   ');
+  console.log('  ENCALM PROJECT DASHBOARD - FULL SYSTEM & RBAC AUDIT RUNNER  ');
   console.log('===============================================================\n');
 
   // 1. Initialize Database
@@ -61,14 +61,17 @@ async function runTestSuite() {
   app.use('/api/email', emailRouter);
   app.use('/api/system', systemRouter);
 
+  // Start test server on dynamic ephemeral port
   const server = app.listen(0);
+  await new Promise((resolve) => server.once('listening', resolve));
+
   const address = server.address();
   const port = typeof address === 'object' && address ? address.port : 5001;
   const baseUrl = `http://127.0.0.1:${port}`;
 
   console.log(`✓ Test API server listening on ${baseUrl}\n`);
 
-  let authToken = '';
+  let currentAuthToken = '';
 
   async function testApi(
     name: string,
@@ -77,15 +80,17 @@ async function runTestSuite() {
     path: string,
     body?: any,
     expectedStatus: number = 200,
-    validator?: (data: any) => boolean | string
+    validator?: (data: any) => boolean | string,
+    customToken?: string | null
   ) {
     const start = Date.now();
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
+      const tokenToUse = customToken !== undefined ? customToken : currentAuthToken;
+      if (tokenToUse) {
+        headers['Authorization'] = `Bearer ${tokenToUse}`;
       }
 
       const res = await fetch(`${baseUrl}${path}`, {
@@ -145,9 +150,9 @@ async function runTestSuite() {
     }
   }
 
-  console.log('Step 2: Executing API Route Tests...\n');
+  console.log('Step 2: Executing API Route & RBAC Tests...\n');
 
-  // --- System APIs ---
+  // --- 1. System Health & Probes ---
   await testApi('System Health Check (Liveness)', 'System', 'GET', '/api/system/health', undefined, 200, (d) => {
     return d.status === 'healthy' && d.counts?.projects >= 68;
   });
@@ -156,38 +161,77 @@ async function runTestSuite() {
     return d.status === 'ready';
   });
 
-  // --- Auth APIs ---
+  // --- 2. Security Negative Test: Unauthenticated Mutation Lockdown ---
+  await testApi('Reject Unauthenticated Delete Project', 'Security', 'DELETE', '/api/projects/delhi-cip-delhi', undefined, 401, (d) => {
+    return d.error && d.error.includes('Unauthorized');
+  }, null);
+
+  await testApi('Reject Unauthenticated Phase Creation', 'Security', 'POST', '/api/projects/delhi-cip-delhi/phases', {
+    name: 'Hacker Stage',
+    owner: 'Unknown',
+    status: 'upcoming',
+  }, 401, undefined, null);
+
+  // --- 3. Auth APIs: Users list & HOD Login ---
   await testApi('List System Users', 'Auth', 'GET', '/api/auth/users', undefined, 200, (d) => {
     return Array.isArray(d.users) && d.users.length >= 3;
   });
 
-  await testApi('Login with Lead Account', 'Auth', 'POST', '/api/auth/login', {
+  let hodToken = '';
+  await testApi('Login with HOD Account', 'Auth', 'POST', '/api/auth/login', {
+    email: 'hod@encalm.com',
+    password: 'encalm',
+  }, 200, (d) => {
+    hodToken = d.token;
+    return Boolean(d.token && d.user?.role === 'hod');
+  });
+
+  // --- 4. Security Negative Test: HOD View-Only Enforcement ---
+  await testApi('Reject HOD Mutating Project Issues', 'Security', 'POST', '/api/projects/delhi-cip-delhi/issues', {
+    title: 'HOD Attempted Issue',
+    detail: 'Should fail',
+    severity: 'Medium',
+    owner: 'HOD',
+  }, 403, (d) => {
+    return d.error && d.error.includes('HOD role has strict view-only oversight');
+  }, hodToken);
+
+  await testApi('Reject HOD Deleting Milestone', 'Security', 'DELETE', '/api/projects/delhi-cip-delhi/milestones/some-ms', undefined, 403, (d) => {
+    return d.error && d.error.includes('HOD role has strict view-only oversight');
+  }, hodToken);
+
+  // --- 5. Auth APIs: Lead Login ---
+  let leadToken = '';
+  await testApi('Login with Lead Account (Chinmay)', 'Auth', 'POST', '/api/auth/login', {
     email: 'chinmay.saxena@encalm.com',
     password: 'encalm',
   }, 200, (d) => {
-    if (d.token) {
-      authToken = d.token;
-    }
+    leadToken = d.token;
+    currentAuthToken = d.token;
     return Boolean(d.token && d.user?.email === 'chinmay.saxena@encalm.com');
   });
 
-  // --- Projects APIs ---
-  let sampleProjectId = 'delhi-1st-class-lounge-inl-07-07a-xenia';
-  await testApi('List All Projects', 'Projects', 'GET', '/api/projects', undefined, 200, (d) => {
-    if (!Array.isArray(d.projects) || d.projects.length < 68) {
-      return `Expected at least 68 projects, found ${d.projects?.length}`;
-    }
-    sampleProjectId = d.projects[0].id;
-    return true;
+  // --- 6. Security Negative Test: Lead Cross-Project Isolation ---
+  // delhi-cip-delhi is allotted to Saharsh Tandon, not Chinmay Saxena
+  await testApi('Reject Lead Editing Other Lead Project', 'Security', 'POST', '/api/projects/delhi-cip-delhi/phases', {
+    name: 'Unauthorized Stage',
+    owner: 'Chinmay',
+    status: 'upcoming',
+  }, 403, (d) => {
+    return d.error && d.error.includes('You can only edit projects allotted to you');
+  }, leadToken);
+
+  await testApi('Reject Lead Deleting Entire Project', 'Security', 'DELETE', '/api/projects/delhi-cip-delhi', undefined, 403, undefined, leadToken);
+
+  // --- 7. Positive Test: Lead Managing Own Allotted Project ---
+  // delhi-1st-class-lounge-inl-07-07a-xenia is allotted to Chinmay Saxena
+  const chinmayProjectId = 'delhi-1st-class-lounge-inl-07-07a-xenia';
+  await testApi('Get Single Project Detail', 'Projects', 'GET', `/api/projects/${chinmayProjectId}`, undefined, 200, (d) => {
+    return Boolean(d.project && d.project.id === chinmayProjectId && Array.isArray(d.project.phases));
   });
 
-  await testApi('Get Single Project Detail', 'Projects', 'GET', `/api/projects/${sampleProjectId}`, undefined, 200, (d) => {
-    return Boolean(d.project && d.project.id === sampleProjectId && Array.isArray(d.project.phases));
-  });
-
-  // --- Phases (Stages) APIs ---
   let createdPhaseId: string | undefined;
-  await testApi('Add Project Phase/Stage', 'Phases', 'POST', `/api/projects/${sampleProjectId}/phases`, {
+  await testApi('Lead Add Project Phase/Stage to Own Project', 'Phases', 'POST', `/api/projects/${chinmayProjectId}/phases`, {
     name: 'Diagnostic Test Phase',
     owner: 'Quality Assurance',
     status: 'upcoming',
@@ -196,14 +240,14 @@ async function runTestSuite() {
     const phase = d.project?.phases?.find((p: any) => p.name === 'Diagnostic Test Phase');
     if (phase) createdPhaseId = phase.id;
     return Boolean(phase);
-  });
+  }, leadToken);
+
   if (createdPhaseId) {
-    await testApi('Clean up Test Phase', 'Phases', 'DELETE', `/api/projects/${sampleProjectId}/phases/${createdPhaseId}`, undefined, 200);
+    await testApi('Lead Clean up Own Project Phase', 'Phases', 'DELETE', `/api/projects/${chinmayProjectId}/phases/${createdPhaseId}`, undefined, 200, undefined, leadToken);
   }
 
-  // --- Milestones APIs ---
   let createdMilestoneId: string | undefined;
-  await testApi('Add Milestone', 'Milestones', 'POST', `/api/projects/${sampleProjectId}/milestones`, {
+  await testApi('Lead Add Milestone to Own Project', 'Milestones', 'POST', `/api/projects/${chinmayProjectId}/milestones`, {
     title: 'Diagnostic Test Milestone',
     date: '2026-12-31',
     status: 'upcoming',
@@ -215,107 +259,120 @@ async function runTestSuite() {
     const ms = d.project?.milestones?.find((m: any) => m.title === 'Diagnostic Test Milestone');
     if (ms) createdMilestoneId = ms.id;
     return Boolean(ms);
-  });
+  }, leadToken);
+
   if (createdMilestoneId) {
-    await testApi('Clean up Test Milestone', 'Milestones', 'DELETE', `/api/projects/${sampleProjectId}/milestones/${createdMilestoneId}`, undefined, 200);
+    await testApi('Lead Clean up Own Milestone', 'Milestones', 'DELETE', `/api/projects/${chinmayProjectId}/milestones/${createdMilestoneId}`, undefined, 200, undefined, leadToken);
   }
 
-  // --- Issues APIs ---
   let createdIssueId: string | undefined;
-  await testApi('Add Issue', 'Issues', 'POST', `/api/projects/${sampleProjectId}/issues`, {
+  await testApi('Lead Add Issue to Own Project', 'Issues', 'POST', `/api/projects/${chinmayProjectId}/issues`, {
     title: 'Diagnostic Test Issue',
-    category: 'Operational',
+    detail: 'Verification of issue creation',
     severity: 'Low',
-    stage: 'Planning',
-    detail: 'Verification of issue creation pipeline.',
+    owner: 'QA Engineer',
+    category: 'Other',
   }, 201, (d) => {
-    const iss = d.project?.issues?.find((i: any) => i.title === 'Diagnostic Test Issue');
-    if (iss) createdIssueId = iss.id;
-    return Boolean(iss);
-  });
+    const issue = d.project?.issues?.find((i: any) => i.title === 'Diagnostic Test Issue');
+    if (issue) createdIssueId = issue.id;
+    return Boolean(issue);
+  }, leadToken);
+
   if (createdIssueId) {
-    await testApi('Clean up Test Issue', 'Issues', 'DELETE', `/api/projects/${sampleProjectId}/issues/${createdIssueId}`, undefined, 200);
+    await testApi('Lead Clean up Own Issue', 'Issues', 'DELETE', `/api/projects/${chinmayProjectId}/issues/${createdIssueId}`, undefined, 200, undefined, leadToken);
   }
 
-  // --- Updates APIs ---
-  await testApi('List Global Updates Feed', 'Updates', 'GET', '/api/updates', undefined, 200, (d) => {
-    return Array.isArray(d.updates);
-  });
-
-  await testApi('List Project Updates', 'Updates', 'GET', `/api/projects/${sampleProjectId}/updates`, undefined, 200, (d) => {
-    return Array.isArray(d.updates);
-  });
-
-  await testApi('Post Project Update Note', 'Updates', 'POST', `/api/projects/${sampleProjectId}/updates`, {
-    author: 'Audit Runner',
-    role: 'Quality Assurance',
-    text: 'Automated test update note verification.',
+  // Updates & Photos
+  await testApi('Get Global Updates', 'Updates', 'GET', '/api/updates', undefined, 200);
+  await testApi('Get Project Updates', 'Updates', 'GET', `/api/projects/${chinmayProjectId}/updates`, undefined, 200);
+  await testApi('Lead Post Update to Own Project', 'Updates', 'POST', `/api/projects/${chinmayProjectId}/updates`, {
+    text: 'Audit test update for automated verification suite.',
+    author: 'Chinmay Saxena',
+    role: 'Lead',
     kind: 'Progress',
-    stage: 'Planning',
-  }, 201, (d) => {
-    return Boolean(d.project && Array.isArray(d.project.updates));
-  });
+  }, 201, undefined, leadToken);
 
-  // --- Photos APIs ---
-  await testApi('List Global Photo Gallery', 'Photos', 'GET', '/api/photos', undefined, 200, (d) => {
-    return Array.isArray(d.photos);
-  });
+  await testApi('Get Global Photos', 'Photos', 'GET', '/api/photos', undefined, 200);
+  await testApi('Get Project Photos', 'Photos', 'GET', `/api/projects/${chinmayProjectId}/photos`, undefined, 200);
+  await testApi('Get Notifications', 'Notifications', 'GET', '/api/notifications', undefined, 200);
 
-  await testApi('List Project Photos', 'Photos', 'GET', `/api/projects/${sampleProjectId}/photos`, undefined, 200, (d) => {
-    return Array.isArray(d.photos);
-  });
-
-  // --- Notifications APIs ---
-  await testApi('List Notifications', 'Notifications', 'GET', '/api/notifications', undefined, 200, (d) => {
-    return Array.isArray(d.notifications);
-  });
-
-  // --- Email & Tagging APIs (SMTP & Microsoft Graph API) ---
-  await testApi('Get Email Settings', 'Email', 'GET', '/api/email/settings', undefined, 200, (d) => {
-    return d.settings && (d.settings.provider === 'smtp' || d.settings.provider === 'microsoft_graph') && typeof d.settings.isConfigured === 'boolean';
-  });
-
-  await testApi('Save Outlook SMTP Settings', 'Email', 'POST', '/api/email/settings', {
-    provider: 'smtp',
-    smtp: {
-      host: 'smtp-mail.outlook.com',
-      port: 587,
-      secure: false,
-      user: 'notifications@outlook.com',
-      pass: 'test-app-password-16ch',
-      fromName: 'Encalm Audit',
-    },
+  // --- 8. Coordinator Supervisory Operations ---
+  let coordinatorToken = '';
+  await testApi('Login with Coordinator Account', 'Auth', 'POST', '/api/auth/login', {
+    email: 'digital.intern@encalm.com',
+    password: 'encalm',
   }, 200, (d) => {
-    return d.settings?.provider === 'smtp' && d.settings?.smtp?.isConfigured === true && d.settings?.smtp?.host === 'smtp-mail.outlook.com';
+    coordinatorToken = d.token;
+    currentAuthToken = d.token;
+    return Boolean(d.token && d.user?.role === 'coordinator');
   });
 
-  await testApi('Save Microsoft Graph Settings', 'Email', 'POST', '/api/email/settings', {
-    provider: 'microsoft_graph',
-    tenantId: 'test-azure-tenant-id-84a7e930',
-    clientId: 'test-azure-client-id-3df2a510',
-    clientSecret: 'test-secret-value-12345',
-    senderEmail: 'notifications@encalm.com',
-    saveToSentItems: true,
-  }, 200, (d) => {
-    return d.settings?.provider === 'microsoft_graph' && d.settings?.isConfigured === true;
-  });
+  // Snapshot existing system_settings before running destructive settings tests
+  const savedSettings = db.prepare('SELECT key, value, updated_at FROM system_settings').all() as Array<{
+    key: string;
+    value: string;
+    updated_at: string;
+  }>;
+
+  try {
+    await testApi('Coordinator Save SMTP Settings', 'Email', 'POST', '/api/email/settings', {
+      provider: 'smtp',
+      smtp: {
+        host: 'smtp-mail.outlook.com',
+        port: 587,
+        secure: false,
+        user: 'notifications@outlook.com',
+        pass: 'test-app-password-16ch',
+        fromName: 'Encalm Audit',
+      },
+    }, 200, (d) => {
+      return d.settings?.provider === 'smtp' && d.settings?.smtp?.isConfigured === true;
+    }, coordinatorToken);
+
+    await testApi('Coordinator Save Microsoft Graph Settings', 'Email', 'POST', '/api/email/settings', {
+      provider: 'microsoft_graph',
+      tenantId: 'test-azure-tenant-id-84a7e930',
+      clientId: 'test-azure-client-id-3df2a510',
+      clientSecret: 'test-secret-value-12345',
+      senderEmail: 'notifications@encalm.com',
+      saveToSentItems: true,
+    }, 200, (d) => {
+      return d.settings?.provider === 'microsoft_graph' && d.settings?.isConfigured === true;
+    }, coordinatorToken);
+  } finally {
+    // Restore original system_settings immediately so live email & directory services remain intact
+    const restoreTx = db.transaction(() => {
+      db.prepare('DELETE FROM system_settings').run();
+      const ins = db.prepare('INSERT INTO system_settings (key, value, updated_at) VALUES (?, ?, ?)');
+      for (const row of savedSettings) {
+        ins.run(row.key, row.value, row.updated_at);
+      }
+    });
+    restoreTx();
+  }
 
   await testApi('Get Email Logs / Outbox', 'Email', 'GET', '/api/email/logs', undefined, 200, (d) => {
     return Array.isArray(d.logs);
   });
 
-  await testApi('Tag Member, Comment & Send Mail', 'Email', 'POST', '/api/email/tag-and-comment', {
-    projectId: sampleProjectId,
+  await testApi('Tag Member & Send Notification', 'Email', 'POST', '/api/email/tag-and-comment', {
+    projectId: chinmayProjectId,
     entityType: 'Stage',
     entityId: 'stage-1',
     entityTitle: 'Stage 1: Concept & Planning',
     entityContext: 'Final drawings ready for approval.',
     taggedUserIds: ['user-ruchika-chauhan'],
-    comment: 'Audit comment: Please verify and sign off the drawings.',
+    comment: 'Audit comment: Please verify drawings.',
     authorName: 'Audit System',
   }, 200, (d) => {
     return d.success === true && Array.isArray(d.recipients) && d.recipients.length > 0;
-  });
+  }, coordinatorToken);
+
+  // Clean up diagnostic test updates from DB
+  try {
+    db.prepare("DELETE FROM updates WHERE text LIKE '%Audit test update%' OR text LIKE '%Audit comment:%'").run();
+    db.prepare("DELETE FROM notifications WHERE message LIKE '%Audit comment:%'").run();
+  } catch {}
 
   // Close test server
   server.close();

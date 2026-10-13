@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db/database.js';
-import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { requireAuth, optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -30,20 +30,20 @@ router.get('/', optionalAuth, (req: AuthenticatedRequest, res) => {
 });
 
 // PATCH mark notification as read
-router.patch('/:id/read', optionalAuth, (req, res) => {
+router.patch('/:id/read', requireAuth, (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   db.prepare('UPDATE notifications SET read = 1 WHERE id = ?').run(id);
   return res.json({ success: true });
 });
 
 // POST mark all as read
-router.post('/read-all', optionalAuth, (req, res) => {
+router.post('/read-all', requireAuth, (req: AuthenticatedRequest, res) => {
   db.prepare('UPDATE notifications SET read = 1 WHERE read = 0').run();
   return res.json({ success: true });
 });
 
 // DELETE notification
-router.delete('/:id', optionalAuth, (req, res) => {
+router.delete('/:id', requireAuth, (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   db.prepare('DELETE FROM notifications WHERE id = ?').run(id);
   return res.json({ success: true });

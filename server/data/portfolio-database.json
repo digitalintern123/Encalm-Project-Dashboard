@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exportedAt": "2026-10-11T16:19:49.805Z",
+  "exportedAt": "2026-10-13T05:03:34.793Z",
   "projectCount": 68,
   "projects": [
     {
@@ -24,7 +24,7 @@
       "nextMilestoneDate": "2025-12-31",
       "leadId": "user-chinmay-saxena",
       "startDate": "2023-04-01",
-      "lastUpdated": "05 Oct 2026",
+      "lastUpdated": "13 Oct 2026",
       "templateId": "lounge",
       "specification": {
         "projectType": "Lounge",
@@ -152,6 +152,51 @@
       ],
       "issues": [],
       "updates": [
+        {
+          "id": "delhi-1st-class-lounge-inl-07-07a-xenia-update-1791867814754",
+          "date": "13 Oct 2026",
+          "author": "Chinmay Saxena",
+          "role": "Lead",
+          "text": "Audit test update for automated verification suite.",
+          "stage": null,
+          "kind": "Progress"
+        },
+        {
+          "id": "upd-1791796248134-bt23",
+          "date": "2026-10-12",
+          "author": "Praveen Pal",
+          "role": "Project Coordinator",
+          "text": "[Tagged Ruchika Chauhan]: Audit comment: Please verify drawings.",
+          "stage": "Stage 1: Concept & Planning",
+          "kind": "Progress"
+        },
+        {
+          "id": "delhi-1st-class-lounge-inl-07-07a-xenia-update-1791796247561",
+          "date": "12 Oct 2026",
+          "author": "Chinmay Saxena",
+          "role": "Lead",
+          "text": "Audit test update for automated verification suite.",
+          "stage": null,
+          "kind": "Progress"
+        },
+        {
+          "id": "upd-1791781104528-h7ki",
+          "date": "2026-10-12",
+          "author": "Praveen Pal",
+          "role": "Project Coordinator",
+          "text": "[Tagged Ruchika Chauhan]: Audit comment: Please verify drawings.",
+          "stage": "Stage 1: Concept & Planning",
+          "kind": "Progress"
+        },
+        {
+          "id": "delhi-1st-class-lounge-inl-07-07a-xenia-update-1791781103953",
+          "date": "12 Oct 2026",
+          "author": "Chinmay Saxena",
+          "role": "Lead",
+          "text": "Audit test update for automated verification suite.",
+          "stage": null,
+          "kind": "Progress"
+        },
         {
           "id": "upd-1791219878412-s01m",
           "date": "2026-10-05",
@@ -1153,6 +1198,15 @@
         }
       ],
       "updates": [
+        {
+          "id": "upd-1791735590227-6kp9",
+          "date": "2026-10-11",
+          "author": "Chinmay Saxena",
+          "role": "Project Lead",
+          "text": "[Tagged Ruchika Chauhan]: Audit comment: Please verify and sign off the drawings.",
+          "stage": "Stage 1: Concept & Planning",
+          "kind": "Progress"
+        },
         {
           "id": "delhi-cip-delhi-update-1791735589778",
           "date": "11 Oct 2026",
@@ -11043,6 +11097,39 @@
     }
   ],
   "notifications": [
+    {
+      "id": "notif-tag-1791796247779-gi8q1",
+      "type": "tagged_task",
+      "title": "Tagged on Stage: Stage 1: Concept & Planning",
+      "message": "Praveen Pal tagged you on stage \"Stage 1: Concept & Planning\" in 1st Class Lounge - INL 07&07A (Xenia): \"Audit comment: Please verify drawings.\"",
+      "project_id": "delhi-1st-class-lounge-inl-07-07a-xenia",
+      "link": "/project/delhi-1st-class-lounge-inl-07-07a-xenia",
+      "read": 0,
+      "created_at": "2026-10-12 09:10:47",
+      "recipient_id": "user-ruchika-chauhan"
+    },
+    {
+      "id": "notif-tag-1791781104141-zo1ji",
+      "type": "tagged_task",
+      "title": "Tagged on Stage: Stage 1: Concept & Planning",
+      "message": "Praveen Pal tagged you on stage \"Stage 1: Concept & Planning\" in 1st Class Lounge - INL 07&07A (Xenia): \"Audit comment: Please verify drawings.\"",
+      "project_id": "delhi-1st-class-lounge-inl-07-07a-xenia",
+      "link": "/project/delhi-1st-class-lounge-inl-07-07a-xenia",
+      "read": 0,
+      "created_at": "2026-10-12 04:58:24",
+      "recipient_id": "user-ruchika-chauhan"
+    },
+    {
+      "id": "notif-tag-1791735589907-h23zd",
+      "type": "tagged_task",
+      "title": "Tagged on Stage: Stage 1: Concept & Planning",
+      "message": "Chinmay Saxena tagged you on stage \"Stage 1: Concept & Planning\" in CIP Delhi: \"Audit comment: Please verify and sign off the drawings.\"",
+      "project_id": "delhi-cip-delhi",
+      "link": "/project/delhi-cip-delhi",
+      "read": 0,
+      "created_at": "2026-10-11 16:19:49",
+      "recipient_id": "user-ruchika-chauhan"
+    },
     {
       "id": "notif-tag-1791735468589-5r17q",
       "type": "tagged_task",

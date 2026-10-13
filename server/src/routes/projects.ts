@@ -156,8 +156,8 @@ router.get('/:id', optionalAuth, (req, res) => {
   return res.json({ project });
 });
 
-// POST bulk sync projects from client cache or external source
-router.post('/sync', optionalAuth, (req: AuthenticatedRequest, res) => {
+// POST bulk sync projects from client cache or external source (Coordinator only)
+router.post('/sync', requireAuth, requireRole(['coordinator']), (req: AuthenticatedRequest, res) => {
   const { projects, explicit } = req.body;
 
   // Protect clean database state from being contaminated by stale browser local caches
@@ -175,11 +175,15 @@ router.post('/sync', optionalAuth, (req: AuthenticatedRequest, res) => {
   return res.json({ success: true, count: result.count, message: `Synced ${result.count} projects successfully` });
 });
 
-// POST create project
-router.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
+// POST create project (Coordinator or Lead)
+router.post('/', requireAuth, requireRole(['coordinator', 'lead']), (req: AuthenticatedRequest, res) => {
   const body = req.body;
   if (!body.name || !body.location || !body.category) {
     return res.status(400).json({ error: 'Name, location, and category are required' });
+  }
+
+  if (req.user && req.user.role === 'lead' && !body.lead_id && !body.leadId) {
+    body.lead_id = req.user.id;
   }
 
   const id = body.id || `${body.location.toLowerCase()}-${body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
@@ -345,7 +349,7 @@ router.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
 });
 
 // PATCH allot project (Coordinator only)
-router.patch('/:id/allot', optionalAuth, (req: AuthenticatedRequest, res) => {
+router.patch('/:id/allot', requireAuth, requireRole(['coordinator']), (req: AuthenticatedRequest, res) => {
   const id = req.params.id as string;
   const { leadId } = req.body;
   if (!leadId) {
@@ -388,8 +392,8 @@ router.patch('/:id/allot', optionalAuth, (req: AuthenticatedRequest, res) => {
   return res.json({ project: updated });
 });
 
-// PATCH update project
-router.patch('/:id', optionalAuth, (req: AuthenticatedRequest, res) => {
+// PATCH update project (Coordinator or allotted Lead)
+router.patch('/:id', requireAuth, requireProjectAccess('id'), (req: AuthenticatedRequest, res) => {
   const id = req.params.id as string;
   const project = fetchFullProject(id);
   if (!project) {
@@ -461,8 +465,8 @@ router.patch('/:id', optionalAuth, (req: AuthenticatedRequest, res) => {
   return res.json({ project: updated });
 });
 
-// DELETE project
-router.delete('/:id', optionalAuth, (req, res) => {
+// DELETE project (Coordinator only)
+router.delete('/:id', requireAuth, requireRole(['coordinator']), (req: AuthenticatedRequest, res) => {
   const id = req.params.id as string;
 
   // Unlink physical photo files from disk

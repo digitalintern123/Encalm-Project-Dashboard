@@ -94,7 +94,12 @@ export function canUserEditProject(projectId: string, user: UserPayload): boolea
   if (user.role === 'lead') {
     const project = db.prepare('SELECT lead_id FROM projects WHERE id = ?').get(projectId) as { lead_id: string | null } | undefined;
     if (!project) return false;
-    return !project.lead_id || project.lead_id === user.id;
+    return (
+      !project.lead_id ||
+      project.lead_id === user.id ||
+      project.lead_id === user.email ||
+      project.lead_id === user.name
+    );
   }
   return false;
 }
@@ -102,12 +107,23 @@ export function canUserEditProject(projectId: string, user: UserPayload): boolea
 export function requireProjectAccess(projectIdParam: string = 'id') {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized: Authentication required' });
+      return res.status(401).json({ error: 'Unauthorized: Authentication token is required' });
     }
 
-    const projectId = req.params[projectIdParam] || req.body?.projectId || req.params.projectId || req.params.id;
+    const projectId =
+      req.params[projectIdParam] ||
+      req.body?.[projectIdParam] ||
+      req.body?.projectId ||
+      req.params.projectId ||
+      req.params.id;
+
     if (!projectId) {
       return res.status(400).json({ error: 'Project ID is required' });
+    }
+
+    const project = db.prepare('SELECT id, lead_id FROM projects WHERE id = ?').get(projectId) as { id: string; lead_id: string | null } | undefined;
+    if (!project) {
+      return res.status(404).json({ error: `Project '${projectId}' not found` });
     }
 
     if (!canUserEditProject(projectId, req.user)) {

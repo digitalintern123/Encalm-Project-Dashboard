@@ -2,7 +2,7 @@ import { Router } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import { db, uploadsDir } from '../db/database.js';
-import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { requireAuth, requireProjectAccess, optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import { saveDatabaseSnapshot } from '../utils/backup.js';
 import { fetchFullProject } from './projects.js';
 
@@ -171,13 +171,13 @@ async function handlePhotoUpload(req: AuthenticatedRequest, res: any) {
   }
 }
 
-projectPhotosRouter.post('/', optionalAuth, handlePhotoUpload);
-projectPhotosRouter.post('/batch', optionalAuth, handlePhotoUpload);
+projectPhotosRouter.post('/', requireAuth, requireProjectAccess('id'), handlePhotoUpload);
+projectPhotosRouter.post('/batch', requireAuth, requireProjectAccess('id'), handlePhotoUpload);
 
 /**
  * Delete a specific site photograph
  */
-projectPhotosRouter.delete('/:photoId', optionalAuth, async (req: AuthenticatedRequest, res) => {
+projectPhotosRouter.delete('/:photoId', requireAuth, requireProjectAccess('id'), async (req: AuthenticatedRequest, res) => {
   try {
     const projectId = req.params.id as string;
     const photoId = req.params.photoId as string;

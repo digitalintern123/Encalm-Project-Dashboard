@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db/database.js';
-import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { requireAuth, requireProjectAccess, AuthenticatedRequest } from '../middleware/auth.js';
 import { fetchFullProject, parseTaggedUsers } from './projects.js';
 import { saveDatabaseSnapshot } from '../utils/backup.js';
 import { dispatchTagNotifications } from '../services/notifications.js';
@@ -50,7 +50,7 @@ export function recomputeProjectProgress(projectId: string): number {
 }
 
 // POST add phase
-router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/', requireAuth, requireProjectAccess('id'), async (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const project = fetchFullProject(projectId);
   if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -114,7 +114,7 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
 });
 
 // PATCH update phase
-router.patch('/:phaseId', optionalAuth, async (req: AuthenticatedRequest, res) => {
+router.patch('/:phaseId', requireAuth, requireProjectAccess('id'), async (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const phaseId = req.params.phaseId as string;
   const phase = db.prepare('SELECT * FROM phases WHERE id = ? AND project_id = ?').get(phaseId, projectId) as any;
@@ -199,7 +199,7 @@ router.patch('/:phaseId', optionalAuth, async (req: AuthenticatedRequest, res) =
 });
 
 // DELETE remove phase
-router.delete('/:phaseId', optionalAuth, (req: AuthenticatedRequest, res) => {
+router.delete('/:phaseId', requireAuth, requireProjectAccess('id'), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const phaseId = req.params.phaseId as string;
   const count = db.prepare('SELECT COUNT(*) as count FROM phases WHERE project_id = ?').get(projectId) as { count: number };
@@ -225,7 +225,7 @@ router.delete('/:phaseId', optionalAuth, (req: AuthenticatedRequest, res) => {
 });
 
 // POST move phase order
-router.post('/move', optionalAuth, (req: AuthenticatedRequest, res) => {
+router.post('/move', requireAuth, requireProjectAccess('id'), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const { phaseIndex, direction } = req.body;
 

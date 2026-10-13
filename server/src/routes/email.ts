@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db/database.js';
-import { requireAuth, optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { requireAuth, requireRole, requireProjectAccess, optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import {
   getActiveEmailProvider,
   saveActiveEmailProvider,
@@ -107,8 +107,8 @@ router.get('/settings', optionalAuth, (req, res) => {
   });
 });
 
-// POST save email settings (SMTP and/or Microsoft Graph API)
-router.post('/settings', optionalAuth, (req: AuthenticatedRequest, res) => {
+// POST save email settings (Coordinator only)
+router.post('/settings', requireAuth, requireRole(['coordinator']), (req: AuthenticatedRequest, res) => {
   const { provider, smtp, graph, tenantId, clientId, clientSecret, senderEmail, saveToSentItems } = req.body;
 
   if (provider === 'smtp' || provider === 'microsoft_graph') {
@@ -184,8 +184,8 @@ router.post('/settings', optionalAuth, (req: AuthenticatedRequest, res) => {
   });
 });
 
-// POST send test email via active provider (SMTP or Microsoft Graph)
-router.post('/test', optionalAuth, async (req: AuthenticatedRequest, res) => {
+// POST send test email via active provider (Coordinator only)
+router.post('/test', requireAuth, requireRole(['coordinator']), async (req: AuthenticatedRequest, res) => {
   const { to, recipientName, provider: reqProvider, smtp, graph } = req.body;
 
   if (reqProvider === 'smtp' || reqProvider === 'microsoft_graph') {
@@ -241,15 +241,15 @@ router.post('/test', optionalAuth, async (req: AuthenticatedRequest, res) => {
   });
 });
 
-// POST resend log entry
-router.post('/resend/:id', optionalAuth, async (req, res) => {
+// POST resend log entry (Coordinator only)
+router.post('/resend/:id', requireAuth, requireRole(['coordinator']), async (req: AuthenticatedRequest, res) => {
   const id = req.params.id as string;
   const result = await resendEmailLog(id);
   return res.json(result);
 });
 
 // POST send executive project update to stakeholders
-router.post('/send-project-update', requireAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/send-project-update', requireAuth, requireProjectAccess('projectId'), async (req: AuthenticatedRequest, res) => {
   const { projectId, recipients, customNote } = req.body;
   if (!projectId) {
     return res.status(400).json({ error: 'Project ID is required' });
@@ -322,7 +322,7 @@ router.post('/send-project-update', requireAuth, async (req: AuthenticatedReques
 });
 
 // POST tag team member(s) with comment & dispatch automated email
-router.post('/tag-and-comment', requireAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/tag-and-comment', requireAuth, requireProjectAccess('projectId'), async (req: AuthenticatedRequest, res) => {
   const {
     projectId,
     entityType = 'Stage',
@@ -425,6 +425,19 @@ router.post('/tag-and-comment', requireAuth, async (req: AuthenticatedRequest, r
         }
       }
     }
+
+    // 5. Direct Email Address Matching in Comment (e.g. "@colleague@encalm.com" or "colleague@encalm.com")
+    const directEmailRegex = /@?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+    let emailMatch: RegExpExecArray | null;
+    while ((emailMatch = directEmailRegex.exec(remainingComment)) !== null) {
+      const extractedEmail = emailMatch[1].toLowerCase().trim();
+      const existingByEmail = allUsers.find((u) => u.email?.toLowerCase().trim() === extractedEmail);
+      if (existingByEmail) {
+        combinedUserIds.add(existingByEmail.id);
+      } else {
+        combinedUserIds.add(extractedEmail);
+      }
+    }
   }
 
   const finalUserIds = Array.from(combinedUserIds);
@@ -461,21 +474,24 @@ router.post('/tag-and-comment', requireAuth, async (req: AuthenticatedRequest, r
   for (const userId of finalUserIds) {
     if (!userId) continue;
 
-    // Lookup user details from DB
-    let userRow = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(userId) as
+    // Lookup user details from DB by ID or by email
+    let userRow = db.prepare('SELECT id, name, email FROM users WHERE id = ? OR LOWER(email) = LOWER(?)').get(userId, userId) as
       | { id: string; name: string; email: string }
       | undefined;
 
-    // If user is from Azure Directory (e.g. azure-guid) or not in local DB
-    if (!userRow && userId.startsWith('azure-')) {
+    // If user is from Azure Directory (e.g. azure-guid) or is a direct email not yet in local DB
+    if (!userRow && (userId.startsWith('azure-') || userId.includes('@'))) {
       try {
-        const azureUsers = await searchEncalmDirectory();
-        const foundAzure = azureUsers.find((au) => au.id === userId);
+        const searchHint = userId.includes('@') ? userId : '';
+        const azureUsers = await searchEncalmDirectory(searchHint);
+        const foundAzure = azureUsers.find(
+          (au) => au.id === userId || au.email.toLowerCase() === userId.toLowerCase()
+        );
         if (foundAzure) {
           // Auto-insert into local users table so foreign keys and future tags work seamlessly
           db.prepare(`
-            INSERT INTO users (id, name, email, role, title, initials, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+            INSERT INTO users (id, name, email, password_hash, role, title, initials, created_at)
+            VALUES (?, ?, ?, '', ?, ?, ?, datetime('now'))
             ON CONFLICT(id) DO UPDATE SET name = excluded.name, email = excluded.email
           `).run(
             foundAzure.id,
@@ -486,9 +502,16 @@ router.post('/tag-and-comment', requireAuth, async (req: AuthenticatedRequest, r
             foundAzure.initials
           );
           userRow = { id: foundAzure.id, name: foundAzure.name, email: foundAzure.email };
+        } else if (userId.includes('@')) {
+          const emailPrefix = userId.split('@')[0].replace(/[._-]+/g, ' ');
+          const displayName = emailPrefix.replace(/\b\w/g, (c) => c.toUpperCase());
+          userRow = { id: userId, name: displayName, email: userId.toLowerCase().trim() };
         }
       } catch (err: any) {
         console.warn('[Azure User Auto-Register Error]', err.message);
+        if (userId.includes('@')) {
+          userRow = { id: userId, name: userId.split('@')[0], email: userId.toLowerCase().trim() };
+        }
       }
     }
 

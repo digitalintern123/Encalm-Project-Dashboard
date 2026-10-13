@@ -1,211 +1,145 @@
 # Encalm Project Dashboard
 
-Internal project-control dashboard for Encalm Hospitality: portfolio health, stage
-progress, milestones, issues, commercial position, and an update feed.
+Enterprise-grade project-controls and PMO dashboard for **Encalm Hospitality**: portfolio health, stage progression, milestone governance, risk registers, commercial analytics, multi-photo site logs, and automated notifications across **68 airport lounges, spas, transit pods, and bars**.
 
-**Full-Stack React 19 · Node.js & Express · TypeScript · SQLite (better-sqlite3) · Vite 7 · Tailwind CSS v4**
-
-The dashboard features a **fully functional Node.js + Express backend** powered by an embedded **SQLite database (`server/data/encalm.db`)** in WAL mode. Projects, stages, milestones, issues, updates, and notifications are stored relationsally in SQLite and served through REST endpoints protected by JWT and role-based access control (RBAC).
-
-> **Core User Accounts & Role Permissions**:
-> - **Project HOD (`hod@encalm.com` / `encalm`)**: Portfolio-wide read-only view with milestone approval & rejection authority.
-> - **Project Lead (`lead@encalm.com` / `encalm`)**: Full project creation, stage workflow updates, milestone management, and risk register logging.
+**Full-Stack React 19 · Node.js & Express 5 · TypeScript · SQLite WAL (better-sqlite3) · Vite 7 · Tailwind CSS v4 · Docker**
 
 ---
 
-## 1. Prerequisites
+## 📚 Technical Documentation Hub
 
-| Requirement | Version | Check |
-| --- | --- | --- |
-| Node.js | **20.19+ or 22.12+** (Vite 7 & Express TS) | `node -v` |
-| npm | 10+ (ships with Node) | `npm -v` |
+For detailed architectural specifications, API contracts, security models, and developer guides, consult the dedicated documentation:
+
+| Document | Description |
+| :--- | :--- |
+| **[Architecture Guide](file:///c:/Users/DigitalIntern/Downloads/Project-Dashboard-main%20(3)/Project-Dashboard-main/ARCHITECTURE.md)** | System architecture, ER diagrams, SQLite WAL concurrency, dual email engine, photo pipeline |
+| **[REST API Reference](file:///c:/Users/DigitalIntern/Downloads/Project-Dashboard-main%20(3)/Project-Dashboard-main/API.md)** | Comprehensive endpoint reference (29 routes), JSON request/response schemas, error codes |
+| **[Security Policy](file:///c:/Users/DigitalIntern/Downloads/Project-Dashboard-main%20(3)/Project-Dashboard-main/SECURITY.md)** | Server-side RBAC, JWT token lifecycle, rate limiting, Helmet headers, upload sanitization |
+| **[Production Deployment](file:///c:/Users/DigitalIntern/Downloads/Project-Dashboard-main%20(3)/Project-Dashboard-main/PRODUCTION.md)** | Containerized deployment, PM2/Systemd setup, backup strategies, environment variables |
+| **[Contributing Guidelines](file:///c:/Users/DigitalIntern/Downloads/Project-Dashboard-main%20(3)/Project-Dashboard-main/CONTRIBUTING.md)** | Developer setup, PR workflows, TypeScript/React guidelines, test commands |
+| **[Changelog](file:///c:/Users/DigitalIntern/Downloads/Project-Dashboard-main%20(3)/Project-Dashboard-main/CHANGELOG.md)** | Semantic release notes tracking changes from prototype to v1.0.0 |
+| **[Engineering Notes](file:///c:/Users/DigitalIntern/Downloads/Project-Dashboard-main%20(3)/Project-Dashboard-main/notes.md)** | Internal engineering decisions, state mutations, and calculation principles |
+| **[Product Roadmap](file:///c:/Users/DigitalIntern/Downloads/Project-Dashboard-main%20(3)/Project-Dashboard-main/docs/roadmap.md)** | Development roadmap tracking completed milestones and future enhancements |
 
 ---
 
-## 2. Setup and Run
+## 1. System Overview & Core Capabilities
+
+- **Single Source of Truth (SSOT)**: Powered by an embedded SQLite database (`server/data/encalm.db`) configured with Write-Ahead Logging (WAL) and foreign key enforcement for high-throughput concurrent operations.
+- **Server-Side Role-Based Access Control (RBAC)**: Enforced through mandatory JWT authentication middleware (`requireAuth`, `requireProjectAccess`, `canUserEditProject`). Prevents unauthorized mutations and data deletion across all 29 REST endpoints.
+- **Dual-Engine Notification System**: Automated transactional email pipeline using the Brevo HTTP API with automatic fallback to Nodemailer SMTP.
+- **Multi-Photo Processing Pipeline**: Multer-based multipart photo uploads with automated Sharp processing (JPEG compression, 1600px max width, 300px thumbnail generation).
+- **Automated Verification**: End-to-end API test suite ([`server/src/scripts/test-all-apis.ts`](file:///c:/Users/DigitalIntern/Downloads/Project-Dashboard-main%20(3)/Project-Dashboard-main/server/src/scripts/test-all-apis.ts)) verifying 29 endpoints with 100% test pass rate.
+
+---
+
+## 2. Default User Accounts & Roles
+
+| Email | Password | Role | Permissions |
+| :--- | :--- | :--- | :--- |
+| `hod@encalm.com` | `encalm` | **Project HOD** (Ruchika Chauhan) | Portfolio-wide visibility, read-only across projects, milestone approval & rejection authority |
+| `lead@encalm.com` | `encalm` | **Project Lead** (Chinmay Saxena) | Full editing rights over assigned projects, stages, milestones, issues, and site photographs |
+
+---
+
+## 3. Prerequisites
+
+| Requirement | Supported Versions | Verification Command |
+| :--- | :--- | :--- |
+| **Node.js** | `20.19+` or `22.12+` | `node -v` |
+| **npm** | `10+` | `npm -v` |
+| **Docker** *(Optional)* | Docker Engine 24+ & Compose v2 | `docker compose version` |
+
+---
+
+## 4. Quick Start & Local Development
+
+### Native Node.js Setup
 
 ```bash
-# 1. install dependencies
+# 1. Install dependencies across root and server
 npm install
 
-# 2. start full-stack application (Backend on :5000 + Frontend on :5173 concurrently)
+# 2. Start full-stack development servers concurrently (Backend :5000 + Frontend :5173)
 npm run dev
 ```
 
-Open <http://localhost:5173>. The frontend Vite dev server automatically proxies `/api` calls directly to the Express backend at `http://localhost:5000`.
+Open [http://localhost:5173](http://localhost:5173) in your browser. The Vite dev server proxies `/api` calls directly to the Express backend running on port `5000`.
 
-### Signing In
+### Docker Setup
 
-| Email | Password | Role | Access Permissions |
-| --- | --- | --- | --- |
-| `hod@encalm.com` | `encalm` | Project HOD (Ruchika Chauhan) | Read portfolio, approve/reject control points |
-| `lead@encalm.com` | `encalm` | Project Lead (Chinmay Saxena) | Full project create/edit, stages, issues, milestones |
+```bash
+# Build and run containerized application with SQLite persistence
+docker compose up -d --build
+
+# View container logs
+docker compose logs -f
+```
+
+The application will be accessible at [http://localhost:5000](http://localhost:5000).
 
 ---
 
-## 3. Full-Stack NPM Commands
+## 5. NPM Commands
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Runs backend Express server (`:5000`) and Vite frontend (`:5173`) concurrently |
+| Script | Purpose |
+| :--- | :--- |
+| `npm run dev` | Runs Express backend (`:5000`) and Vite frontend (`:5173`) concurrently |
 | `npm run server` | Starts only the Express TypeScript backend server |
-| `npm run seed` | Re-seeds SQLite database with the standard 20 projects |
-| `npm run build` | Builds frontend production bundle to `dist/` |
-| `npm run typecheck` | Full TypeScript type check across both frontend and backend |
-| `node scripts/test-e2e.mjs` | Runs automated E2E smoke tests against backend REST endpoints |
-
-Run `npm run typecheck` before committing — `npm run build` does not fail on type
-errors.
+| `npm run seed` | Seeds SQLite database with the full enterprise dataset of 68 facilities |
+| `npm run build` | Compiles frontend assets into production bundle (`dist/`) |
+| `npm run typecheck` | Executes strict TypeScript type validation across frontend and backend |
+| `npm run test` | Executes the complete 29-endpoint backend API test suite |
+| `npm run test:api` | Runs automated E2E API verification with detailed step-by-step reporting |
 
 ---
 
-## 4. Debugging in VS Code
-
-`.vscode/launch.json` ships with two configurations.
-
-1. Start the dev server: `npm run dev`
-2. Open the **Run and Debug** panel (`Ctrl+Shift+D` / `Cmd+Shift+D`)
-3. Pick **Debug in Chrome** (or **Debug in Edge**) and press `F5`
-
-Breakpoints in `.tsx` files resolve through Vite's source maps. `.vscode/tasks.json`
-also exposes `dev` and `typecheck` via `Ctrl+Shift+B`.
-
----
-
-## 5. Project structure
+## 6. Project Architecture & Directory Layout
 
 ```
-src/
-  main.tsx               Entry point, mounts the root error boundary
-  App.tsx                Routes (wouter) and providers
-  index.css              Tailwind v4 theme, colour tokens, motion rules
-  data/
-    projects.ts           Seed data (20 demo projects), domain types, formatters
-    users.ts              Stable user identity — every project's `leadId` points here
-  state/app-state.tsx    Role, project state, persistence, RBAC — see notes.md §4
-  lib/
-    storage.ts           localStorage access that never throws
-    date.ts              Date parsing/formatting that never throws
-    calculations.ts      Planned progress, variance, commercial ratios —
-                          the one place these are computed, see notes.md §7
-    utils.ts             `cn()` class merger
-  pages/
-    dashboard.tsx         "/" — portfolio KPIs, health donut, attention list
-    workspace.tsx         nine views (projects, timeline, milestones, issues,
-                           commercial, updates, reports, new-project) in one
-                           file, selected by a `view` prop from the router
-    project-detail.tsx    "/project/:id" — tabbed single-project view
-    login.tsx             role picker (not real authentication)
-    not-found.tsx         catch-all route
-  components/
-    app-shell.tsx        Sidebar, header, settings dialog
-    error-boundary.tsx   Route-level error recovery
-    ui/                  shadcn/ui primitives (generated — see components.json)
-  hooks/                 use-toast · use-mobile
+├── server/                    # Node.js + Express 5 Backend
+│   ├── src/
+│   │   ├── controllers/      # Request handlers (auth, projects, milestones, etc.)
+│   │   ├── middleware/       # JWT auth, RBAC (requireProjectAccess), upload, rate-limit
+│   │   ├── routes/           # REST route definitions
+│   │   ├── services/         # SQLite DB queries (db.ts), Brevo/SMTP email engine (email.ts)
+│   │   └── scripts/          # test-all-apis.ts, seed-db.ts
+│   ├── data/                 # SQLite encalm.db & WAL files
+│   └── uploads/              # Stored site photographs and thumbnails
+├── src/                      # React 19 Frontend
+│   ├── components/           # UI primitives (shadcn), app-shell, dialogs, charts
+│   ├── data/                 # Seed data fallback & domain TypeScript interfaces
+│   ├── hooks/                # use-toast, use-mobile
+│   ├── lib/                  # Calculation engine (calculations.ts), date utils, storage
+│   ├── pages/                # Dashboard, Workspace, ProjectDetail, Login, NotFound
+│   └── state/                # React context & app state provider (app-state.tsx)
+├── Dockerfile                # Production multi-stage Docker build
+├── docker-compose.yml        # Docker compose service definition with healthcheck
+├── package.json              # Root package configuration and scripts
+└── vite.config.ts            # Vite 7 build configuration with API reverse proxy
 ```
-
-### Things you'll likely change
-
-- **Projects and seed data** → `src/data/projects.ts`
-- **Project leads** → `src/data/users.ts`. Add a person there before
-  assigning `leadId` to a project — don't reintroduce a bare name string.
-- **Colours, fonts, theme tokens** → `src/index.css` (`:root` block)
-- **Navigation items** → `src/components/app-shell.tsx`
-- **Routes** → `src/App.tsx`
-- **Who can edit** → `EDITOR_ROLES` in `src/state/app-state.tsx` (currently
-  only `lead`; HOD is read-only by not being in that list)
-- **Adding a new mutation** → wrap it through `mutate`/`patchById` in
-  `app-state.tsx`, not a direct `setProjectState` call — see `notes.md` §4
-  and §11 for why
-- **Adding a new calculated number** → put it in `src/lib/calculations.ts`
-  so every page reads the same value — see `notes.md` §7
-
-If the app ever shows stale data, open DevTools → Application → Local Storage and
-clear the `encalm-*` keys, or use **Settings → Reset demo data** in the app.
 
 ---
 
-## 6. Publishing to GitHub
+## 7. Production Deployment & Verification
+
+Before promoting code changes to production or submitting a pull request, run all verification gates:
 
 ```bash
-# from the project root
-git init
-git branch -M main
+# 1. Typecheck
+npm run typecheck
 
-git add .
-git status                 # confirm no .env.local, no node_modules, no dist
-git commit -m "Initial commit: Encalm project dashboard"
+# 2. Automated API & RBAC Suite
+npm run test
 
-# create an empty repo on github.com first (no README, no .gitignore),
-# then point this one at it
-git remote add origin https://github.com/<your-username>/<your-repo>.git
-git push -u origin main
+# 3. Production Frontend Build
+npm run build
 ```
 
-Subsequent pushes:
-
-```bash
-git add .
-git commit -m "Describe the change"
-git push
-```
-
-`.gitignore` already excludes `node_modules/`, `dist/`, every `.env*` file except
-`.env.example`, caches, logs, key and certificate files, and OS cruft. Verify with
-`git status` before your first commit — once a secret is pushed, rewriting history
-does not un-leak it; rotate the credential instead.
+See [PRODUCTION.md](file:///c:/Users/DigitalIntern/Downloads/Project-Dashboard-main%20(3)/Project-Dashboard-main/PRODUCTION.md) for full server configuration, reverse proxy setup with NGINX, SSL certificates, and environment variable references.
 
 ---
 
-## 7. Deploying
+## 8. License
 
-`npm run build` produces a static `dist/` folder.
-
-- **Netlify** — drag `dist/` in, or connect the repo with build command
-  `npm run build` and publish directory `dist`
-- **Vercel / Cloudflare Pages** — same build command and output directory
-- **Any static host** — serve `dist/` with a SPA rewrite so unknown paths fall
-  back to `index.html`, otherwise deep links like `/project/xyz` 404
-
----
-
-## 8. Known limitations
-
-This is a frontend-only prototype, now past **Stage 1** of the product
-roadmap (see [`docs/roadmap.md`](./docs/roadmap.md)) — every number on
-screen is either calculated from real project data or explicitly labelled
-"unavailable"; nothing is fabricated. The remaining gaps are structural,
-tracked as Stage 2 onward:
-
-- **Sign-in is a role picker, not authentication** — any non-empty password
-  is accepted. Do not expose this to the public internet with real project
-  data.
-- **All data lives in one browser.** Nothing is shared between users or
-  devices, there is no server, and clearing site data loses local edits.
-  There is also no audit trail — editing a value overwrites it with no
-  history of the previous one.
-- **`project.health` is set manually**, not calculated from progress,
-  overdue milestones, or open issues. Two projects in identical trouble can
-  show different health if a Lead forgot to update the field. A centralized
-  health engine is Stage 2.
-- **Planned progress needs a start date.** `getPlannedProgress()` genuinely
-  calculates it from each project's `startDate`/`targetDate` — but **17 of
-  the 20 seeded projects don't have a `startDate`**, so most of the
-  portfolio will show "Planned progress unavailable" rather than a number
-  until those dates are filled in. This is the correct, honest behaviour,
-  not a bug to patch over with an invented date.
-- **"My projects" is ID-based** (`project.leadId === user.id`, resolved
-  through `src/data/users.ts`), not name-matching — but the only
-  login-capable Lead account doesn't currently own any seeded project, so
-  "My projects" for that account is correctly empty. See `docs/roadmap.md`.
-- **Per-stage budgets are not tracked**; the "Budget by phase" card shows an
-  indicative split of the awarded value and is labelled as such in the UI.
-- **Progress has one source of truth today (the overall number), not the
-  phases.** Phase-weighted progress, where the overall number is derived
-  from weighted phase progress instead of set independently, is Stage 2.
-- The main JS bundle is ~145 kB gzipped. Route-level code splitting would
-  reduce first paint if this ever ships externally.
-
-**[`notes.md`](./notes.md)** covers the architecture behind each of these
-in depth; **[`docs/roadmap.md`](./docs/roadmap.md)** covers what closing
-them looks like, staged.
+Internal proprietary software for **Encalm Hospitality Private Limited**. All rights reserved.

@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import dns from 'node:dns';
+import dotenv from 'dotenv';
 import nodemailer, { type Transporter } from 'nodemailer';
 import { db } from '../db/database.js';
+
+dotenv.config();
 
 export type EmailProvider = 'smtp' | 'microsoft_graph';
 
@@ -47,6 +50,12 @@ export function getActiveEmailProvider(): EmailProvider {
       return row.value as EmailProvider;
     }
   } catch {}
+  if (process.env.EMAIL_PROVIDER === 'microsoft_graph' || process.env.EMAIL_PROVIDER === 'smtp') {
+    return process.env.EMAIL_PROVIDER;
+  }
+  if (process.env.AZURE_TENANT_ID && process.env.AZURE_CLIENT_ID && process.env.AZURE_CLIENT_SECRET) {
+    return 'microsoft_graph';
+  }
   return 'smtp';
 }
 
@@ -190,7 +199,7 @@ export function getGraphConfig(): MicrosoftGraphConfig {
   const tenantId = getSetting('graph_tenant_id') || process.env.AZURE_TENANT_ID || process.env.MS_GRAPH_TENANT_ID || '';
   const clientId = getSetting('graph_client_id') || process.env.AZURE_CLIENT_ID || process.env.MS_GRAPH_CLIENT_ID || '';
   const clientSecret = getSetting('graph_client_secret') || process.env.AZURE_CLIENT_SECRET || process.env.MS_GRAPH_CLIENT_SECRET || '';
-  const senderEmail = getSetting('graph_sender_email') || process.env.MS_GRAPH_SENDER_EMAIL || 'notifications@encalm.com';
+  const senderEmail = getSetting('graph_sender_email') || process.env.MS_GRAPH_SENDER_EMAIL || 'chinmay.saxena@encalm.com';
   const saveToSentItemsStr = getSetting('graph_save_to_sent_items') || 'true';
 
   return {
@@ -953,22 +962,64 @@ export interface DirectoryUser {
 }
 
 /**
- * Searches the Encalm corporate directory via Microsoft Graph API.
- * Uses User.Read.All permission to fetch live employees.
+ * Searches the Encalm corporate directory via Microsoft Graph API and local database cache.
+ * Uses User.Read.All permission to fetch live employees and merges with local SQLite users.
  */
 export async function searchEncalmDirectory(searchQuery: string = ''): Promise<DirectoryUser[]> {
+  const cleanQuery = searchQuery.trim().replace(/^@+/, '').replace(/['"]/g, '');
+  const qLower = cleanQuery.toLowerCase();
+
+  // Fetch local user accounts to map canonical IDs and provide instant fallback/substring matching
+  const localUsers = db.prepare('SELECT id, name, email, role, title, initials FROM users').all() as Array<{
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    title: string;
+    initials: string;
+  }>;
+
+  const filterMatchesQuery = (name: string, email: string, title?: string): boolean => {
+    if (!qLower) return true;
+    const n = (name || '').toLowerCase();
+    const e = (email || '').toLowerCase();
+    const t = (title || '').toLowerCase();
+    if (n.includes(qLower) || e.includes(qLower) || t.includes(qLower)) {
+      return true;
+    }
+    // Also support multi-token matching (e.g. "akash deep" matching "Akash  Deep")
+    const tokens = qLower.split(/\s+/).filter(Boolean);
+    if (tokens.length > 1) {
+      return tokens.every((tok) => n.includes(tok) || e.includes(tok));
+    }
+    return false;
+  };
+
+  const matchedLocalResults: DirectoryUser[] = localUsers
+    .filter((lu) => lu.name && lu.email && filterMatchesQuery(lu.name, lu.email, lu.title))
+    .map((lu) => ({
+      id: lu.id,
+      name: lu.name,
+      email: lu.email.toLowerCase().trim(),
+      role: lu.role,
+      title: lu.title || 'Encalm Team',
+      initials: lu.initials || 'U',
+    }));
+
   const cfg = getGraphConfig();
   if (!cfg.tenantId || !cfg.clientId || !cfg.clientSecret) {
-    return [];
+    return matchedLocalResults.slice(0, 30);
   }
 
   try {
     const accessToken = await acquireGraphAccessToken(cfg);
-    const cleanQuery = searchQuery.trim().replace(/['"]/g, '');
 
-    let url = 'https://graph.microsoft.com/v1.0/users?$top=30&$select=id,displayName,mail,userPrincipalName,jobTitle,department';
-    if (cleanQuery) {
-      url += `&$filter=startswith(displayName,'${encodeURIComponent(cleanQuery)}') or startswith(mail,'${encodeURIComponent(cleanQuery)}') or startswith(userPrincipalName,'${encodeURIComponent(cleanQuery)}')`;
+    // For Graph startswith filter, if query has spaces (e.g. "Akash Deep"), filter on the first token and refine locally
+    const graphPrefix = cleanQuery.includes(' ') ? cleanQuery.split(/\s+/)[0] : cleanQuery;
+
+    let url = 'https://graph.microsoft.com/v1.0/users?$top=40&$select=id,displayName,mail,userPrincipalName,jobTitle,department';
+    if (graphPrefix) {
+      url += `&$filter=startswith(displayName,'${encodeURIComponent(graphPrefix)}') or startswith(mail,'${encodeURIComponent(graphPrefix)}') or startswith(userPrincipalName,'${encodeURIComponent(graphPrefix)}')`;
     }
 
     const res = await fetch(url, {
@@ -980,23 +1031,13 @@ export async function searchEncalmDirectory(searchQuery: string = ''): Promise<D
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
       console.warn(`[Microsoft Graph Directory] Query failed (${res.status}): ${errText}`);
-      return [];
+      return matchedLocalResults.slice(0, 30);
     }
 
     const data = (await res.json()) as { value?: any[] };
     const items = data.value || [];
 
-    // Fetch local user accounts to map any directory users sharing the same email to canonical IDs
-    const localUsers = db.prepare('SELECT id, name, email, role, title, initials FROM users').all() as Array<{
-      id: string;
-      name: string;
-      email: string;
-      role: string;
-      title: string;
-      initials: string;
-    }>;
-
-    return items
+    const graphResults: DirectoryUser[] = items
       .filter((u) => u.displayName && (u.mail || u.userPrincipalName))
       .map((u) => {
         const email = (u.mail || u.userPrincipalName || '').toLowerCase().trim();
@@ -1047,10 +1088,21 @@ export async function searchEncalmDirectory(searchQuery: string = ''): Promise<D
           department: u.department || undefined,
           initials: finalInitials,
         };
-      });
+      })
+      .filter((du) => filterMatchesQuery(du.name, du.email, du.title));
+
+    // Merge Graph results with matched local results, deduplicating by lowercase email
+    const merged: DirectoryUser[] = [...graphResults];
+    for (const localUser of matchedLocalResults) {
+      if (!merged.some((m) => m.email.toLowerCase() === localUser.email.toLowerCase())) {
+        merged.push(localUser);
+      }
+    }
+
+    return merged.slice(0, 30);
   } catch (err: any) {
     console.error('[Microsoft Graph Directory Error]', err.message);
-    return [];
+    return matchedLocalResults.slice(0, 30);
   }
 }
 

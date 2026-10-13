@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db/database.js';
-import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { requireAuth, requireProjectAccess, AuthenticatedRequest } from '../middleware/auth.js';
 import { fetchFullProject } from './projects.js';
 import { saveDatabaseSnapshot } from '../utils/backup.js';
 
@@ -48,7 +48,7 @@ projectUpdatesRouter.get('/', (req: any, res) => {
 });
 
 // POST add update to project
-projectUpdatesRouter.post('/', optionalAuth, (req: AuthenticatedRequest, res) => {
+projectUpdatesRouter.post('/', requireAuth, requireProjectAccess('id'), (req: AuthenticatedRequest, res) => {
   const projectId = req.params.id as string;
   const project = fetchFullProject(projectId);
   if (!project) return res.status(404).json({ error: 'Project not found' });

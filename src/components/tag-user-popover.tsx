@@ -33,31 +33,79 @@ export function TagUserPopover({
 }: TagUserPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [comment, setComment] = useState('');
+  const [memberSearch, setMemberSearch] = useState('');
   const [sending, setSending] = useState(false);
   const [stagedUserIds, setStagedUserIds] = useState<string[]>(taggedUsers || []);
   const [externalMentionedUsers, setExternalMentionedUsers] = useState<User[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { leads, users: contextUsers, resolveUser, user: currentUser } = useAppState();
+  const { leads, users: contextUsers, resolveUser } = useAppState();
   const { toast } = useToast();
 
   // Reset staged selections whenever popover opens
   useEffect(() => {
     if (isOpen) {
       setStagedUserIds(taggedUsers || []);
+      setMemberSearch('');
     }
   }, [isOpen, taggedUsers]);
 
-  // Merge default users, context directory users, leads, and dynamically fetched Azure users
+  // Live directory lookup when searching by name or email inside the popover
+  useEffect(() => {
+    const q = memberSearch.trim().replace(/^@+/, '');
+    if (!isOpen || q.length < 2) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/email/directory?q=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.users) && data.users.length > 0) {
+            setExternalMentionedUsers((prev) => {
+              const next = [...prev];
+              for (const du of data.users) {
+                if (!next.some((u) => u.id === du.id || (u.email && du.email && u.email.toLowerCase() === du.email.toLowerCase()))) {
+                  next.push(du);
+                }
+              }
+              return next;
+            });
+          }
+        }
+      } catch {
+        // Ignore directory lookup error
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [isOpen, memberSearch]);
+
+  // Merge default users, context directory users, leads, and dynamically fetched Azure users (deduplicated by email & ID)
   const baseUsers: User[] = React.useMemo(() => {
     const map = new Map<string, User>();
-    defaultUsers.forEach((u) => map.set(u.id, u));
+    const emailToId = new Map<string, string>();
+
+    const upsertUser = (u: User) => {
+      if (!u || !u.id) return;
+      const emailKey = u.email?.toLowerCase().trim();
+      if (emailKey && emailToId.has(emailKey)) {
+        const existingId = emailToId.get(emailKey)!;
+        map.set(existingId, { ...map.get(existingId)!, ...u, id: existingId });
+        return;
+      }
+      map.set(u.id, { ...map.get(u.id), ...u });
+      if (emailKey) {
+        emailToId.set(emailKey, u.id);
+      }
+    };
+
+    defaultUsers.forEach(upsertUser);
     if (Array.isArray(contextUsers)) {
-      contextUsers.forEach((u) => map.set(u.id, { ...map.get(u.id), ...u }));
+      contextUsers.forEach(upsertUser);
     }
     if (Array.isArray(leads)) {
-      leads.forEach((l) => map.set(l.id, { ...map.get(l.id), ...l }));
+      leads.forEach(upsertUser);
     }
-    externalMentionedUsers.forEach((eu) => map.set(eu.id, { ...map.get(eu.id), ...eu }));
+    externalMentionedUsers.forEach(upsertUser);
     return Array.from(map.values());
   }, [leads, contextUsers, externalMentionedUsers]);
 
@@ -71,14 +119,24 @@ export function TagUserPopover({
     return Array.from(new Set([...(stagedUserIds || []), ...mentionedFromComment]));
   }, [stagedUserIds, mentionedFromComment]);
 
-  // Sort available users: currently selected/tagged users always appear at the top
+  // Sort available users: currently selected/tagged users always appear at the top, filtered by memberSearch
   const availableUsers: User[] = React.useMemo(() => {
-    return [...baseUsers].sort((a, b) => {
+    const q = memberSearch.toLowerCase().trim().replace(/^@+/, '');
+    const filtered = q
+      ? baseUsers.filter((u) => {
+          const n = (u.name || '').toLowerCase();
+          const e = (u.email || '').toLowerCase();
+          const t = (u.title || '').toLowerCase();
+          return n.includes(q) || e.includes(q) || t.includes(q) || effectiveSelectedIds.includes(u.id);
+        })
+      : baseUsers;
+
+    return [...filtered].sort((a, b) => {
       const aSelected = effectiveSelectedIds.includes(a.id) ? 1 : 0;
       const bSelected = effectiveSelectedIds.includes(b.id) ? 1 : 0;
       return bSelected - aSelected;
     });
-  }, [baseUsers, effectiveSelectedIds]);
+  }, [baseUsers, effectiveSelectedIds, memberSearch]);
 
   // Close on outside click
   useEffect(() => {
@@ -157,7 +215,7 @@ export function TagUserPopover({
     if (allRecipientIds.length === 0) {
       toast({
         title: 'Select a team member',
-        description: 'Please select a team member or type @name in the comment.',
+        description: 'Please select a team member or type @name / @email in the comment.',
         variant: 'destructive',
       });
       return;
@@ -196,14 +254,25 @@ export function TagUserPopover({
 
       const outboxCount = res.recipients.filter((r) => r.status === 'outbox').length;
       const sentCount = res.recipients.filter((r) => r.status === 'sent').length;
+      const failedList = res.recipients.filter((r) => r.status === 'failed');
 
-      toast({
-        title: sentCount > 0 ? '✓ Email Sent Successfully' : '✓ Notification Logged in Outbox',
-        description:
-          sentCount > 0
-            ? `Dispatched email notification to ${recipientNames}.`
-            : `Notification queued for ${recipientNames} (view in Email Hub).`,
-      });
+      if (sentCount > 0) {
+        toast({
+          title: '✓ Email Sent Successfully',
+          description: `Dispatched email notification to ${recipientNames}.`,
+        });
+      } else if (outboxCount > 0) {
+        toast({
+          title: '✓ Notification Logged in Outbox',
+          description: `Notification queued for ${recipientNames} (view in Email Hub).`,
+        });
+      } else if (failedList.length > 0) {
+        toast({
+          title: 'Email Delivery Error',
+          description: failedList[0].error || `Failed to deliver email to ${recipientNames}.`,
+          variant: 'destructive',
+        });
+      }
 
       setComment('');
       setIsOpen(false);
@@ -222,7 +291,7 @@ export function TagUserPopover({
     <div className="relative inline-flex items-center gap-1.5" ref={containerRef}>
       {/* Existing Tag Chips */}
       {taggedUsers.map((userId) => {
-        const u = (resolveUser ? resolveUser(userId) : undefined) || availableUsers.find((user) => user.id === userId) || getUserById(userId);
+        const u = (resolveUser ? resolveUser(userId) : undefined) || baseUsers.find((user) => user.id === userId) || getUserById(userId);
         const name = u?.name || userId;
         const initials = u?.initials || (u?.name ? initialsOf(u.name) : name.slice(0, 2).toUpperCase());
 
@@ -305,7 +374,16 @@ export function TagUserPopover({
               </span>
             )}
           </div>
-          <div className="mt-1 max-h-36 space-y-1 overflow-y-auto pr-1">
+          <div className="mt-1">
+            <input
+              type="text"
+              value={memberSearch}
+              onChange={(e) => setMemberSearch(e.target.value)}
+              placeholder="Search name or email..."
+              className="w-full rounded-md border border-border/80 bg-[#faf8f3] px-2 py-1 text-[11px] outline-none focus:border-[#2e7c67] focus:bg-white transition"
+            />
+          </div>
+          <div className="mt-1.5 max-h-36 space-y-1 overflow-y-auto pr-1">
             {availableUsers.map((user) => {
               const isSelected = effectiveSelectedIds.includes(user.id);
               return (
@@ -358,9 +436,9 @@ export function TagUserPopover({
             <MentionTextarea
               value={comment}
               onChange={setComment}
-              users={availableUsers}
+              users={baseUsers}
               onMentionSelect={handleMentionSelect}
-              placeholder="Type @person to tag, then write message..."
+              placeholder="Type @name or @email to tag..."
               rows={2}
               className="w-full rounded-lg border border-border bg-[#faf8f3] px-2.5 py-1.5 text-[11px] outline-none focus:border-[#2e7c67] focus:bg-white transition resize-none"
             />
